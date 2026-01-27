@@ -1,0 +1,7 @@
+{
+  "name": "Program Mentoring",
+  "description": "A modern, intuitive Learning Management System (LMS) platform designed to enhance the learning experience. It features a personalized dashboard, a comprehensive course discovery page, and a dedicated mentorship program portal.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
