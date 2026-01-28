@@ -99,17 +99,16 @@ const HomePage: React.FC = () => {
   const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
   const [mySkills, setMySkills] = useState<string[]>(['Leadership', 'Data Analytics']);
 
-  // Simulate First Visit Check
+  // Automatic "Personalize your learning" popup has been disabled as requested.
+  // The logic to set sessionStorage 'hasVisitedHomePage' remains to prevent future re-activation if desired,
+  // but the call to open the modal has been removed.
   useEffect(() => {
       const hasVisited = sessionStorage.getItem('hasVisitedHomePage');
       if (!hasVisited) {
-          // Add a slight delay for better UX
-          setTimeout(() => setIsSkillsModalOpen(true), 1000);
           sessionStorage.setItem('hasVisitedHomePage', 'true');
       }
   }, []);
 
-  // Fix: Updated handleSkillsSubmit to accept the correct object structure from SkillsSelectionModal
   const handleSkillsSubmit = (data: { skills: string[]; jobDescription: string }) => {
       setMySkills(data.skills);
       console.log('User selected skills:', data.skills);
