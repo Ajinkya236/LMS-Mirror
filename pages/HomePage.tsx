@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { Course, CarouselItem } from '../types';
 import { useCarousel } from '../hooks/useCarousel';
 import CourseRow from '../components/CourseRow';
 import TopicButton from '../components/TopicButton';
-import { ChevronLeftIcon, ChevronRightIcon, StarIcon, AwardIcon, MessageSquareIcon, Edit2Icon } from '../components/Icons';
+import { ChevronLeftIcon, ChevronRightIcon, StarIcon, AwardIcon, MessageSquareIcon, Edit2Icon, SearchIcon } from '../components/Icons';
 import SkillsSelectionModal from '../components/SkillsSelectionModal';
 
 const homeCarouselItems: CarouselItem[] = [
@@ -98,6 +98,8 @@ const HomePage: React.FC = () => {
   const { currentItem, goToPrevious, goToNext, currentIndex, goToSlide } = useCarousel(homeCarouselItems, 6000);
   const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
   const [mySkills, setMySkills] = useState<string[]>(['Leadership', 'Data Analytics']);
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   // Automatic "Personalize your learning" popup has been disabled as requested.
   // The logic to set sessionStorage 'hasVisitedHomePage' remains to prevent future re-activation if desired,
@@ -116,6 +118,54 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="space-y-0 pb-12">
+      {/* Search Bar Section */}
+      <div className="bg-white pt-8 pb-4">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto flex items-center gap-2">
+            <div className="relative flex-grow">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <SearchIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-full leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-r-blue focus:border-r-blue sm:text-sm"
+                placeholder="Search for courses, skills, or ask a question..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+                  }
+                }}
+              />
+            </div>
+            <button
+              onClick={() => {
+                if (searchQuery.trim()) {
+                  navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+                }
+              }}
+              className="px-6 py-3 bg-r-blue text-white font-medium rounded-full hover:bg-r-blue-dark transition-colors"
+            >
+              Search
+            </button>
+            <button
+              onClick={() => {
+                if (searchQuery.trim()) {
+                  navigate(`/search?q=${encodeURIComponent(searchQuery)}&mode=ai`);
+                } else {
+                  navigate(`/search?mode=ai`);
+                }
+              }}
+              className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-medium rounded-full hover:from-purple-600 hover:to-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
+            >
+              <span className="flex items-center justify-center w-5 h-5 bg-white/20 rounded-sm text-[10px] font-bold">AI</span>
+              AI Assist
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Carousel Section */}
       {currentItem && (
         <div className="bg-white py-12 mb-8">

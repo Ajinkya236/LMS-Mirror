@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { GoogleGenAI } from "@google/genai";
 import type { Course } from '../types';
 import CourseCard from '../components/CourseCard';
-import { FilterIcon, ChevronDownIcon, XIcon, SearchIcon, MessageSquareIcon, SendIcon, UserIcon, AppLogoIcon, PaperclipIcon, SettingsIcon, LayersIcon, FilePlusIcon, Trash2Icon } from '../components/Icons';
+import { FilterIcon, ChevronDownIcon, XIcon, SearchIcon, MessageSquareIcon, SendIcon, UserIcon, AppLogoIcon, PaperclipIcon, SettingsIcon, LayersIcon, FilePlusIcon, Trash2Icon, ShieldCheckIcon, MicIcon, ThumbsUpIcon, ThumbsDownIcon, CopyIcon, Volume2Icon, EditIcon } from '../components/Icons';
 
 // Extended Mock Catalog for AI recommendations
 const mockLMSCatalog: Course[] = [
@@ -106,6 +106,7 @@ interface ChatMessage {
     text: string;
     sources?: { title: string; url: string }[];
     files?: { name: string; type: string }[];
+    isGuardrailVerified?: boolean;
 }
 
 // Helper to convert file to base64
@@ -115,7 +116,6 @@ const fileToBase64 = (file: File): Promise<string> => {
         reader.readAsDataURL(file);
         reader.onload = () => {
             if (typeof reader.result === 'string') {
-                // Remove data URL prefix (e.g. "data:image/png;base64,")
                 const base64 = reader.result.split(',')[1];
                 resolve(base64);
             } else {
@@ -126,113 +126,6 @@ const fileToBase64 = (file: File): Promise<string> => {
     });
 };
 
-const CustomizePromptModal: React.FC<{ isOpen: boolean; onClose: () => void; prompt: string; setPrompt: (p: string) => void }> = ({ isOpen, onClose, prompt, setPrompt }) => {
-    const [localPrompt, setLocalPrompt] = useState(prompt);
-
-    useEffect(() => { setLocalPrompt(prompt); }, [prompt, isOpen]);
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg flex flex-col">
-                <div className="p-4 border-b flex justify-between items-center">
-                    <h3 className="font-bold text-gray-900">Customize Chatbot Prompt</h3>
-                    <button onClick={onClose}><XIcon className="w-5 h-5 text-gray-500" /></button>
-                </div>
-                <div className="p-6">
-                    <p className="text-sm text-gray-600 mb-2">Define the persona or system instructions for the chatbot.</p>
-                    <textarea 
-                        className="w-full h-32 p-3 border rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none"
-                        placeholder="E.g., You are a helpful learning assistant..."
-                        value={localPrompt}
-                        onChange={(e) => setLocalPrompt(e.target.value)}
-                    />
-                </div>
-                <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-                    <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-md">Cancel</button>
-                    <button onClick={() => { setPrompt(localPrompt); onClose(); }} className="px-4 py-2 text-sm font-medium text-white bg-r-blue rounded-md">Save</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const CustomizeContextModal: React.FC<{ 
-    isOpen: boolean; 
-    onClose: () => void; 
-    contextText: string; 
-    setContextText: (t: string) => void;
-    contextFiles: File[];
-    setContextFiles: (f: File[]) => void;
-}> = ({ isOpen, onClose, contextText, setContextText, contextFiles, setContextFiles }) => {
-    const [localText, setLocalText] = useState(contextText);
-    const [localFiles, setLocalFiles] = useState<File[]>([]);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => { 
-        setLocalText(contextText); 
-        setLocalFiles([...contextFiles]);
-    }, [contextText, contextFiles, isOpen]);
-
-    if (!isOpen) return null;
-
-    const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            setLocalFiles(prev => [...prev, ...Array.from(e.target.files || [])]);
-        }
-    };
-
-    const removeFile = (index: number) => {
-        setLocalFiles(prev => prev.filter((_, i) => i !== index));
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
-                <div className="p-4 border-b flex justify-between items-center">
-                    <h3 className="font-bold text-gray-900">Customize Context</h3>
-                    <button onClick={onClose}><XIcon className="w-5 h-5 text-gray-500" /></button>
-                </div>
-                <div className="p-6 overflow-y-auto">
-                    <p className="text-sm text-gray-600 mb-4">Add documents, images, or text that the AI should use as context for all queries.</p>
-                    
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Text Context</label>
-                        <textarea 
-                            className="w-full h-24 p-3 border rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none"
-                            placeholder="Paste text context here..."
-                            value={localText}
-                            onChange={(e) => setLocalText(e.target.value)}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">File Context</label>
-                        <div className="flex flex-wrap gap-2 mb-2">
-                            {localFiles.map((file, idx) => (
-                                <div key={idx} className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-xs text-gray-700 border">
-                                    <span className="truncate max-w-[150px]">{file.name}</span>
-                                    <button onClick={() => removeFile(idx)} className="ml-2 text-red-500"><XIcon className="w-3 h-3" /></button>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="flex gap-2">
-                            <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileAdd} />
-                            <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 text-sm border rounded-md hover:bg-gray-50">
-                                <FilePlusIcon className="w-4 h-4 text-gray-500" /> Add Files (PDF, Image, etc.)
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
-                    <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-md">Cancel</button>
-                    <button onClick={() => { setContextText(localText); setContextFiles(localFiles); onClose(); }} className="px-4 py-2 text-sm font-medium text-white bg-r-blue rounded-md">Save Context</button>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 const AISnippetBanner: React.FC<{ query: string; onSwitchToAI: () => void }> = ({ query, onSwitchToAI }) => {
     const [snippet, setSnippet] = useState<string>('');
@@ -248,8 +141,6 @@ const AISnippetBanner: React.FC<{ query: string; onSwitchToAI: () => void }> = (
                      setLoading(false);
                      return;
                 }
-
-                // Fix: Updated model to gemini-3-flash-preview as per text task guidelines
                 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
                 const response = await ai.models.generateContent({
                     model: 'gemini-3-flash-preview',
@@ -293,7 +184,6 @@ const AISnippetBanner: React.FC<{ query: string; onSwitchToAI: () => void }> = (
     );
 };
 
-// Simulation function for recommended courses
 const getRelatedCourses = (currentPrompt: string, historyMessages: ChatMessage[]): Course[] => {
     const scoreCourse = (course: Course, text: string) => {
         const keywords = text.toLowerCase().split(/\s+/).filter(w => w.length > 3);
@@ -304,34 +194,130 @@ const getRelatedCourses = (currentPrompt: string, historyMessages: ChatMessage[]
         });
         return score;
     };
-
-    // 1. Get 80% weight courses from current prompt
     const currentMatches = mockLMSCatalog
         .map(c => ({ course: c, score: scoreCourse(c, currentPrompt) }))
         .sort((a, b) => b.score - a.score)
         .filter(x => x.score > 0)
         .map(x => x.course);
-
-    // 2. Get 20% weight courses from history
     const historyText = historyMessages.filter(m => m.role === 'user').map(m => m.text).join(' ');
     const historyMatches = mockLMSCatalog
         .map(c => ({ course: c, score: scoreCourse(c, historyText) }))
         .sort((a, b) => b.score - a.score)
         .filter(x => x.score > 0)
         .map(x => x.course);
-
-    // Combine: 4 from current, 1 from history (approx 80/20 for a list of 5)
     const topCurrent = currentMatches.slice(0, 4);
     const topHistory = historyMatches.filter(c => !topCurrent.find(tc => tc.id === c.id)).slice(0, 1);
-    
-    // If we don't have enough matches, fill with randoms to avoid empty sidebar
     let combined = [...topCurrent, ...topHistory];
     if (combined.length < 5) {
         const remaining = mockLMSCatalog.filter(c => !combined.find(ec => ec.id === c.id));
         combined = [...combined, ...remaining.slice(0, 5 - combined.length)];
     }
-
     return combined;
+};
+
+// Global state for Admin AI Control (in-memory for prototype)
+let globalAdminPrompt = "You are a helpful learning assistant for the Reliance New LMS platform.";
+let globalAdminDomains: { id: string; title: string; description: string; files: File[] }[] = [
+    { id: '1', title: 'General', description: 'General knowledge and guidelines', files: [] }
+];
+
+const AdminAIControlView: React.FC = () => {
+    const [prompt, setPrompt] = useState(globalAdminPrompt);
+    const [domains, setDomains] = useState(globalAdminDomains);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [activeDomainId, setActiveDomainId] = useState<string | null>(null);
+
+    const handleSave = () => {
+        globalAdminPrompt = prompt;
+        globalAdminDomains = domains;
+        alert('Admin settings saved successfully!');
+    };
+
+    const handleAddDomain = () => {
+        setDomains([...domains, { id: Date.now().toString(), title: 'New Domain', description: 'Domain description', files: [] }]);
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && activeDomainId) {
+            const newFiles = Array.from(e.target.files);
+            setDomains(domains.map(d => d.id === activeDomainId ? { ...d, files: [...d.files, ...newFiles] } : d));
+        }
+    };
+
+    return (
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Admin AI Control</h2>
+                <button onClick={handleSave} className="px-4 py-2 bg-r-blue text-white rounded-md font-medium">Save All Changes</button>
+            </div>
+            
+            <div className="bg-white p-6 rounded-xl shadow-sm mb-6 border border-gray-200">
+                <h3 className="text-lg font-semibold mb-2 text-gray-800">Customize System Prompt</h3>
+                <p className="text-sm text-gray-500 mb-4">Define the persona and core instructions for the AI assistant.</p>
+                <textarea 
+                    className="w-full h-32 p-3 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                />
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Knowledge Domains (RAG)</h3>
+                        <p className="text-sm text-gray-500">Create domains and upload PDF documents. The AI will automatically route queries to the relevant domain.</p>
+                    </div>
+                    <button onClick={handleAddDomain} className="px-4 py-2 border border-r-blue text-r-blue rounded-md font-medium hover:bg-blue-50 transition-colors">
+                        + Add Domain
+                    </button>
+                </div>
+                
+                <input type="file" multiple ref={fileInputRef} className="hidden" onChange={handleFileSelect} accept=".pdf,.txt,.doc,.docx" />
+
+                <div className="space-y-4">
+                    {domains.map((domain) => (
+                        <div key={domain.id} className="border border-gray-200 p-4 rounded-lg bg-gray-50">
+                            <input 
+                                className="font-bold text-lg w-full mb-2 outline-none bg-transparent border-b border-transparent focus:border-gray-300" 
+                                value={domain.title} 
+                                onChange={(e) => setDomains(domains.map(d => d.id === domain.id ? { ...d, title: e.target.value } : d))} 
+                                placeholder="Domain Title"
+                            />
+                            <textarea 
+                                className="w-full text-sm text-gray-600 outline-none mb-3 bg-transparent border-b border-transparent focus:border-gray-300 resize-none" 
+                                value={domain.description} 
+                                onChange={(e) => setDomains(domains.map(d => d.id === domain.id ? { ...d, description: e.target.value } : d))} 
+                                placeholder="Describe what kind of queries this domain handles..."
+                                rows={2}
+                            />
+                            
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {domain.files.map((file, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md text-xs border border-gray-200 text-gray-700 shadow-sm">
+                                        <PaperclipIcon className="w-3 h-3 text-gray-400" />
+                                        <span className="truncate max-w-[150px] font-medium">{file.name}</span>
+                                        <button 
+                                            onClick={() => setDomains(domains.map(d => d.id === domain.id ? { ...d, files: d.files.filter((_, i) => i !== idx) } : d))} 
+                                            className="text-gray-400 hover:text-red-500 ml-1"
+                                        >
+                                            <XIcon className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button 
+                                onClick={() => { setActiveDomainId(domain.id); fileInputRef.current?.click(); }} 
+                                className="text-sm text-r-blue flex items-center gap-1 font-medium hover:text-r-blue-dark"
+                            >
+                                <FilePlusIcon className="w-4 h-4" /> Add Documents
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
 };
 
 const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
@@ -340,20 +326,19 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const hasInitialized = useRef(false);
+    const [isListening, setIsListening] = useState(false);
     
-    // File upload state for input
     const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Customization State
-    const [customPrompt, setCustomPrompt] = useState('');
-    const [contextText, setContextText] = useState('');
-    const [contextFiles, setContextFiles] = useState<File[]>([]);
-    const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
-    const [isContextModalOpen, setIsContextModalOpen] = useState(false);
+    const basicQuestions = [
+        "How do I improve my leadership skills?",
+        "What courses are best for learning Python?",
+        "Can you help me create a learning plan?",
+        "What are the mandatory compliance courses?"
+    ];
 
-    // Related Courses Sidebar State
-    const [relatedCourses, setRelatedCourses] = useState<Course[]>([]);
+    const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -361,12 +346,50 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, isLoading]);
+    }, [messages, isLoading, followUpQuestions]);
+
+    const handleVoiceInput = () => {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert("Speech recognition is not supported in this browser.");
+            return;
+        }
+        
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.onstart = () => {
+            setIsListening(true);
+        };
+        
+        recognition.onresult = (event: any) => {
+            const transcript = event.results[0][0].transcript;
+            setInputValue(prev => prev + (prev ? ' ' : '') + transcript);
+        };
+        
+        recognition.onerror = (event: any) => {
+            console.error("Speech recognition error", event.error);
+            setIsListening(false);
+        };
+        
+        recognition.onend = () => {
+            setIsListening(false);
+        };
+        
+        recognition.start();
+    };
+
+    const handleReadAloud = (text: string) => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert("Text-to-speech is not supported in this browser.");
+        }
+    };
 
     const handleSendMessage = async (text: string) => {
         if (!text.trim() && attachedFiles.length === 0) return;
 
-        // Display user message
         const newUserMsg: ChatMessage = { 
             id: Date.now().toString(), 
             role: 'user', 
@@ -374,11 +397,10 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
             files: attachedFiles.map(f => ({ name: f.name, type: f.type })) 
         };
         
-        // Update Related Courses (80% current, 20% history)
-        const recommended = getRelatedCourses(text, messages);
-        setRelatedCourses(recommended);
-
-        setMessages(prev => [...prev, newUserMsg]);
+        const updatedMessages = [...messages, newUserMsg];
+        setMessages(updatedMessages);
+        setFollowUpQuestions([]);
+        
         const currentFiles = [...attachedFiles];
         setInputValue('');
         setAttachedFiles([]);
@@ -387,59 +409,86 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
         try {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             
-            // Build the contents part
-            // 1. Text Prompt
-            let promptText = text;
-            if (contextText) {
-                promptText = `[Context]: ${contextText}\n\n[User Query]: ${text}`;
+            // 1. Analyze query to find relevant domain
+            let selectedDomain = globalAdminDomains[0]; // Default to first domain
+            let domainContext = "";
+            
+            if (globalAdminDomains.length > 1) {
+                const domainDescriptions = globalAdminDomains.map(d => `ID: ${d.id}, Title: ${d.title}, Description: ${d.description}`).join('\n');
+                const routingPrompt = `Analyze the following user query and select the most relevant knowledge domain ID from the list below. If none are highly relevant, return the ID of the 'General' domain. Only return the ID, nothing else.\n\nDomains:\n${domainDescriptions}\n\nUser Query: "${text}"`;
+                
+                try {
+                    const routingResponse = await ai.models.generateContent({
+                        model: 'gemini-3-flash-preview',
+                        contents: routingPrompt,
+                    });
+                    const selectedId = routingResponse.text?.trim();
+                    const foundDomain = globalAdminDomains.find(d => d.id === selectedId);
+                    if (foundDomain) {
+                        selectedDomain = foundDomain;
+                    }
+                } catch (e) {
+                    console.error("Routing error", e);
+                }
             }
 
-            const parts: any[] = [{ text: promptText }];
+            // 2. Prepare context from selected domain
+            if (selectedDomain && selectedDomain.files.length > 0) {
+                domainContext = `\n\n[System Note: Use the following context from the '${selectedDomain.title}' domain to answer the user's query. If the context is not relevant, ignore it.]\n`;
+                // In a real app, we would extract text from PDFs here. 
+                // For this prototype, we'll just mention the files are being used.
+                domainContext += `Attached Knowledge Base Files: ${selectedDomain.files.map(f => f.name).join(', ')}`;
+            }
 
-            // 2. Attached Files (Input)
+            const finalSystemInstruction = globalAdminPrompt;
+
+            const contents = updatedMessages.map(msg => ({
+                role: msg.role === 'model' ? 'model' : 'user',
+                parts: [{ text: msg.text }]
+            }));
+
+            let promptText = text;
+            if (domainContext) {
+                promptText = `${text}${domainContext}`;
+            }
+
+            const lastTurnParts: any[] = [{ text: promptText }];
             for (const file of currentFiles) {
                 const base64Data = await fileToBase64(file);
-                parts.push({
-                    inlineData: {
-                        mimeType: file.type,
-                        data: base64Data
+                lastTurnParts.push({ inlineData: { mimeType: file.type, data: base64Data } });
+            }
+            
+            // Add domain files to context
+            if (selectedDomain) {
+                for (const file of selectedDomain.files) {
+                    try {
+                        const base64Data = await fileToBase64(file);
+                        lastTurnParts.push({ inlineData: { mimeType: file.type, data: base64Data } });
+                    } catch (e) {
+                        console.error("Error attaching domain file", e);
                     }
-                });
+                }
             }
 
-            // 3. Context Files (Global)
-            for (const file of contextFiles) {
-                const base64Data = await fileToBase64(file);
-                parts.push({
-                    inlineData: {
-                        mimeType: file.type,
-                        data: base64Data
-                    }
-                });
-            }
+            contents[contents.length - 1].parts = lastTurnParts;
 
-            // Fix: Updated model to gemini-3-flash-preview and implemented grounding extraction per mandatory guidelines
             const response = await ai.models.generateContent({
                 model: 'gemini-3-flash-preview',
-                contents: { parts },
+                contents: contents,
                 config: {
                     tools: [{ googleSearch: {} }],
-                    systemInstruction: customPrompt || undefined
+                    systemInstruction: finalSystemInstruction
                 },
             });
 
-            const responseText = response.text || "I couldn't find an answer to that.";
-            
-            // Fix: Extract grounding chunks to comply with search grounding visibility requirements
+            let finalResponseText = response.text || "I couldn't find an answer to that.";
+
             const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
             const sources: { title: string; url: string }[] = [];
             if (groundingChunks) {
                 groundingChunks.forEach((chunk: any) => {
                     if (chunk.web) {
-                        sources.push({
-                            title: chunk.web.title || chunk.web.uri,
-                            url: chunk.web.uri
-                        });
+                        sources.push({ title: chunk.web.title || chunk.web.uri, url: chunk.web.uri });
                     }
                 });
             }
@@ -447,10 +496,29 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
             const newAiMsg: ChatMessage = { 
                 id: (Date.now() + 1).toString(), 
                 role: 'model', 
-                text: responseText,
-                sources: sources.length > 0 ? sources : undefined
+                text: finalResponseText,
+                sources: sources.length > 0 ? sources : undefined,
             };
             setMessages(prev => [...prev, newAiMsg]);
+
+            // Generate follow-up questions
+            try {
+                const followUpPrompt = `Based on the following conversation, suggest 3 short, relevant follow-up questions the user could ask next. Return ONLY a JSON array of strings.\n\nUser: ${text}\nAI: ${finalResponseText}`;
+                const followUpResponse = await ai.models.generateContent({
+                    model: 'gemini-3-flash-preview',
+                    contents: followUpPrompt,
+                    config: { responseMimeType: "application/json" }
+                });
+                if (followUpResponse.text) {
+                    const questions = JSON.parse(followUpResponse.text);
+                    if (Array.isArray(questions)) {
+                        setFollowUpQuestions(questions.slice(0, 3));
+                    }
+                }
+            } catch (e) {
+                console.error("Error generating follow-ups", e);
+            }
+
         } catch (error) {
             console.error("AI Error:", error);
             const errorMsg: ChatMessage = { 
@@ -478,43 +546,35 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
     };
 
     return (
-        <div className="flex h-full bg-white rounded-xl shadow-sm border border-r-gray-200 overflow-hidden relative">
-            {/* Left Column: Chat */}
+        <div className="flex h-full bg-white rounded-xl shadow-sm border border-r-gray-200 overflow-hidden relative max-w-4xl mx-auto">
             <div className="flex-grow flex flex-col h-full relative min-w-0">
-                {/* Toolbar */}
-                <div className="h-12 flex-shrink-0 border-b bg-white flex items-center justify-between px-4 z-10">
-                    <span className="text-sm font-bold text-gray-700">Chat</span>
-                    <div className="flex items-center gap-2">
-                        <button 
-                            onClick={() => setIsPromptModalOpen(true)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                        >
-                            <SettingsIcon className="w-4 h-4 text-gray-500" />
-                            Customize Prompt
-                        </button>
-                        <button 
-                            onClick={() => setIsContextModalOpen(true)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                        >
-                            <LayersIcon className="w-4 h-4 text-gray-500" />
-                            Customize Context
-                        </button>
-                    </div>
+                <div className="h-12 flex-shrink-0 border-b bg-white flex items-center justify-center px-4 z-10">
+                    <span className="text-sm font-bold text-gray-700">AI Learning Assistant</span>
                 </div>
 
-                {/* Messages Area */}
                 <div className="flex-grow overflow-y-auto p-6 space-y-6 bg-r-gray-50 scroll-smooth">
                     {messages.length === 0 && !isLoading && (
-                        <div className="flex flex-col items-center justify-center h-full text-r-gray-400 opacity-50">
-                            <MessageSquareIcon className="w-16 h-16 mb-4" />
-                            <p className="text-lg font-medium">Ask me anything about your learning journey!</p>
-                            <p className="text-sm">Use the tools above to customize my behavior.</p>
+                        <div className="flex flex-col items-center justify-center h-full text-r-gray-400 opacity-50 text-center px-8">
+                            <AppLogoIcon className="w-16 h-16 mb-4 text-indigo-200" />
+                            <p className="text-lg font-medium text-gray-600 mb-6">Ask me anything about your learning journey!</p>
+                            
+                            <div className="flex flex-col gap-2 w-full max-w-md">
+                                {basicQuestions.map((q, i) => (
+                                    <button 
+                                        key={i}
+                                        onClick={() => handleSendMessage(q)}
+                                        className="text-sm text-left px-4 py-3 bg-white border border-gray-200 rounded-lg hover:border-r-blue hover:text-r-blue transition-colors shadow-sm"
+                                    >
+                                        {q}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     )}
                     
                     {messages.map((msg) => (
                         <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] rounded-2xl p-4 shadow-sm ${
+                            <div className={`max-w-[85%] rounded-2xl p-4 shadow-sm relative group ${
                                 msg.role === 'user' 
                                     ? 'bg-r-blue text-white rounded-tr-none' 
                                     : 'bg-white text-r-gray-800 border border-r-gray-200 rounded-tl-none'
@@ -537,7 +597,6 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
                                         )}
                                         <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
                                         
-                                        {/* Fix: Display search grounding sources as required by guidelines */}
                                         {msg.sources && msg.sources.length > 0 && (
                                             <div className="mt-4 pt-3 border-t border-gray-100">
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Sources:</p>
@@ -558,6 +617,23 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
                                         )}
                                     </div>
                                 </div>
+                                
+                                {/* Action Buttons */}
+                                <div className={`absolute -bottom-4 ${msg.role === 'user' ? 'right-2' : 'left-2'} opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white shadow-md border border-gray-200 rounded-full px-2 py-1 z-10`}>
+                                    {msg.role === 'user' ? (
+                                        <>
+                                            <button onClick={() => navigator.clipboard.writeText(msg.text)} className="p-1 text-gray-500 hover:text-r-blue" title="Copy"><CopyIcon className="w-3 h-3" /></button>
+                                            <button onClick={() => setInputValue(msg.text)} className="p-1 text-gray-500 hover:text-r-blue" title="Edit"><EditIcon className="w-3 h-3" /></button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button className="p-1 text-gray-500 hover:text-green-600" title="Like"><ThumbsUpIcon className="w-3 h-3" /></button>
+                                            <button className="p-1 text-gray-500 hover:text-red-600" title="Dislike"><ThumbsDownIcon className="w-3 h-3" /></button>
+                                            <button onClick={() => navigator.clipboard.writeText(msg.text)} className="p-1 text-gray-500 hover:text-r-blue" title="Copy"><CopyIcon className="w-3 h-3" /></button>
+                                            <button onClick={() => handleReadAloud(msg.text)} className="p-1 text-gray-500 hover:text-r-blue" title="Read Aloud"><Volume2Icon className="w-3 h-3" /></button>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -568,13 +644,31 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
                                  <div className="w-2 h-2 bg-r-blue rounded-full animate-bounce"></div>
                                  <div className="w-2 h-2 bg-r-blue rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                                  <div className="w-2 h-2 bg-r-blue rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                                 <span className="text-xs text-gray-400 ml-2 font-medium">Generating...</span>
                             </div>
                         </div>
                     )}
+
+                    {followUpQuestions.length > 0 && !isLoading && (
+                        <div className="flex flex-col gap-2 mt-4 ml-12">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Suggested Follow-ups</p>
+                            <div className="flex flex-wrap gap-2">
+                                {followUpQuestions.map((q, i) => (
+                                    <button 
+                                        key={i}
+                                        onClick={() => handleSendMessage(q)}
+                                        className="text-xs px-3 py-1.5 bg-white border border-r-blue text-r-blue rounded-full hover:bg-blue-50 transition-colors shadow-sm"
+                                    >
+                                        {q}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input Area */}
                 <div className="flex-shrink-0 p-4 bg-white border-t border-r-gray-200 z-10">
                     {attachedFiles.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-2 px-2">
@@ -592,13 +686,7 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
                         onSubmit={(e) => { e.preventDefault(); handleSendMessage(inputValue); }}
                         className="relative flex items-center gap-2"
                     >
-                        <input 
-                            type="file" 
-                            multiple 
-                            ref={fileInputRef} 
-                            className="hidden" 
-                            onChange={handleFileSelect} 
-                        />
+                        <input type="file" multiple ref={fileInputRef} className="hidden" onChange={handleFileSelect} />
                         <button 
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
@@ -607,12 +695,20 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
                         >
                             <PaperclipIcon className="w-5 h-5" />
                         </button>
+                        <button 
+                            type="button"
+                            onClick={handleVoiceInput}
+                            className={`p-2.5 rounded-full transition-colors ${isListening ? 'bg-red-100 text-red-600 animate-pulse' : 'text-gray-500 hover:bg-gray-100'}`}
+                            title="Voice input"
+                        >
+                            <MicIcon className="w-5 h-5" />
+                        </button>
                         <input
                             type="text"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
-                            placeholder="Ask a follow-up question..."
-                            className="flex-grow pl-4 pr-12 py-3 rounded-full border border-r-gray-300 focus:outline-none focus:ring-2 focus:ring-r-blue focus:border-transparent bg-r-gray-50"
+                            placeholder={isListening ? "Listening..." : "Ask a follow-up question..."}
+                            className="flex-grow pl-4 pr-12 py-3 rounded-full border border-r-gray-300 focus:outline-none focus:ring-2 focus:ring-r-blue focus:border-transparent bg-r-gray-50 text-gray-900"
                             disabled={isLoading}
                         />
                         <button 
@@ -625,43 +721,6 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
                     </form>
                 </div>
             </div>
-
-            {/* Right Column: Related Courses Sidebar */}
-            <div className="w-96 border-l bg-gray-50 h-full flex flex-col shadow-inner hidden lg:flex flex-shrink-0">
-                <div className="h-12 flex-shrink-0 border-b bg-white flex items-center px-4">
-                    <span className="text-sm font-bold text-gray-700">Related Courses</span>
-                </div>
-                <div className="flex-grow overflow-y-auto p-4 space-y-4">
-                    {relatedCourses.length > 0 ? (
-                        relatedCourses.map((course) => (
-                            <div key={course.id} className="w-full">
-                                <CourseCard course={course} />
-                            </div>
-                        ))
-                    ) : (
-                        <div className="text-center text-gray-400 mt-10">
-                            <SearchIcon className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">Start chatting to see relevant course recommendations here.</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Modals */}
-            <CustomizePromptModal 
-                isOpen={isPromptModalOpen} 
-                onClose={() => setIsPromptModalOpen(false)} 
-                prompt={customPrompt} 
-                setPrompt={setCustomPrompt} 
-            />
-            <CustomizeContextModal 
-                isOpen={isContextModalOpen} 
-                onClose={() => setIsContextModalOpen(false)}
-                contextText={contextText}
-                setContextText={setContextText}
-                contextFiles={contextFiles}
-                setContextFiles={setContextFiles}
-            />
         </div>
     );
 };
@@ -669,15 +728,20 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
 const SearchResultsPage: React.FC = () => {
     const [searchParams] = useSearchParams();
     const query = searchParams.get('q') || '';
+    const modeParam = searchParams.get('mode');
     const [searchMode, setSearchMode] = useState<'exact' | 'similar'>('exact');
-    const [activeTab, setActiveTab] = useState<'results' | 'ai'>('results');
+    const [activeTab, setActiveTab] = useState<'results' | 'ai' | 'admin'>(modeParam === 'ai' ? 'ai' : 'results');
+
+    useEffect(() => {
+        if (modeParam === 'ai') {
+            setActiveTab('ai');
+        }
+    }, [modeParam]);
 
     return (
         <div className="bg-white min-h-screen flex flex-col">
-            {/* Top Navigation (Sub Menu) */}
             <div className="bg-subnav-blue border-b border-white/10 sticky top-16 z-20 shadow-md">
                 <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Sub-menu Tabs */}
                     <div className="flex space-x-8">
                         <button
                             onClick={() => setActiveTab('results')}
@@ -700,16 +764,25 @@ const SearchResultsPage: React.FC = () => {
                             <span className="flex items-center justify-center w-5 h-5 bg-gradient-to-tr from-purple-400 to-indigo-400 text-white text-[10px] font-bold rounded-sm shadow-sm">AI</span>
                             AI Mode
                         </button>
+                        <button
+                            onClick={() => setActiveTab('admin')}
+                            className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                                activeTab === 'admin'
+                                    ? 'border-white text-white'
+                                    : 'border-transparent text-r-gray-300 hover:text-white hover:border-gray-400'
+                            }`}
+                        >
+                            <SettingsIcon className="w-4 h-4" />
+                            Admin AI Control
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {/* AI Snippet Banner - Only on standard results tab */}
             {activeTab === 'results' && query && (
                 <AISnippetBanner query={query} onSwitchToAI={() => setActiveTab('ai')} />
             )}
 
-            {/* Filters Row - Only show for regular results */}
             {activeTab === 'results' && (
                 <div className="bg-white border-b border-gray-200 sticky top-[7.5rem] z-10 shadow-sm">
                     <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
@@ -718,7 +791,6 @@ const SearchResultsPage: React.FC = () => {
                                 <FilterIcon className="w-4 h-4" />
                                 Filter by Academies
                             </button>
-
                             <div className="flex items-center gap-4 self-end md:self-auto">
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm font-semibold text-gray-700">Sort by :</span>
@@ -726,7 +798,6 @@ const SearchResultsPage: React.FC = () => {
                                         Name: A-Z (↑) <ChevronDownIcon className="w-4 h-4" />
                                     </button>
                                 </div>
-                                
                                 <div className="flex border border-gray-300 rounded-lg overflow-hidden">
                                     <button className="p-2 hover:bg-gray-100 border-r border-gray-300">
                                         <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
@@ -737,7 +808,6 @@ const SearchResultsPage: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-
                         <div className="flex flex-wrap items-center gap-3">
                             <FilterDropdown label="Category" />
                             <FilterDropdown label="Language" />
@@ -748,7 +818,6 @@ const SearchResultsPage: React.FC = () => {
                             <FilterDropdown label="Proficiency Level" />
                             <button className="ml-auto text-sm font-bold text-r-blue hover:text-r-blue-dark">Reset</button>
                         </div>
-
                         <div className="flex flex-wrap items-center gap-6">
                             <div className="flex items-center gap-6">
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -766,7 +835,6 @@ const SearchResultsPage: React.FC = () => {
                                     <span className={`text-sm font-medium ${searchMode === 'similar' ? 'text-gray-900' : 'text-gray-600'}`}>Similar Search</span>
                                 </label>
                             </div>
-
                             <div className="flex flex-wrap gap-3">
                                 <span className="inline-flex items-center px-3 py-1 rounded bg-teal-50 text-teal-800 text-sm border border-teal-100">
                                     <span className="font-semibold mr-1">Search:</span> {query || 'co'}
@@ -782,7 +850,6 @@ const SearchResultsPage: React.FC = () => {
                 </div>
             )}
 
-            {/* Content Area */}
             <div className="flex-grow bg-r-gray-50 flex flex-col">
                 {activeTab === 'results' ? (
                     <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
@@ -793,9 +860,13 @@ const SearchResultsPage: React.FC = () => {
                             ))}
                         </div>
                     </div>
-                ) : (
-                    <div className="flex-grow h-[calc(100vh-8rem)] w-full overflow-hidden"> 
+                ) : activeTab === 'ai' ? (
+                    <div className="flex-grow h-[calc(100vh-8rem)] w-full overflow-hidden p-4"> 
                         <AIModeView initialQuery={query || 'Learning opportunities at Reliance'} />
+                    </div>
+                ) : (
+                    <div className="flex-grow w-full overflow-y-auto">
+                        <AdminAIControlView />
                     </div>
                 )}
             </div>
