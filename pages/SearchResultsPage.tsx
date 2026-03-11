@@ -220,6 +220,7 @@ interface SubDomain {
     title: string;
     description: string;
     files: File[];
+    texts: string[];
 }
 
 interface Domain {
@@ -227,13 +228,14 @@ interface Domain {
     title: string;
     description: string;
     files: File[];
+    texts: string[];
     subDomains: SubDomain[];
 }
 
 // Global state for Admin AI Control (in-memory for prototype)
 let globalAdminPrompt = "You are a helpful learning assistant for the Reliance New LMS platform.";
 let globalAdminDomains: Domain[] = [
-    { id: '1', title: 'General', description: 'General knowledge and guidelines', files: [], subDomains: [] }
+    { id: '1', title: 'General', description: 'General knowledge and guidelines', files: [], texts: [], subDomains: [] }
 ];
 
 const AdminAIControlView: React.FC = () => {
@@ -258,6 +260,32 @@ const AdminAIControlView: React.FC = () => {
 
     const [editingDomain, setEditingDomain] = useState<Domain | null>(null);
     const [editingSubDomain, setEditingSubDomain] = useState<SubDomain | null>(null);
+    const [newDomainText, setNewDomainText] = useState('');
+    const [newSubDomainText, setNewSubDomainText] = useState('');
+
+    // Auto-save logic for Domain
+    useEffect(() => {
+        if (editingDomain) {
+            const updatedDomains = domains.map(d => d.id === editingDomain.id ? editingDomain : d);
+            setDomains(updatedDomains);
+            globalAdminDomains = updatedDomains;
+        }
+    }, [editingDomain]);
+
+    // Auto-save logic for Sub-Domain (updates the parent editingDomain)
+    useEffect(() => {
+        if (editingSubDomain && editingDomain) {
+            const updatedSubDomains = editingDomain.subDomains.map(sd => sd.id === editingSubDomain.id ? editingSubDomain : sd);
+            // Only update if there's an actual change to avoid infinite loop
+            const currentSubDomain = editingDomain.subDomains.find(sd => sd.id === editingSubDomain.id);
+            if (JSON.stringify(currentSubDomain) !== JSON.stringify(editingSubDomain)) {
+                setEditingDomain({
+                    ...editingDomain,
+                    subDomains: updatedSubDomains
+                });
+            }
+        }
+    }, [editingSubDomain]);
 
     const handleSavePrompt = () => {
         globalAdminPrompt = prompt;
@@ -281,7 +309,7 @@ const AdminAIControlView: React.FC = () => {
             setDomainError('A domain with this title already exists.');
             return;
         }
-        setDomains([...domains, { id: Date.now().toString(), title: newDomainTitle.trim(), description: newDomainDescription.trim(), files: [], subDomains: [] }]);
+        setDomains([...domains, { id: Date.now().toString(), title: newDomainTitle.trim(), description: newDomainDescription.trim(), files: [], texts: [], subDomains: [] }]);
         setIsAddDomainModalOpen(false);
     };
 
@@ -306,7 +334,8 @@ const AdminAIControlView: React.FC = () => {
                 id: Date.now().toString(),
                 title: newSubDomainTitle.trim(),
                 description: newSubDomainDescription.trim(),
-                files: []
+                files: [],
+                texts: []
             };
             setEditingDomain({
                 ...editingDomain,
@@ -317,35 +346,50 @@ const AdminAIControlView: React.FC = () => {
     };
 
     const handleViewDomain = (domain: Domain) => {
-        setEditingDomain({ ...domain, files: [...domain.files], subDomains: [...domain.subDomains] });
+        setEditingDomain({ ...domain, files: [...domain.files], texts: [...(domain.texts || [])], subDomains: [...domain.subDomains] });
         setViewingDomainId(domain.id);
     };
 
-    const handleSaveDomain = () => {
-        if (editingDomain) {
-            const updatedDomains = domains.map(d => d.id === editingDomain.id ? editingDomain : d);
-            setDomains(updatedDomains);
-            globalAdminDomains = updatedDomains;
-            alert('Domain saved successfully!');
-            setViewingDomainId(null);
-        }
-    };
-
     const handleViewSubDomain = (subDomain: SubDomain) => {
-        setEditingSubDomain({ ...subDomain, files: [...subDomain.files] });
+        setEditingSubDomain({ ...subDomain, files: [...subDomain.files], texts: [...(subDomain.texts || [])] });
         setViewingSubDomainId(subDomain.id);
     };
 
-    const handleSaveSubDomain = () => {
-        if (editingSubDomain && editingDomain) {
-            const updatedSubDomains = editingDomain.subDomains.map(sd => sd.id === editingSubDomain.id ? editingSubDomain : sd);
+    const handleAddDomainText = () => {
+        if (newDomainText.trim() && editingDomain) {
             setEditingDomain({
                 ...editingDomain,
-                subDomains: updatedSubDomains
+                texts: [...(editingDomain.texts || []), newDomainText.trim()]
             });
-            setViewingSubDomainId(null);
-            setEditingSubDomain(null);
-            alert('Sub-domain changes staged. Remember to save the domain to persist changes.');
+            setNewDomainText('');
+        }
+    };
+
+    const handleRemoveDomainText = (index: number) => {
+        if (editingDomain) {
+            setEditingDomain({
+                ...editingDomain,
+                texts: editingDomain.texts.filter((_, i) => i !== index)
+            });
+        }
+    };
+
+    const handleAddSubDomainText = () => {
+        if (newSubDomainText.trim() && editingSubDomain) {
+            setEditingSubDomain({
+                ...editingSubDomain,
+                texts: [...(editingSubDomain.texts || []), newSubDomainText.trim()]
+            });
+            setNewSubDomainText('');
+        }
+    };
+
+    const handleRemoveSubDomainText = (index: number) => {
+        if (editingSubDomain) {
+            setEditingSubDomain({
+                ...editingSubDomain,
+                texts: editingSubDomain.texts.filter((_, i) => i !== index)
+            });
         }
     };
 
@@ -371,8 +415,10 @@ const AdminAIControlView: React.FC = () => {
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     </button>
                     <h2 className="text-2xl font-bold text-gray-900">Edit Sub-Domain: {editingSubDomain.title}</h2>
-                    <div className="ml-auto">
-                        <button onClick={handleSaveSubDomain} className="px-4 py-2 bg-r-blue text-white rounded-md font-medium">Apply Changes</button>
+                    <div className="ml-auto flex items-center gap-2">
+                        <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                            <ShieldCheckIcon className="w-3 h-3" /> Auto-saved
+                        </span>
                     </div>
                 </div>
 
@@ -421,6 +467,38 @@ const AdminAIControlView: React.FC = () => {
                                 <FilePlusIcon className="w-4 h-4" /> Add Documents
                             </button>
                         </div>
+
+                        <div className="pt-4 border-t border-gray-100">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Text Knowledge Base</label>
+                            <div className="space-y-2 mb-3">
+                                {editingSubDomain.texts && editingSubDomain.texts.map((text, idx) => (
+                                    <div key={idx} className="flex items-start gap-2 bg-teal-50 p-3 rounded-lg text-sm border border-teal-100 text-teal-900 shadow-sm relative group">
+                                        <div className="flex-grow pr-6 italic">"{text}"</div>
+                                        <button 
+                                            onClick={() => handleRemoveSubDomainText(idx)} 
+                                            className="absolute top-2 right-2 text-teal-400 hover:text-red-500"
+                                        >
+                                            <Trash2Icon className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex gap-2">
+                                <textarea 
+                                    className="flex-grow p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none resize-none"
+                                    placeholder="Enter text knowledge to add..."
+                                    rows={2}
+                                    value={newSubDomainText}
+                                    onChange={(e) => setNewSubDomainText(e.target.value)}
+                                />
+                                <button 
+                                    onClick={handleAddSubDomainText}
+                                    className="px-4 py-2 bg-r-blue text-white rounded-md text-sm font-medium self-end"
+                                >
+                                    Add Text
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -435,8 +513,10 @@ const AdminAIControlView: React.FC = () => {
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     </button>
                     <h2 className="text-2xl font-bold text-gray-900">Edit Domain: {editingDomain.title}</h2>
-                    <div className="ml-auto">
-                        <button onClick={handleSaveDomain} className="px-4 py-2 bg-r-blue text-white rounded-md font-medium">Save Domain</button>
+                    <div className="ml-auto flex items-center gap-2">
+                        <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                            <ShieldCheckIcon className="w-3 h-3" /> Auto-saved
+                        </span>
                     </div>
                 </div>
 
@@ -486,6 +566,38 @@ const AdminAIControlView: React.FC = () => {
                                 >
                                     <FilePlusIcon className="w-4 h-4" /> Add Documents
                                 </button>
+                            </div>
+
+                            <div className="pt-4 border-t border-gray-100">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Text Knowledge Base</label>
+                                <div className="space-y-2 mb-3">
+                                    {editingDomain.texts && editingDomain.texts.map((text, idx) => (
+                                        <div key={idx} className="flex items-start gap-2 bg-teal-50 p-3 rounded-lg text-sm border border-teal-100 text-teal-900 shadow-sm relative group">
+                                            <div className="flex-grow pr-6 italic">"{text}"</div>
+                                            <button 
+                                                onClick={() => handleRemoveDomainText(idx)} 
+                                                className="absolute top-2 right-2 text-teal-400 hover:text-red-500"
+                                            >
+                                                <Trash2Icon className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex gap-2">
+                                    <textarea 
+                                        className="flex-grow p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none resize-none"
+                                        placeholder="Enter text knowledge to add..."
+                                        rows={2}
+                                        value={newDomainText}
+                                        onChange={(e) => setNewDomainText(e.target.value)}
+                                    />
+                                    <button 
+                                        onClick={handleAddDomainText}
+                                        className="px-4 py-2 bg-r-blue text-white rounded-md text-sm font-medium self-end"
+                                    >
+                                        Add Text
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -791,11 +903,14 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
             }
 
             // 2. Prepare context from selected domain
-            if (selectedDomain && selectedDomain.files.length > 0) {
+            if (selectedDomain && (selectedDomain.files.length > 0 || (selectedDomain.texts && selectedDomain.texts.length > 0))) {
                 domainContext = `\n\n[System Note: Use the following context from the '${selectedDomain.title}' domain to answer the user's query. If the context is not relevant, ignore it.]\n`;
-                // In a real app, we would extract text from PDFs here. 
-                // For this prototype, we'll just mention the files are being used.
-                domainContext += `Attached Knowledge Base Files: ${selectedDomain.files.map(f => f.name).join(', ')}`;
+                if (selectedDomain.files.length > 0) {
+                    domainContext += `Attached Knowledge Base Files: ${selectedDomain.files.map(f => f.name).join(', ')}\n`;
+                }
+                if (selectedDomain.texts && selectedDomain.texts.length > 0) {
+                    domainContext += `Knowledge Base Text Snippets:\n${selectedDomain.texts.join('\n---\n')}\n`;
+                }
             }
 
             const finalSystemInstruction = globalAdminPrompt;
