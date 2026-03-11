@@ -40,7 +40,7 @@ function App() {
     <HashRouter>
       <div className="bg-r-gray-50 min-h-screen font-sans text-r-gray-800 flex flex-col">
         <Header />
-        <main className="flex-grow pb-16 md:pb-0">
+        <main className="flex-grow pt-16 pb-16 md:pb-0">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/discover" element={<DiscoverPage />} />

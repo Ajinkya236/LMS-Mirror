@@ -215,49 +215,382 @@ const getRelatedCourses = (currentPrompt: string, historyMessages: ChatMessage[]
     return combined;
 };
 
+interface SubDomain {
+    id: string;
+    title: string;
+    description: string;
+    files: File[];
+}
+
+interface Domain {
+    id: string;
+    title: string;
+    description: string;
+    files: File[];
+    subDomains: SubDomain[];
+}
+
 // Global state for Admin AI Control (in-memory for prototype)
 let globalAdminPrompt = "You are a helpful learning assistant for the Reliance New LMS platform.";
-let globalAdminDomains: { id: string; title: string; description: string; files: File[] }[] = [
-    { id: '1', title: 'General', description: 'General knowledge and guidelines', files: [] }
+let globalAdminDomains: Domain[] = [
+    { id: '1', title: 'General', description: 'General knowledge and guidelines', files: [], subDomains: [] }
 ];
 
 const AdminAIControlView: React.FC = () => {
     const [prompt, setPrompt] = useState(globalAdminPrompt);
+    const [isPromptEditing, setIsPromptEditing] = useState(false);
     const [domains, setDomains] = useState(globalAdminDomains);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const subDomainFileInputRef = useRef<HTMLInputElement>(null);
     const [activeDomainId, setActiveDomainId] = useState<string | null>(null);
+    const [viewingDomainId, setViewingDomainId] = useState<string | null>(null);
+    const [viewingSubDomainId, setViewingSubDomainId] = useState<string | null>(null);
 
-    const handleSave = () => {
+    const [isAddDomainModalOpen, setIsAddDomainModalOpen] = useState(false);
+    const [newDomainTitle, setNewDomainTitle] = useState('');
+    const [newDomainDescription, setNewDomainDescription] = useState('');
+    const [domainError, setDomainError] = useState('');
+
+    const [isAddSubDomainModalOpen, setIsAddSubDomainModalOpen] = useState(false);
+    const [newSubDomainTitle, setNewSubDomainTitle] = useState('');
+    const [newSubDomainDescription, setNewSubDomainDescription] = useState('');
+    const [subDomainError, setSubDomainError] = useState('');
+
+    const [editingDomain, setEditingDomain] = useState<Domain | null>(null);
+    const [editingSubDomain, setEditingSubDomain] = useState<SubDomain | null>(null);
+
+    const handleSavePrompt = () => {
         globalAdminPrompt = prompt;
-        globalAdminDomains = domains;
-        alert('Admin settings saved successfully!');
+        setIsPromptEditing(false);
+        alert('System prompt saved successfully!');
     };
 
-    const handleAddDomain = () => {
-        setDomains([...domains, { id: Date.now().toString(), title: 'New Domain', description: 'Domain description', files: [] }]);
+    const handleOpenAddDomain = () => {
+        setNewDomainTitle('');
+        setNewDomainDescription('');
+        setDomainError('');
+        setIsAddDomainModalOpen(true);
+    };
+
+    const handleConfirmAddDomain = () => {
+        if (!newDomainTitle.trim() || !newDomainDescription.trim()) {
+            setDomainError('Title and description are mandatory.');
+            return;
+        }
+        if (domains.some(d => d.title.toLowerCase() === newDomainTitle.trim().toLowerCase())) {
+            setDomainError('A domain with this title already exists.');
+            return;
+        }
+        setDomains([...domains, { id: Date.now().toString(), title: newDomainTitle.trim(), description: newDomainDescription.trim(), files: [], subDomains: [] }]);
+        setIsAddDomainModalOpen(false);
+    };
+
+    const handleOpenAddSubDomain = () => {
+        setNewSubDomainTitle('');
+        setNewSubDomainDescription('');
+        setSubDomainError('');
+        setIsAddSubDomainModalOpen(true);
+    };
+
+    const handleConfirmAddSubDomain = () => {
+        if (!newSubDomainTitle.trim() || !newSubDomainDescription.trim()) {
+            setSubDomainError('Title and description are mandatory.');
+            return;
+        }
+        if (editingDomain) {
+            if (editingDomain.subDomains.some(sd => sd.title.toLowerCase() === newSubDomainTitle.trim().toLowerCase())) {
+                setSubDomainError('A sub-domain with this title already exists in this domain.');
+                return;
+            }
+            const newSubDomain: SubDomain = {
+                id: Date.now().toString(),
+                title: newSubDomainTitle.trim(),
+                description: newSubDomainDescription.trim(),
+                files: []
+            };
+            setEditingDomain({
+                ...editingDomain,
+                subDomains: [...editingDomain.subDomains, newSubDomain]
+            });
+            setIsAddSubDomainModalOpen(false);
+        }
+    };
+
+    const handleViewDomain = (domain: Domain) => {
+        setEditingDomain({ ...domain, files: [...domain.files], subDomains: [...domain.subDomains] });
+        setViewingDomainId(domain.id);
+    };
+
+    const handleSaveDomain = () => {
+        if (editingDomain) {
+            const updatedDomains = domains.map(d => d.id === editingDomain.id ? editingDomain : d);
+            setDomains(updatedDomains);
+            globalAdminDomains = updatedDomains;
+            alert('Domain saved successfully!');
+            setViewingDomainId(null);
+        }
+    };
+
+    const handleViewSubDomain = (subDomain: SubDomain) => {
+        setEditingSubDomain({ ...subDomain, files: [...subDomain.files] });
+        setViewingSubDomainId(subDomain.id);
+    };
+
+    const handleSaveSubDomain = () => {
+        if (editingSubDomain && editingDomain) {
+            const updatedSubDomains = editingDomain.subDomains.map(sd => sd.id === editingSubDomain.id ? editingSubDomain : sd);
+            setEditingDomain({
+                ...editingDomain,
+                subDomains: updatedSubDomains
+            });
+            setViewingSubDomainId(null);
+            setEditingSubDomain(null);
+            alert('Sub-domain changes staged. Remember to save the domain to persist changes.');
+        }
     };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && activeDomainId) {
+        if (e.target.files && editingDomain) {
             const newFiles = Array.from(e.target.files);
-            setDomains(domains.map(d => d.id === activeDomainId ? { ...d, files: [...d.files, ...newFiles] } : d));
+            setEditingDomain({ ...editingDomain, files: [...editingDomain.files, ...newFiles] });
         }
     };
+
+    const handleSubDomainFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && editingSubDomain) {
+            const newFiles = Array.from(e.target.files);
+            setEditingSubDomain({ ...editingSubDomain, files: [...editingSubDomain.files, ...newFiles] });
+        }
+    };
+
+    if (viewingSubDomainId && editingSubDomain) {
+        return (
+            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                <div className="flex items-center mb-6 gap-4">
+                    <button onClick={() => setViewingSubDomainId(null)} className="p-2 hover:bg-gray-100 rounded-full text-gray-600">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </button>
+                    <h2 className="text-2xl font-bold text-gray-900">Edit Sub-Domain: {editingSubDomain.title}</h2>
+                    <div className="ml-auto">
+                        <button onClick={handleSaveSubDomain} className="px-4 py-2 bg-r-blue text-white rounded-md font-medium">Apply Changes</button>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Sub-Domain Title</label>
+                            <input 
+                                className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none"
+                                value={editingSubDomain.title} 
+                                onChange={(e) => setEditingSubDomain({ ...editingSubDomain, title: e.target.value })} 
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea 
+                                className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none resize-none"
+                                value={editingSubDomain.description} 
+                                onChange={(e) => setEditingSubDomain({ ...editingSubDomain, description: e.target.value })} 
+                                rows={3}
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Documents</label>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {editingSubDomain.files.map((file, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-md text-sm border border-gray-200 text-gray-700 shadow-sm">
+                                        <PaperclipIcon className="w-4 h-4 text-gray-400" />
+                                        <span className="truncate max-w-[200px] font-medium">{file.name}</span>
+                                        <button 
+                                            onClick={() => setEditingSubDomain({ ...editingSubDomain, files: editingSubDomain.files.filter((_, i) => i !== idx) })} 
+                                            className="text-gray-400 hover:text-red-500 ml-2"
+                                        >
+                                            <XIcon className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <input type="file" multiple ref={subDomainFileInputRef} className="hidden" onChange={handleSubDomainFileSelect} accept=".pdf,.txt,.doc,.docx" />
+                            <button 
+                                onClick={() => subDomainFileInputRef.current?.click()} 
+                                className="text-sm text-r-blue flex items-center gap-1 font-medium hover:text-r-blue-dark"
+                            >
+                                <FilePlusIcon className="w-4 h-4" /> Add Documents
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (viewingDomainId && editingDomain) {
+        return (
+            <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+                <div className="flex items-center mb-6 gap-4">
+                    <button onClick={() => setViewingDomainId(null)} className="p-2 hover:bg-gray-100 rounded-full text-gray-600">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </button>
+                    <h2 className="text-2xl font-bold text-gray-900">Edit Domain: {editingDomain.title}</h2>
+                    <div className="ml-auto">
+                        <button onClick={handleSaveDomain} className="px-4 py-2 bg-r-blue text-white rounded-md font-medium">Save Domain</button>
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">General Information</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Domain Title</label>
+                                <input 
+                                    className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none"
+                                    value={editingDomain.title} 
+                                    onChange={(e) => setEditingDomain({ ...editingDomain, title: e.target.value })} 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <textarea 
+                                    className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none resize-none"
+                                    value={editingDomain.description} 
+                                    onChange={(e) => setEditingDomain({ ...editingDomain, description: e.target.value })} 
+                                    rows={3}
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Documents</label>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {editingDomain.files.map((file, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-md text-sm border border-gray-200 text-gray-700 shadow-sm">
+                                            <PaperclipIcon className="w-4 h-4 text-gray-400" />
+                                            <span className="truncate max-w-[200px] font-medium">{file.name}</span>
+                                            <button 
+                                                onClick={() => setEditingDomain({ ...editingDomain, files: editingDomain.files.filter((_, i) => i !== idx) })} 
+                                                className="text-gray-400 hover:text-red-500 ml-2"
+                                            >
+                                                <XIcon className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <input type="file" multiple ref={fileInputRef} className="hidden" onChange={handleFileSelect} accept=".pdf,.txt,.doc,.docx" />
+                                <button 
+                                    onClick={() => fileInputRef.current?.click()} 
+                                    className="text-sm text-r-blue flex items-center gap-1 font-medium hover:text-r-blue-dark"
+                                >
+                                    <FilePlusIcon className="w-4 h-4" /> Add Documents
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">Sub-Domains</h3>
+                            <button onClick={handleOpenAddSubDomain} className="px-3 py-1.5 border border-r-blue text-r-blue rounded-md text-sm font-medium hover:bg-blue-50 transition-colors">
+                                + Add Sub-Domain
+                            </button>
+                        </div>
+
+                        {editingDomain.subDomains.length === 0 ? (
+                            <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                                <LayersIcon className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                                <p className="text-sm text-gray-500">No sub-domains created yet.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-3">
+                                {editingDomain.subDomains.map((subDomain) => (
+                                    <div key={subDomain.id} className="border border-gray-200 p-4 rounded-lg bg-gray-50 flex justify-between items-center">
+                                        <div>
+                                            <h4 className="font-bold text-gray-900">{subDomain.title}</h4>
+                                            <p className="text-xs text-gray-600 mt-1 line-clamp-1">{subDomain.description}</p>
+                                            <div className="text-[10px] text-gray-500 mt-2 flex items-center gap-1">
+                                                <PaperclipIcon className="w-2.5 h-2.5" /> {subDomain.files.length} document(s)
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleViewSubDomain(subDomain)}
+                                            className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-50"
+                                        >
+                                            View/Edit
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {isAddSubDomainModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex justify-center items-center p-4">
+                        <div className="bg-white rounded-xl shadow-xl w-full max-w-md flex flex-col">
+                            <div className="p-4 border-b flex justify-between items-center">
+                                <h3 className="font-bold text-gray-900">Add New Sub-Domain</h3>
+                                <button onClick={() => setIsAddSubDomainModalOpen(false)}><XIcon className="w-5 h-5 text-gray-500" /></button>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                {subDomainError && <div className="text-red-500 text-sm">{subDomainError}</div>}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Sub-Domain Title *</label>
+                                    <input 
+                                        type="text"
+                                        className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none"
+                                        placeholder="e.g., Leave Policy"
+                                        value={newSubDomainTitle}
+                                        onChange={(e) => setNewSubDomainTitle(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                                    <textarea 
+                                        className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none resize-none"
+                                        placeholder="Describe the sub-domain..."
+                                        rows={3}
+                                        value={newSubDomainDescription}
+                                        onChange={(e) => setNewSubDomainDescription(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+                                <button onClick={() => setIsAddSubDomainModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-md">Cancel</button>
+                                <button onClick={handleConfirmAddSubDomain} className="px-4 py-2 text-sm font-medium text-white bg-r-blue rounded-md">Add Sub-Domain</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Admin AI Control</h2>
-                <button onClick={handleSave} className="px-4 py-2 bg-r-blue text-white rounded-md font-medium">Save All Changes</button>
             </div>
             
             <div className="bg-white p-6 rounded-xl shadow-sm mb-6 border border-gray-200">
-                <h3 className="text-lg font-semibold mb-2 text-gray-800">Customize System Prompt</h3>
-                <p className="text-sm text-gray-500 mb-4">Define the persona and core instructions for the AI assistant.</p>
+                <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800">Customize System Prompt</h3>
+                        <p className="text-sm text-gray-500">Define the persona and core instructions for the AI assistant.</p>
+                    </div>
+                    {isPromptEditing ? (
+                        <button onClick={handleSavePrompt} className="px-4 py-2 bg-r-blue text-white rounded-md text-sm font-medium">Save Prompt</button>
+                    ) : (
+                        <button onClick={() => setIsPromptEditing(true)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50">Edit Prompt</button>
+                    )}
+                </div>
                 <textarea 
-                    className="w-full h-32 p-3 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none"
+                    className={`w-full h-32 p-3 border rounded-md text-sm outline-none ${isPromptEditing ? 'border-r-blue focus:ring-2 focus:ring-r-blue bg-white' : 'border-gray-200 bg-gray-50 text-gray-600'}`}
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
+                    disabled={!isPromptEditing}
                 />
             </div>
 
@@ -267,55 +600,70 @@ const AdminAIControlView: React.FC = () => {
                         <h3 className="text-lg font-semibold text-gray-800">Knowledge Domains (RAG)</h3>
                         <p className="text-sm text-gray-500">Create domains and upload PDF documents. The AI will automatically route queries to the relevant domain.</p>
                     </div>
-                    <button onClick={handleAddDomain} className="px-4 py-2 border border-r-blue text-r-blue rounded-md font-medium hover:bg-blue-50 transition-colors">
+                    <button onClick={handleOpenAddDomain} className="px-4 py-2 border border-r-blue text-r-blue rounded-md font-medium hover:bg-blue-50 transition-colors">
                         + Add Domain
                     </button>
                 </div>
-                
-                <input type="file" multiple ref={fileInputRef} className="hidden" onChange={handleFileSelect} accept=".pdf,.txt,.doc,.docx" />
 
                 <div className="space-y-4">
                     {domains.map((domain) => (
-                        <div key={domain.id} className="border border-gray-200 p-4 rounded-lg bg-gray-50">
-                            <input 
-                                className="font-bold text-lg w-full mb-2 outline-none bg-transparent border-b border-transparent focus:border-gray-300" 
-                                value={domain.title} 
-                                onChange={(e) => setDomains(domains.map(d => d.id === domain.id ? { ...d, title: e.target.value } : d))} 
-                                placeholder="Domain Title"
-                            />
-                            <textarea 
-                                className="w-full text-sm text-gray-600 outline-none mb-3 bg-transparent border-b border-transparent focus:border-gray-300 resize-none" 
-                                value={domain.description} 
-                                onChange={(e) => setDomains(domains.map(d => d.id === domain.id ? { ...d, description: e.target.value } : d))} 
-                                placeholder="Describe what kind of queries this domain handles..."
-                                rows={2}
-                            />
-                            
-                            <div className="flex flex-wrap gap-2 mb-3">
-                                {domain.files.map((file, idx) => (
-                                    <div key={idx} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md text-xs border border-gray-200 text-gray-700 shadow-sm">
-                                        <PaperclipIcon className="w-3 h-3 text-gray-400" />
-                                        <span className="truncate max-w-[150px] font-medium">{file.name}</span>
-                                        <button 
-                                            onClick={() => setDomains(domains.map(d => d.id === domain.id ? { ...d, files: d.files.filter((_, i) => i !== idx) } : d))} 
-                                            className="text-gray-400 hover:text-red-500 ml-1"
-                                        >
-                                            <XIcon className="w-3 h-3" />
-                                        </button>
-                                    </div>
-                                ))}
+                        <div key={domain.id} className="border border-gray-200 p-4 rounded-lg bg-gray-50 flex justify-between items-center">
+                            <div>
+                                <h4 className="font-bold text-lg text-gray-900">{domain.title}</h4>
+                                <p className="text-sm text-gray-600 mt-1">{domain.description}</p>
+                                <div className="text-xs text-gray-500 mt-2 flex items-center gap-3">
+                                    <span className="flex items-center gap-1"><PaperclipIcon className="w-3 h-3" /> {domain.files.length} document(s)</span>
+                                    <span className="flex items-center gap-1"><LayersIcon className="w-3 h-3" /> {domain.subDomains.length} sub-domain(s)</span>
+                                </div>
                             </div>
-
                             <button 
-                                onClick={() => { setActiveDomainId(domain.id); fileInputRef.current?.click(); }} 
-                                className="text-sm text-r-blue flex items-center gap-1 font-medium hover:text-r-blue-dark"
+                                onClick={() => handleViewDomain(domain)}
+                                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50"
                             >
-                                <FilePlusIcon className="w-4 h-4" /> Add Documents
+                                View
                             </button>
                         </div>
                     ))}
                 </div>
             </div>
+
+            {isAddDomainModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md flex flex-col">
+                        <div className="p-4 border-b flex justify-between items-center">
+                            <h3 className="font-bold text-gray-900">Add New Domain</h3>
+                            <button onClick={() => setIsAddDomainModalOpen(false)}><XIcon className="w-5 h-5 text-gray-500" /></button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            {domainError && <div className="text-red-500 text-sm">{domainError}</div>}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Domain Title *</label>
+                                <input 
+                                    type="text"
+                                    className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none"
+                                    placeholder="e.g., HR Policies"
+                                    value={newDomainTitle}
+                                    onChange={(e) => setNewDomainTitle(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                                <textarea 
+                                    className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-r-blue outline-none resize-none"
+                                    placeholder="Describe the domain..."
+                                    rows={3}
+                                    value={newDomainDescription}
+                                    onChange={(e) => setNewDomainDescription(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="p-4 border-t bg-gray-50 flex justify-end gap-2">
+                            <button onClick={() => setIsAddDomainModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-md">Cancel</button>
+                            <button onClick={handleConfirmAddDomain} className="px-4 py-2 text-sm font-medium text-white bg-r-blue rounded-md">Add Domain</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -327,6 +675,7 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const hasInitialized = useRef(false);
     const [isListening, setIsListening] = useState(false);
+    const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
     
     const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -378,9 +727,18 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
         recognition.start();
     };
 
-    const handleReadAloud = (text: string) => {
+    const handleReadAloud = (msgId: string, text: string) => {
         if ('speechSynthesis' in window) {
+            if (playingMessageId === msgId) {
+                window.speechSynthesis.cancel();
+                setPlayingMessageId(null);
+                return;
+            }
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
+            utterance.onend = () => setPlayingMessageId(null);
+            utterance.onerror = () => setPlayingMessageId(null);
+            setPlayingMessageId(msgId);
             window.speechSynthesis.speak(utterance);
         } else {
             alert("Text-to-speech is not supported in this browser.");
@@ -619,7 +977,7 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
                                 </div>
                                 
                                 {/* Action Buttons */}
-                                <div className={`absolute -bottom-4 ${msg.role === 'user' ? 'right-2' : 'left-2'} opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white shadow-md border border-gray-200 rounded-full px-2 py-1 z-10`}>
+                                <div className={`absolute -bottom-4 ${msg.role === 'user' ? 'right-2 opacity-100' : 'left-2 opacity-0 group-hover:opacity-100'} transition-opacity flex items-center gap-1 bg-white shadow-md border border-gray-200 rounded-full px-2 py-1 z-10`}>
                                     {msg.role === 'user' ? (
                                         <>
                                             <button onClick={() => navigator.clipboard.writeText(msg.text)} className="p-1 text-gray-500 hover:text-r-blue" title="Copy"><CopyIcon className="w-3 h-3" /></button>
@@ -630,7 +988,7 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
                                             <button className="p-1 text-gray-500 hover:text-green-600" title="Like"><ThumbsUpIcon className="w-3 h-3" /></button>
                                             <button className="p-1 text-gray-500 hover:text-red-600" title="Dislike"><ThumbsDownIcon className="w-3 h-3" /></button>
                                             <button onClick={() => navigator.clipboard.writeText(msg.text)} className="p-1 text-gray-500 hover:text-r-blue" title="Copy"><CopyIcon className="w-3 h-3" /></button>
-                                            <button onClick={() => handleReadAloud(msg.text)} className="p-1 text-gray-500 hover:text-r-blue" title="Read Aloud"><Volume2Icon className="w-3 h-3" /></button>
+                                            <button onClick={() => handleReadAloud(msg.id, msg.text)} className={`p-1 hover:text-r-blue ${playingMessageId === msg.id ? 'text-r-blue' : 'text-gray-500'}`} title={playingMessageId === msg.id ? "Stop Reading" : "Read Aloud"}><Volume2Icon className="w-3 h-3" /></button>
                                         </>
                                     )}
                                 </div>
@@ -691,7 +1049,7 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             className="p-2.5 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
-                            title="Upload files"
+                            title="Add files and images"
                         >
                             <PaperclipIcon className="w-5 h-5" />
                         </button>
@@ -719,6 +1077,7 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
                             <SendIcon className="w-5 h-5" />
                         </button>
                     </form>
+                    <p className="text-center text-xs text-gray-400 mt-2">AI can make mistakes. Please verify important information.</p>
                 </div>
             </div>
         </div>
@@ -739,10 +1098,10 @@ const SearchResultsPage: React.FC = () => {
     }, [modeParam]);
 
     return (
-        <div className="bg-white min-h-screen flex flex-col">
-            <div className="bg-subnav-blue border-b border-white/10 sticky top-16 z-20 shadow-md">
+        <div className={`bg-white flex flex-col ${activeTab === 'ai' ? 'h-[calc(100vh-128px)] overflow-hidden' : 'min-h-[calc(100vh-128px)]'}`}>
+            <div className="bg-subnav-blue border-b border-white/10 fixed top-16 left-0 right-0 z-40 shadow-md h-16">
                 <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex space-x-8">
+                    <div className="flex space-x-8 h-16">
                         <button
                             onClick={() => setActiveTab('results')}
                             className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors ${
@@ -779,12 +1138,13 @@ const SearchResultsPage: React.FC = () => {
                 </div>
             </div>
 
-            {activeTab === 'results' && query && (
-                <AISnippetBanner query={query} onSwitchToAI={() => setActiveTab('ai')} />
-            )}
+            <div className="pt-16 flex-grow flex flex-col overflow-hidden">
+                {activeTab === 'results' && query && (
+                    <AISnippetBanner query={query} onSwitchToAI={() => setActiveTab('ai')} />
+                )}
 
-            {activeTab === 'results' && (
-                <div className="bg-white border-b border-gray-200 sticky top-[7.5rem] z-10 shadow-sm">
+                {activeTab === 'results' && (
+                    <div className="bg-white border-b border-gray-200 sticky top-32 z-10 shadow-sm">
                     <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <button className="flex items-center gap-2 text-r-blue font-semibold px-4 py-2 border border-r-blue rounded-full bg-blue-50 hover:bg-blue-100 transition-colors">
@@ -861,14 +1221,15 @@ const SearchResultsPage: React.FC = () => {
                         </div>
                     </div>
                 ) : activeTab === 'ai' ? (
-                    <div className="flex-grow h-[calc(100vh-8rem)] w-full overflow-hidden p-4"> 
-                        <AIModeView initialQuery={query || 'Learning opportunities at Reliance'} />
+                    <div className="flex-grow w-full overflow-hidden p-4"> 
+                        <AIModeView initialQuery={query} />
                     </div>
                 ) : (
                     <div className="flex-grow w-full overflow-y-auto">
                         <AdminAIControlView />
                     </div>
                 )}
+            </div>
             </div>
         </div>
     );
