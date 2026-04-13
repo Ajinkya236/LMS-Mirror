@@ -1019,7 +1019,7 @@ const AIModeView: React.FC<{ initialQuery: string }> = ({ initialQuery }) => {
     };
 
     return (
-        <div className="flex h-full bg-white rounded-xl shadow-sm border border-r-gray-200 overflow-hidden relative max-w-4xl mx-auto">
+        <div className="flex w-full h-full md:h-auto md:aspect-video md:max-w-[calc((100vh-160px)*16/9)] bg-white rounded-xl shadow-sm border border-r-gray-200 overflow-hidden relative mx-auto">
             <div className="flex-grow flex flex-col h-full relative min-w-0">
                 <div className="h-12 flex-shrink-0 border-b bg-white flex items-center justify-center px-4 z-10">
                     <span className="text-sm font-bold text-gray-700">AI Learning Assistant</span>
@@ -1336,7 +1336,7 @@ const SearchResultsPage: React.FC = () => {
                         </div>
                     </div>
                 ) : activeTab === 'ai' ? (
-                    <div className="flex-grow w-full overflow-hidden p-4 flex flex-col min-h-0"> 
+                    <div className="flex-grow w-full overflow-hidden p-4 flex flex-col min-h-0 items-center justify-center"> 
                         <AIModeView initialQuery={query} />
                     </div>
                 ) : (
