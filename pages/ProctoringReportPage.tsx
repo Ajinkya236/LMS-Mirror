@@ -43,7 +43,7 @@ const ProctoringReportPage: React.FC = () => {
     const openProofModal = (flagId: number, proofCount: number) => {
         // Generate a set of mock proof URLs for the selected flag
         const images = Array.from({ length: proofCount }, (_, i) => 
-            `https://picsum.photos/seed/${flagId}-${i + 100}/1200/900`
+            `https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&h=900&fit=crop&q=80`
         );
         setProofImages(images);
         setCurrentImageIndex(0);
@@ -83,7 +83,7 @@ const ProctoringReportPage: React.FC = () => {
                 <div className="flex flex-col md:flex-row gap-8 mb-10 bg-blue-50 p-8 rounded-2xl border border-blue-100 shadow-sm items-center">
                     <div className="flex-shrink-0">
                         <img 
-                            src="https://picsum.photos/id/177/200/200" 
+                            src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop&q=80" 
                             alt="Employee Profile" 
                             className="w-32 h-32 rounded-xl object-cover border-4 border-white shadow-sm"
                         />

@@ -6,6 +6,7 @@ import CourseRow from '../components/CourseRow';
 import TopicButton from '../components/TopicButton';
 import { ChevronLeftIcon, ChevronRightIcon, StarIcon, AwardIcon, MessageSquareIcon, Edit2Icon, SearchIcon } from '../components/Icons';
 import SkillsSelectionModal from '../components/SkillsSelectionModal';
+import AspiredRoleModal from '../components/AspiredRoleModal';
 
 const homeCarouselItems: CarouselItem[] = [
   {
@@ -15,7 +16,7 @@ const homeCarouselItems: CarouselItem[] = [
     description: 'Welcome to the New LMS! Quick tour to navigate and familiarize yourself with the key features of the platform. Discover how to access, track your progress, and utilize new tools designed to enhance your learning experience. Watch now to get started effortlessly!',
     media: {
       type: 'video',
-      src: 'https://picsum.photos/seed/tour/800/450',
+      src: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=450&fit=crop&q=80',
       alt: 'New LMS Tour Video',
     },
   },
@@ -26,7 +27,7 @@ const homeCarouselItems: CarouselItem[] = [
     description: 'Explore the cutting edge of Artificial Intelligence and its application in modern leadership and business strategy. This course is designed for executives and managers aiming to drive innovation.',
     media: {
       type: 'image',
-      src: 'https://picsum.photos/seed/ai/800/450',
+      src: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=450&fit=crop&q=80',
       alt: 'Advanced AI Course',
     },
   }
@@ -38,54 +39,54 @@ const generateMockCourses = (count: number, categoryPrefix: string): Course[] =>
     id: `${categoryPrefix}-${i}`,
     title: `${categoryPrefix} Topic ${i + 1}: Mastering the Skill`,
     provider: i % 2 === 0 ? 'Internal' : 'Coursera',
-    imageUrl: `https://picsum.photos/seed/${categoryPrefix}${i}/400/225`,
+    imageUrl: `https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=225&fit=crop&q=80`,
     tags: ['Online']
   }));
 };
 
 const topPicksCourses: Course[] = [
-    { id: 'tp-1', title: 'Cloud Fundamentals', provider: 'AWS Training', imageUrl: 'https://picsum.photos/seed/cloud/400/225', tags: ['Online'] },
-    { id: 'tp-2', title: 'API Security Basics', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/apisec/400/225', tags: ['Online'] },
-    { id: 'tp-3', title: 'Elasticsearch for Architects', provider: 'Elastic', imageUrl: 'https://picsum.photos/seed/elastic/400/225', tags: ['Online'] },
-    { id: 'tp-4', title: 'System Design Patterns', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/sysdesign/400/225', tags: ['Online'] },
-    { id: 'tp-5', title: 'Event-Driven Architecture', provider: 'Coursera', imageUrl: 'https://picsum.photos/seed/eda/400/225', tags: ['Online'] },
-    { id: 'tp-6', title: 'Kubernetes Advanced', provider: 'Cloud Native', imageUrl: 'https://picsum.photos/seed/k8s/400/225', tags: ['Online'] },
-    { id: 'tp-7', title: 'Designing Resilient Systems', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/resilient/400/225', tags: ['Online'] },
-    { id: 'tp-8', title: 'CI/CD at Scale', provider: 'GitLab', imageUrl: 'https://picsum.photos/seed/cicd/400/225', tags: ['Online'] },
-    { id: 'tp-9', title: 'OAuth Deep Dive', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/oauth/400/225', tags: ['Online'] },
-    { id: 'tp-10', title: 'High Scale Microservices', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/microservices/400/225', tags: ['Online'] },
+    { id: 'tp-1', title: 'Cloud Fundamentals', provider: 'AWS Training', imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=225&fit=crop&q=80', tags: ['Online'] },
+    { id: 'tp-2', title: 'API Security Basics', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=225&fit=crop&q=80', tags: ['Online'] },
+    { id: 'tp-3', title: 'Elasticsearch for Architects', provider: 'Elastic', imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=225&fit=crop&q=80', tags: ['Online'] },
+    { id: 'tp-4', title: 'System Design Patterns', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=225&fit=crop&q=80', tags: ['Online'] },
+    { id: 'tp-5', title: 'Event-Driven Architecture', provider: 'Coursera', imageUrl: 'https://images.unsplash.com/photo-1553877522-435f05697254?w=400&h=225&fit=crop&q=80', tags: ['Online'] },
+    { id: 'tp-6', title: 'Kubernetes Advanced', provider: 'Cloud Native', imageUrl: 'https://images.unsplash.com/photo-1553877522-435f05697254?w=400&h=225&fit=crop&q=80', tags: ['Online'] },
+    { id: 'tp-7', title: 'Designing Resilient Systems', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&h=225&fit=crop&q=80', tags: ['Online'] },
+    { id: 'tp-8', title: 'CI/CD at Scale', provider: 'GitLab', imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=225&fit=crop&q=80', tags: ['Online'] },
+    { id: 'tp-9', title: 'OAuth Deep Dive', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=225&fit=crop&q=80', tags: ['Online'] },
+    { id: 'tp-10', title: 'High Scale Microservices', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=225&fit=crop&q=80', tags: ['Online'] },
 ];
 
 const jobRoleCourses: Course[] = [
-    { id: 'jr-1', title: 'Enterprise Sales Excellence', provider: 'Salesforce Academy', imageUrl: 'https://picsum.photos/seed/sales1/400/225', tags: ['Sales', 'Enterprise'] },
-    { id: 'jr-2', title: 'Strategic Account Management', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/sales2/400/225', tags: ['Strategy', 'Accounts'] },
-    { id: 'jr-3', title: 'Revenue-Focused Territory Planning', provider: 'Coursera', imageUrl: 'https://picsum.photos/seed/sales3/400/225', tags: ['Revenue', 'Planning'] },
-    { id: 'jr-4', title: 'Key Client Stakeholder Management', provider: 'LinkedIn Learning', imageUrl: 'https://picsum.photos/seed/sales4/400/225', tags: ['Stakeholders', 'Management'] },
-    { id: 'jr-5', title: 'Contract & Commercial Fundamentals for Sales', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/sales5/400/225', tags: ['Legal', 'Commercial'] },
-    { id: 'jr-6', title: 'Consultative Selling for Digital B2B Products', provider: 'Udemy', imageUrl: 'https://picsum.photos/seed/sales6/400/225', tags: ['B2B', 'Selling'] },
-    { id: 'jr-7', title: 'Sales Pipeline & Forecasting Masterclass', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/sales7/400/225', tags: ['Analytics', 'Forecasting'] },
-    { id: 'jr-8', title: 'High-Impact Sales Presentation Skills', provider: 'Global Training', imageUrl: 'https://picsum.photos/seed/sales8/400/225', tags: ['Soft Skills', 'Presentation'] },
-    { id: 'jr-9', title: 'Winning RFPs and Large Deal Bids', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/sales9/400/225', tags: ['Bidding', 'RFP'] },
-    { id: 'jr-10', title: 'Enterprise Customer Success for Sales Leaders', provider: 'Coursera', imageUrl: 'https://picsum.photos/seed/sales10/400/225', tags: ['Customer Success', 'Leadership'] },
+    { id: 'jr-1', title: 'Enterprise Sales Excellence', provider: 'Salesforce Academy', imageUrl: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=400&h=225&fit=crop&q=80', tags: ['Sales', 'Enterprise'] },
+    { id: 'jr-2', title: 'Strategic Account Management', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=225&fit=crop&q=80', tags: ['Strategy', 'Accounts'] },
+    { id: 'jr-3', title: 'Revenue-Focused Territory Planning', provider: 'Coursera', imageUrl: 'https://images.unsplash.com/photo-1513258496099-48162023ac90?w=400&h=225&fit=crop&q=80', tags: ['Revenue', 'Planning'] },
+    { id: 'jr-4', title: 'Key Client Stakeholder Management', provider: 'LinkedIn Learning', imageUrl: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=225&fit=crop&q=80', tags: ['Stakeholders', 'Management'] },
+    { id: 'jr-5', title: 'Contract & Commercial Fundamentals for Sales', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400&h=225&fit=crop&q=80', tags: ['Legal', 'Commercial'] },
+    { id: 'jr-6', title: 'Consultative Selling for Digital B2B Products', provider: 'Udemy', imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=225&fit=crop&q=80', tags: ['B2B', 'Selling'] },
+    { id: 'jr-7', title: 'Sales Pipeline & Forecasting Masterclass', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=225&fit=crop&q=80', tags: ['Analytics', 'Forecasting'] },
+    { id: 'jr-8', title: 'High-Impact Sales Presentation Skills', provider: 'Global Training', imageUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&h=225&fit=crop&q=80', tags: ['Soft Skills', 'Presentation'] },
+    { id: 'jr-9', title: 'Winning RFPs and Large Deal Bids', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=225&fit=crop&q=80', tags: ['Bidding', 'RFP'] },
+    { id: 'jr-10', title: 'Enterprise Customer Success for Sales Leaders', provider: 'Coursera', imageUrl: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=225&fit=crop&q=80', tags: ['Customer Success', 'Leadership'] },
 ];
 
 const similarUsersCourses: Course[] = [
-    { id: 'sim-1', title: 'Mobile UX for Bharat Users', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/bharat/400/225', tags: ['Online', 'UX'] },
-    { id: 'sim-2', title: 'Design Systems at Scale', provider: 'Coursera', imageUrl: 'https://picsum.photos/seed/design-sys/400/225', tags: ['Online', 'Design'] },
-    { id: 'sim-3', title: 'Advanced Figma Mastery', provider: 'Udemy', imageUrl: 'https://picsum.photos/seed/figma/400/225', tags: ['Online', 'Tools'] },
-    { id: 'sim-4', title: 'Interaction Design for Apps', provider: 'LinkedIn Learning', imageUrl: 'https://picsum.photos/seed/interaction/400/225', tags: ['Online', 'Design'] },
-    { id: 'sim-5', title: 'UX Basics Certification', provider: 'Interaction Design Foundation', imageUrl: 'https://picsum.photos/seed/uxbasics/400/225', tags: ['Online', 'Certificate'] },
-    { id: 'sim-6', title: 'User Research Essentials', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/research/400/225', tags: ['Online', 'Research'] },
-    { id: 'sim-7', title: 'UX System Of Interactions', provider: 'Coursera', imageUrl: 'https://picsum.photos/seed/uxsys/400/225', tags: ['Online', 'Design'] },
-    { id: 'sim-8', title: 'Design Thinking', provider: 'Stanford', imageUrl: 'https://picsum.photos/seed/thinking/400/225', tags: ['Online', 'Process'] },
+    { id: 'sim-1', title: 'Mobile UX for Bharat Users', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=225&fit=crop&q=80', tags: ['Online', 'UX'] },
+    { id: 'sim-2', title: 'Design Systems at Scale', provider: 'Coursera', imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Design'] },
+    { id: 'sim-3', title: 'Advanced Figma Mastery', provider: 'Udemy', imageUrl: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Tools'] },
+    { id: 'sim-4', title: 'Interaction Design for Apps', provider: 'LinkedIn Learning', imageUrl: 'https://images.unsplash.com/photo-1553877522-435f05697254?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Design'] },
+    { id: 'sim-5', title: 'UX Basics Certification', provider: 'Interaction Design Foundation', imageUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Certificate'] },
+    { id: 'sim-6', title: 'User Research Essentials', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Research'] },
+    { id: 'sim-7', title: 'UX System Of Interactions', provider: 'Coursera', imageUrl: 'https://images.unsplash.com/photo-1553877522-435f05697254?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Design'] },
+    { id: 'sim-8', title: 'Design Thinking', provider: 'Stanford', imageUrl: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Process'] },
 ];
 
 const trendingCourses: Course[] = [
-    { id: 5, title: 'Code of Conduct', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/conduct/400/225', tags: ['Online', 'Mandatory'] },
-    { id: 6, title: 'Creating a Respectful Workplace', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/respect/400/225', tags: ['Online', 'Mandatory'] },
-    { id: 7, title: 'Anti Bribery Management System', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/bribery/400/225', tags: ['Online', 'Mandatory'] },
-    { id: 8, title: 'Cyber Security Awareness', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/cyber/400/225', tags: ['Online', 'Mandatory'] },
-    { id: 201, title: 'POSH Awareness', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/posh/400/225', tags: ['Online', 'Mandatory'] },
+    { id: 5, title: 'Code of Conduct', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Mandatory'] },
+    { id: 6, title: 'Creating a Respectful Workplace', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1497032205566-5089c1a73938?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Mandatory'] },
+    { id: 7, title: 'Anti Bribery Management System', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Mandatory'] },
+    { id: 8, title: 'Cyber Security Awareness', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1427504494785-3a9a2e443ee4?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Mandatory'] },
+    { id: 201, title: 'POSH Awareness', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=225&fit=crop&q=80', tags: ['Online', 'Mandatory'] },
 ];
 
 const skills: string[] = [
@@ -99,6 +100,8 @@ const HomePage: React.FC = () => {
   const [isSkillsModalOpen, setIsSkillsModalOpen] = useState(false);
   const [mySkills, setMySkills] = useState<string[]>(['Leadership', 'Data Analytics']);
   const [searchQuery, setSearchQuery] = useState('');
+  const [aspiredRole, setAspiredRole] = useState('Senior Engineer');
+  const [isAspiredRoleModalOpen, setIsAspiredRoleModalOpen] = useState(false);
   const navigate = useNavigate();
 
   // Automatic "Personalize your learning" popup has been disabled as requested.
@@ -219,7 +222,7 @@ const HomePage: React.FC = () => {
               <a href="#" className="px-3 py-1 text-sm font-medium text-r-blue border border-r-blue rounded-full hover:bg-r-blue-50">View all</a>
             </div>
             <div className="mt-4 flex items-center space-x-4 p-4 bg-r-gray-50 rounded-lg">
-              <img src="https://picsum.photos/seed/conduct/100/100" alt="Code of Conduct" className="w-20 h-20 rounded-lg object-cover" />
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80" alt="Code of Conduct" className="w-20 h-20 rounded-lg object-cover" />
               <div>
                 <p className="text-xs text-r-gray-500">INTERNAL</p>
                 <h3 className="font-heading font-semibold">Code of Conduct</h3>
@@ -268,24 +271,26 @@ const HomePage: React.FC = () => {
       <div className="space-y-4">
         <CourseRow title="Top picks for you" courses={topPicksCourses} />
         
-        {/* a. Based on Your Job Role */}
+        {/* a. For Your Aspired Role */}
         <CourseRow 
-            title="Based on Your Job Role" 
+            title={`For Your Aspired Role: ${aspiredRole}`} 
             courses={jobRoleCourses} 
             bgClass="bg-r-gray-50"
-        />
-
-        {/* b. For your next level Job */}
-        <CourseRow 
-            title="For your next level Job" 
-            courses={generateMockCourses(8, 'Leadership')} 
+            action={
+                <button 
+                    onClick={() => setIsAspiredRoleModalOpen(true)}
+                    className="flex items-center gap-1 text-sm font-medium text-r-gray-500 hover:text-r-blue transition-colors"
+                >
+                    <Edit2Icon className="w-3 h-3" /> Edit Role
+                </button>
+            }
         />
 
         {/* c. Because you've watched "Data Analytics" */}
         <CourseRow 
             title='Because you watched "Data Analytics"' 
             courses={generateMockCourses(8, 'Data Science')} 
-            bgClass="bg-r-gray-50"
+            bgClass="bg-white"
         />
 
         {/* d. Based on Skills you follow */}
@@ -352,6 +357,13 @@ const HomePage: React.FC = () => {
         onClose={() => setIsSkillsModalOpen(false)}
         onSubmit={handleSkillsSubmit}
         initialSkills={mySkills}
+      />
+
+      <AspiredRoleModal
+        isOpen={isAspiredRoleModalOpen}
+        onClose={() => setIsAspiredRoleModalOpen(false)}
+        currentRole={aspiredRole}
+        onSave={(role) => setAspiredRole(role)}
       />
     </div>
   );

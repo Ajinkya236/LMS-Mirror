@@ -54,7 +54,7 @@ const MentorPreferencesPage: React.FC = () => {
                 <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 mb-8">
                     <div className="flex flex-col md:flex-row gap-6">
                         <div className="flex-shrink-0">
-                            <img src="https://picsum.photos/seed/mentor1/150/150" alt="Profile" className="w-20 h-20 rounded-full object-cover border-2 border-gray-200" />
+                            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&q=80" alt="Profile" className="w-20 h-20 rounded-full object-cover border-2 border-gray-200" />
                         </div>
                         <div className="flex-grow">
                             <div className="flex justify-between items-center">

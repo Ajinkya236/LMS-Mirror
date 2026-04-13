@@ -25,11 +25,11 @@ const mockMenteePreferences: MenteePreferences = {
 const mockMenteeRequests: MentorshipRequest[] = [
     { 
         id: 'req2', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://picsum.photos/id/237/100/100'}, 
+        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Rohan Mehta', 
             title: 'Senior Product Manager', 
-            imageUrl: 'https://picsum.photos/seed/mentor2/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: '5002341',
                 email: 'rohan.mehta@ril.com',
@@ -50,11 +50,11 @@ const mockMenteeRequests: MentorshipRequest[] = [
     },
     { 
         id: 'req3', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://picsum.photos/id/237/100/100'}, 
+        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Anjali Desai', 
             title: 'Lead Architect', 
-            imageUrl: 'https://picsum.photos/seed/mentor3/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: '5008892',
                 email: 'anjali.desai@ril.com',
@@ -75,11 +75,11 @@ const mockMenteeRequests: MentorshipRequest[] = [
     },
     { 
         id: 'req_prog_pending', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://picsum.photos/id/237/100/100'}, 
+        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Tech Mentoring Program', 
             title: 'Group Mentoring', 
-            imageUrl: 'https://picsum.photos/seed/techprog/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'PROG-001',
                 email: 'learning@ril.com',
@@ -100,11 +100,11 @@ const mockMenteeRequests: MentorshipRequest[] = [
     },
     { 
         id: 'req_accepted', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://picsum.photos/id/237/100/100'}, 
+        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Sameer Khan', 
             title: 'Program Manager', 
-            imageUrl: 'https://picsum.photos/seed/mentor5/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: '5001122',
                 email: 'sameer.khan@ril.com',
@@ -124,11 +124,11 @@ const mockMenteeRequests: MentorshipRequest[] = [
     },
     { 
         id: 'req_prog_accepted', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://picsum.photos/id/237/100/100'}, 
+        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Data Science for All', 
             title: 'Group Mentoring Program', 
-            imageUrl: 'https://picsum.photos/seed/data/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'PROG-002',
                 email: 'learning@ril.com',
@@ -149,11 +149,11 @@ const mockMenteeRequests: MentorshipRequest[] = [
     },
     { 
         id: 'req_prog_rejected', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://picsum.photos/id/237/100/100'}, 
+        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Future Leaders Program', 
             title: 'Group Mentoring', 
-            imageUrl: 'https://picsum.photos/seed/future/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'PROG-003',
                 email: 'learning@ril.com',
@@ -181,7 +181,7 @@ const mockMenteeActiveMentorships: ActiveMentorship[] = [
         participant: { 
             name: 'Priya Sharma', 
             title: 'Director of Engineering', 
-            imageUrl: 'https://picsum.photos/seed/mentor1/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'E50012',
                 email: 'priya.sharma@ril.com',
@@ -202,7 +202,7 @@ const mockMenteeActiveMentorships: ActiveMentorship[] = [
 const mockMenteeActivePrograms: ActiveMentorship[] = [
     {
         id: 'prog_1o1_closed',
-        participant: { name: 'Executive Leadership', title: 'Mentoring Program', imageUrl: 'https://picsum.photos/seed/exec1/100/100' },
+        participant: { name: 'Executive Leadership', title: 'Mentoring Program', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         topic: 'Executive Presence',
         startDate: '2024-08-01',
         status: 'active',
@@ -211,7 +211,7 @@ const mockMenteeActivePrograms: ActiveMentorship[] = [
     },
     {
         id: 'prog_1o1_open',
-        participant: { name: 'Tech Leads Rising', title: 'Mentoring Program', imageUrl: 'https://picsum.photos/seed/tech1/100/100' },
+        participant: { name: 'Tech Leads Rising', title: 'Mentoring Program', imageUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop&q=80' },
         topic: 'System Design',
         startDate: '2024-08-05',
         status: 'active',
@@ -220,7 +220,7 @@ const mockMenteeActivePrograms: ActiveMentorship[] = [
     },
     {
         id: 'prog_group_open',
-        participant: { name: 'Data Science for All', title: 'Mentoring Program', imageUrl: 'https://picsum.photos/seed/data/100/100' },
+        participant: { name: 'Data Science for All', title: 'Mentoring Program', imageUrl: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&h=100&fit=crop&q=80' },
         topic: 'Machine Learning',
         startDate: '2024-08-10',
         status: 'active',
@@ -229,7 +229,7 @@ const mockMenteeActivePrograms: ActiveMentorship[] = [
     },
     {
         id: 'prog_group_closed',
-        participant: { name: 'Women in Tech Cohort 5', title: 'Mentoring Program', imageUrl: 'https://picsum.photos/seed/women/100/100' },
+        participant: { name: 'Women in Tech Cohort 5', title: 'Mentoring Program', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80' },
         topic: 'Career Growth',
         startDate: '2024-08-15',
         status: 'active',
@@ -241,14 +241,14 @@ const mockMenteeActivePrograms: ActiveMentorship[] = [
 const mockMenteeCompletedMentorships: ActiveMentorship[] = [
      {
         id: 'completed1',
-        participant: { name: 'Vikram Singh', title: 'Agile Coach', imageUrl: 'https://picsum.photos/seed/mentor4/100/100' },
+        participant: { name: 'Vikram Singh', title: 'Agile Coach', imageUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop&q=80' },
         topic: 'Project Management',
         startDate: '2024-01-15',
         status: 'completed'
     },
     {
         id: 'completed_prog_1',
-        participant: { name: 'Tech Mentoring Program', title: 'Group Mentoring Program', imageUrl: 'https://picsum.photos/seed/techprog/100/100' },
+        participant: { name: 'Tech Mentoring Program', title: 'Group Mentoring Program', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         topic: 'Leadership',
         startDate: '2023-11-01',
         status: 'completed'
@@ -347,7 +347,7 @@ const MenteeJourneyPage: React.FC = () => {
                 <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <div className="flex items-center space-x-4">
-                            <img className="h-16 w-16 rounded-full" src="https://picsum.photos/id/237/100/100" alt="Mentee" />
+                            <img className="h-16 w-16 rounded-full" src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80" alt="Mentee" />
                             <div>
                                 <h2 className="text-2xl font-heading font-bold text-r-gray-900">{preferences.name}</h2>
                                 <p className="text-sm text-r-gray-500">{preferences.grade}</p>

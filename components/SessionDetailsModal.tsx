@@ -17,9 +17,9 @@ const mockSessionAttendance = [
 ];
 
 const mockCourses: AssignedCourse[] = [
-    { id: 1, title: 'Leadership Principles', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/lead101/400/225', tags: ['Leadership'], status: 'In Progress' },
-    { id: 2, title: 'Advanced System Design', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/advsys/400/225', tags: ['Online'], status: 'Completed' },
-    { id: 3, title: 'Agile for Product Managers', provider: 'LinkedIn Learning', imageUrl: 'https://picsum.photos/seed/agilepm/400/225', tags: ['Agile'], status: 'Not Started' },
+    { id: 1, title: 'Leadership Principles', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1497032205566-5089c1a73938?w=400&h=225&fit=crop&q=80', tags: ['Leadership'], status: 'In Progress' },
+    { id: 2, title: 'Advanced System Design', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=225&fit=crop&q=80', tags: ['Online'], status: 'Completed' },
+    { id: 3, title: 'Agile for Product Managers', provider: 'LinkedIn Learning', imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=225&fit=crop&q=80', tags: ['Agile'], status: 'Not Started' },
 ];
 
 const StatusPill: React.FC<{ status: string }> = ({ status }) => {

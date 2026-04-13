@@ -36,21 +36,21 @@ const howItWorksVideos: VideoItem[] = [
         title: "Getting Started with Mentoring",
         description: "Learn how to set up your profile, define your preferences, and find the perfect mentor or mentee to kickstart your journey.",
         src: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        thumbnail: "https://picsum.photos/seed/guide1/800/450"
+        thumbnail: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=450&fit=crop&q=80"
     },
     {
         id: 2,
         title: "Scheduling & Conducting Sessions",
         description: "A step-by-step guide to proposing meeting times, setting agendas, and conducting effective mentorship sessions.",
         src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-        thumbnail: "https://picsum.photos/seed/guide2/800/450"
+        thumbnail: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&h=450&fit=crop&q=80"
     },
     {
         id: 3,
         title: "Tracking Goals & Progress",
         description: "Discover how to use the platform's tools to set SMART goals, track milestones, and provide meaningful feedback.",
         src: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        thumbnail: "https://picsum.photos/seed/guide3/800/450"
+        thumbnail: "https://images.unsplash.com/photo-1513258496099-48162023ac90?w=800&h=450&fit=crop&q=80"
     }
 ];
 

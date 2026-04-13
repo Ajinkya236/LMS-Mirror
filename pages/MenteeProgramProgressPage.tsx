@@ -13,7 +13,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
     'tech-mentoring': {
         id: 'tech-mentoring',
         title: 'Tech Mentoring Program',
-        mentor: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://picsum.photos/seed/mentor1/100/100' },
+        mentor: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         skillsCovered: ['Mentoring', 'Leadership', 'System Design'],
         mentoringType: 'Group',
         sessions: [
@@ -52,24 +52,24 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee1', 
                 name: 'Ravi Kumar', 
                 grade: 'Software Engineer II', 
-                imageUrl: 'https://picsum.photos/seed/mentee2/100/100', 
-                assignedCourses: [{id: 1, title: 'System Design 101', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/sys101/400/225', tags:['Online'], status: 'In Progress'}],
+                imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80', 
+                assignedCourses: [{id: 1, title: 'System Design 101', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=225&fit=crop&q=80', tags:['Online'], status: 'In Progress'}],
                 dossier: { employeeCode: 'EMP101', email: 'ravi.kumar@ril.com', grade: 'L4', location: 'Bangalore', experience: '4 Years', business: 'Jio', segment: 'Engineering', function: 'Technology' }
             },
             { 
                 id: 'mentee2', 
                 name: 'Sunita Singh', 
                 grade: 'Data Analyst', 
-                imageUrl: 'https://picsum.photos/seed/mentee3/100/100', 
-                assignedCourses: [{id: 1, title: 'System Design 101', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/sys101/400/225', tags:['Online'], status: 'Completed'}],
+                imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&q=80', 
+                assignedCourses: [{id: 1, title: 'System Design 101', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=225&fit=crop&q=80', tags:['Online'], status: 'Completed'}],
                 dossier: { employeeCode: 'EMP102', email: 'sunita.singh@ril.com', grade: 'L3', location: 'Mumbai', experience: '3 Years', business: 'Retail', segment: 'Analytics', function: 'Data' }
             },
             { 
                 id: 'mentee3', 
                 name: 'Amit Patel', 
                 grade: 'Intern', 
-                imageUrl: 'https://picsum.photos/seed/mentee5/100/100', 
-                assignedCourses: [{id: 1, title: 'System Design 101', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/sys101/400/225', tags:['Online'], status: 'Not Started'}],
+                imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&q=80', 
+                assignedCourses: [{id: 1, title: 'System Design 101', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=225&fit=crop&q=80', tags:['Online'], status: 'Not Started'}],
                 dossier: { employeeCode: 'EMP103', email: 'amit.patel@ril.com', grade: 'Intern', location: 'Pune', experience: '0 Years', business: 'Jio', segment: 'Engineering', function: 'Technology' }
             },
         ],
@@ -78,7 +78,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
     'active_prog_1': {
         id: 'active_prog_1',
         title: 'Data Science for All',
-        mentor: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://picsum.photos/seed/mentor1/100/100' },
+        mentor: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         skillsCovered: ['Machine Learning', 'Python', 'Data Visualization'],
         mentoringType: 'One-on-One',
         sessions: [
@@ -117,9 +117,9 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee_ajinkya', 
                 name: 'Ajinkya Patil', 
                 grade: 'Senior Engineer', 
-                imageUrl: 'https://picsum.photos/id/237/100/100', 
+                imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80', 
                 assignedCourses: [
-                    {id: 3, title: 'Machine Learning A-Z', provider: 'Udemy', imageUrl: 'https://picsum.photos/seed/mlaz/400/225', tags:['Online'], status: 'In Progress'}
+                    {id: 3, title: 'Machine Learning A-Z', provider: 'Udemy', imageUrl: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=400&h=225&fit=crop&q=80', tags:['Online'], status: 'In Progress'}
                 ],
                 dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             },
@@ -127,9 +127,9 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee_rahul', 
                 name: 'Rahul Verma', 
                 grade: 'Associate Product Manager', 
-                imageUrl: 'https://picsum.photos/seed/mentee2/100/100', 
+                imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80', 
                 assignedCourses: [
-                    {id: 4, title: 'Python for Beginners', provider: 'Coursera', imageUrl: 'https://picsum.photos/seed/py101/400/225', tags:['Online'], status: 'In Progress'}
+                    {id: 4, title: 'Python for Beginners', provider: 'Coursera', imageUrl: 'https://images.unsplash.com/photo-1513258496099-48162023ac90?w=400&h=225&fit=crop&q=80', tags:['Online'], status: 'In Progress'}
                 ], 
                 attendance: 'present',
                 dossier: { employeeCode: 'E20045', email: 'rahul.verma@ril.com', grade: 'L4', location: 'Bangalore', experience: '3 Years', business: 'Reliance Retail', segment: 'Product', function: 'Product Management' }
@@ -140,7 +140,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
     'completed_prog_1': {
         id: 'completed_prog_1',
         title: 'Tech Mentoring Program (Completed)',
-        mentor: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://picsum.photos/seed/mentor1/100/100' },
+        mentor: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         skillsCovered: ['Leadership', 'Project Management'],
         mentoringType: 'Group',
         sessions: [
@@ -165,9 +165,9 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee_ajinkya', 
                 name: 'Ajinkya Patil', 
                 grade: 'Senior Engineer', 
-                imageUrl: 'https://picsum.photos/id/237/100/100', 
+                imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80', 
                 assignedCourses: [
-                    {id: 5, title: 'Agile Leadership', provider: 'LinkedIn Learning', imageUrl: 'https://picsum.photos/seed/agilelead/400/225', tags:['Online'], status: 'Completed'}
+                    {id: 5, title: 'Agile Leadership', provider: 'LinkedIn Learning', imageUrl: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=400&h=225&fit=crop&q=80', tags:['Online'], status: 'Completed'}
                 ],
                 dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             },
@@ -177,7 +177,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
     'prog_1o1_closed': {
         id: 'prog_1o1_closed',
         title: 'Executive Leadership',
-        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://picsum.photos/seed/mentor1/100/100' },
+        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         skillsCovered: ['Leadership', 'Strategy'],
         mentoringType: 'One-on-One',
         sessions: [
@@ -214,7 +214,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee_ajinkya',
                 name: 'Ajinkya Patil',
                 grade: 'Senior Engineer',
-                imageUrl: 'https://picsum.photos/id/237/100/100',
+                imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
                 dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             }
@@ -224,7 +224,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
     'prog_1o1_open': {
         id: 'prog_1o1_open',
         title: 'Tech Leads Rising',
-        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://picsum.photos/seed/mentor1/100/100' },
+        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         skillsCovered: ['System Design', 'Team Management'],
         mentoringType: 'One-on-One',
         sessions: [
@@ -247,7 +247,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee_ajinkya',
                 name: 'Ajinkya Patil',
                 grade: 'Senior Engineer',
-                imageUrl: 'https://picsum.photos/id/237/100/100',
+                imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
                 dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             }
@@ -257,7 +257,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
     'prog_group_open': {
         id: 'prog_group_open',
         title: 'Data Science for All',
-        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://picsum.photos/seed/mentor1/100/100' },
+        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         skillsCovered: ['Machine Learning', 'Data Analysis'],
         mentoringType: 'Group',
         sessions: [
@@ -280,7 +280,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee_ajinkya',
                 name: 'Ajinkya Patil',
                 grade: 'Senior Engineer',
-                imageUrl: 'https://picsum.photos/id/237/100/100',
+                imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
                 dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             }
@@ -290,7 +290,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
     'prog_group_closed': {
         id: 'prog_group_closed',
         title: 'Women in Tech Cohort 5',
-        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://picsum.photos/seed/mentor1/100/100' },
+        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         skillsCovered: ['Career Growth', 'Networking'],
         mentoringType: 'Group',
         sessions: [
@@ -313,7 +313,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee_ajinkya',
                 name: 'Ajinkya Patil',
                 grade: 'Senior Engineer',
-                imageUrl: 'https://picsum.photos/id/237/100/100',
+                imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
                 dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             }
@@ -323,7 +323,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
     'mentor_prog_1o1_closed': {
         id: 'mentor_prog_1o1_closed',
         title: 'Senior Mgmt Fast Track',
-        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://picsum.photos/seed/mentor1/100/100' },
+        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         skillsCovered: ['Strategic Leadership'],
         mentoringType: 'One-on-One',
         sessions: [
@@ -346,7 +346,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee_rahul',
                 name: 'Rahul Verma',
                 grade: 'Senior Manager',
-                imageUrl: 'https://picsum.photos/seed/mentee2/100/100',
+                imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
                 dossier: { employeeCode: 'E20045', email: 'rahul.verma@ril.com', grade: 'L4', location: 'Bangalore', experience: '3 Years', business: 'Reliance Retail', segment: 'Product', function: 'Product Management' }
             }
@@ -356,7 +356,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
     'mentor_prog_1o1_open': {
         id: 'mentor_prog_1o1_open',
         title: 'Cloud Architecture',
-        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://picsum.photos/seed/mentor1/100/100' },
+        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         skillsCovered: ['Cloud Native'],
         mentoringType: 'One-on-One',
         sessions: [
@@ -379,7 +379,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee_sunita',
                 name: 'Sunita Singh',
                 grade: 'Architect',
-                imageUrl: 'https://picsum.photos/seed/mentee3/100/100',
+                imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
                 dossier: { employeeCode: 'EMP102', email: 'sunita.singh@ril.com', grade: 'L3', location: 'Mumbai', experience: '3 Years', business: 'Retail', segment: 'Analytics', function: 'Data' }
             }
@@ -389,7 +389,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
     'mentor_prog_group_open': {
         id: 'mentor_prog_group_open',
         title: 'Agile Transformation',
-        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://picsum.photos/seed/mentor1/100/100' },
+        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         skillsCovered: ['Agile'],
         mentoringType: 'Group',
         sessions: [
@@ -412,7 +412,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee1',
                 name: 'Dev 1',
                 grade: 'Dev',
-                imageUrl: 'https://picsum.photos/seed/m1/100/100',
+                imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
                 dossier: { employeeCode: 'EMP201', email: 'dev1@ril.com', grade: 'L2', location: 'Remote', experience: '1 Year', business: 'Jio', segment: 'Engineering', function: 'Dev' }
             },
@@ -420,7 +420,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee2',
                 name: 'Dev 2',
                 grade: 'Dev',
-                imageUrl: 'https://picsum.photos/seed/m2/100/100',
+                imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
                 dossier: { employeeCode: 'EMP202', email: 'dev2@ril.com', grade: 'L2', location: 'Remote', experience: '1.5 Years', business: 'Jio', segment: 'Engineering', function: 'Dev' }
             }
@@ -430,7 +430,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
     'mentor_prog_group_closed': {
         id: 'mentor_prog_group_closed',
         title: 'High Potential Leaders',
-        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://picsum.photos/seed/mentor1/100/100' },
+        mentor: { name: 'Priya Sharma', title: 'Director', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         skillsCovered: ['Organizational Change'],
         mentoringType: 'Group',
         sessions: [
@@ -453,7 +453,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 id: 'mentee_lead',
                 name: 'Lead 1',
                 grade: 'Lead',
-                imageUrl: 'https://picsum.photos/seed/l1/100/100',
+                imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
                 dossier: { employeeCode: 'EMP301', email: 'lead1@ril.com', grade: 'L5', location: 'Delhi', experience: '7 Years', business: 'Jio', segment: 'Sales', function: 'Leadership' }
             }

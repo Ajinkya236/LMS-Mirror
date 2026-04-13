@@ -14,14 +14,14 @@ import FilterDropdown from '../components/FilterDropdown';
 import SendRequestModal from '../components/SendRequestModal';
 
 const mockSearchItems: MentorSearchItem[] = [
-    { id: 'leadership', title: 'Leadership', type: 'topic', imageUrl: 'https://picsum.photos/seed/leadership/400/225', description: 'Develop your leadership skills and guide teams effectively.' },
-    { id: 'tech-mentoring', title: 'Tech Mentoring Program', type: 'program', imageUrl: 'https://picsum.photos/seed/techprog/400/225', description: 'A structured program for aspiring tech leaders.', isAvailable: true, proficiencyLevel: 'Level 1 - Awareness', duration: '2 Hour(s)', creditHours: '2 Hour(s)', contactPerson: { name: 'Program Manager', email: 'learningoperations@ril.com'}, academy: 'HR Academy', location: 'Mumbai', assignedOn: '26-06-2025', learningObjectives: ['Objective 1', 'Objective 2'], skillsCovered: ['Mentoring', 'Leadership'], isShareable: true },
-    { id: 'project-management', title: 'Project Management', type: 'topic', imageUrl: 'https://picsum.photos/seed/pm/400/225', description: 'Master the art of managing projects and delivering results.' },
-    { id: 'communication', title: 'Communication Skills', type: 'topic', imageUrl: 'https://picsum.photos/seed/comm/400/225', description: 'Enhance your verbal and written communication abilities.' },
-    { id: 'career-growth', title: 'Career Growth', type: 'topic', imageUrl: 'https://picsum.photos/seed/career/400/225', description: 'Navigate your career path and achieve your professional goals.' },
-    { id: 'future-leaders', title: 'Future Leaders Program', type: 'program', imageUrl: 'https://picsum.photos/seed/future/400/225', description: 'Accelerated development for high-potential individuals.', isAvailable: false, proficiencyLevel: 'Level 3 - Expert', duration: '6 Month(s)', creditHours: '40 Hour(s)', contactPerson: { name: 'Program Lead', email: 'leaders@ril.com'}, academy: 'Leadership Academy', location: 'Bangalore', assignedOn: 'N/A', learningObjectives: ['Strategic Thinking', 'Change Management'], skillsCovered: ['Strategy', 'Communication'], isShareable: false },
-    ...Array.from({ length: 10 }, (_, i) => ({ id: `program-${i}`, title: `Growth Program ${i + 1}`, type: 'program' as const, imageUrl: `https://picsum.photos/seed/gprog${i}/400/225`, description: `Description for growth program ${i+1}.`, isAvailable: i % 2 === 0, academy: i % 3 === 0 ? 'HR Academy' : 'Tech Academy', location: i % 2 === 0 ? 'Mumbai' : 'Delhi', isShareable: true })),
-    { id: 'data-science', title: 'Data Science', type: 'topic', imageUrl: 'https://picsum.photos/seed/data/400/225', description: 'Unlock insights from data.' },
+    { id: 'leadership', title: 'Leadership', type: 'topic', imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=225&fit=crop&q=80', description: 'Develop your leadership skills and guide teams effectively.' },
+    { id: 'tech-mentoring', title: 'Tech Mentoring Program', type: 'program', imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop&q=80', description: 'A structured program for aspiring tech leaders.', isAvailable: true, proficiencyLevel: 'Level 1 - Awareness', duration: '2 Hour(s)', creditHours: '2 Hour(s)', contactPerson: { name: 'Program Manager', email: 'learningoperations@ril.com'}, academy: 'HR Academy', location: 'Mumbai', assignedOn: '26-06-2025', learningObjectives: ['Objective 1', 'Objective 2'], skillsCovered: ['Mentoring', 'Leadership'], isShareable: true },
+    { id: 'project-management', title: 'Project Management', type: 'topic', imageUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&h=225&fit=crop&q=80', description: 'Master the art of managing projects and delivering results.' },
+    { id: 'communication', title: 'Communication Skills', type: 'topic', imageUrl: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=225&fit=crop&q=80', description: 'Enhance your verbal and written communication abilities.' },
+    { id: 'career-growth', title: 'Career Growth', type: 'topic', imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=225&fit=crop&q=80', description: 'Navigate your career path and achieve your professional goals.' },
+    { id: 'future-leaders', title: 'Future Leaders Program', type: 'program', imageUrl: 'https://images.unsplash.com/photo-1513258496099-48162023ac90?w=400&h=225&fit=crop&q=80', description: 'Accelerated development for high-potential individuals.', isAvailable: false, proficiencyLevel: 'Level 3 - Expert', duration: '6 Month(s)', creditHours: '40 Hour(s)', contactPerson: { name: 'Program Lead', email: 'leaders@ril.com'}, academy: 'Leadership Academy', location: 'Bangalore', assignedOn: 'N/A', learningObjectives: ['Strategic Thinking', 'Change Management'], skillsCovered: ['Strategy', 'Communication'], isShareable: false },
+    ...Array.from({ length: 10 }, (_, i) => ({ id: `program-${i}`, title: `Growth Program ${i + 1}`, type: 'program' as const, imageUrl: `https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=225&fit=crop&q=80`, description: `Description for growth program ${i+1}.`, isAvailable: i % 2 === 0, academy: i % 3 === 0 ? 'HR Academy' : 'Tech Academy', location: i % 2 === 0 ? 'Mumbai' : 'Delhi', isShareable: true })),
+    { id: 'data-science', title: 'Data Science', type: 'topic', imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=225&fit=crop&q=80', description: 'Unlock insights from data.' },
 ];
 
 const allMentors: { [topicId: string]: Mentor[] } = {
@@ -30,7 +30,7 @@ const allMentors: { [topicId: string]: Mentor[] } = {
         id: 1, 
         name: 'Priya Sharma', 
         title: 'Director of Engineering', 
-        imageUrl: 'https://picsum.photos/seed/mentor1/200/200', 
+        imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop&q=80', 
         isAvailable: true, 
         expertise: ['Leadership', 'Team Building'], 
         mentoringMeaning: 'Guiding others to unlock their potential.', 
@@ -49,7 +49,7 @@ const allMentors: { [topicId: string]: Mentor[] } = {
         id: 2, 
         name: 'Rohan Mehta', 
         title: 'Senior Product Manager', 
-        imageUrl: 'https://picsum.photos/seed/mentor2/200/200', 
+        imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop&q=80', 
         isAvailable: false, 
         expertise: ['Leadership', 'Product Strategy'], 
         mentoringMeaning: 'Sharing experiences to accelerate growth.', 
@@ -68,7 +68,7 @@ const allMentors: { [topicId: string]: Mentor[] } = {
         id: 3, 
         name: 'Anjali Desai', 
         title: 'Lead Architect', 
-        imageUrl: 'https://picsum.photos/seed/mentor3/200/200', 
+        imageUrl: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&h=200&fit=crop&q=80', 
         isAvailable: true, 
         expertise: ['Leadership', 'Technical Leadership'], 
         mentoringMeaning: 'Building the next generation of technical leaders.', 
@@ -85,15 +85,15 @@ const allMentors: { [topicId: string]: Mentor[] } = {
     },
   ],
   'project-management': [
-     { id: 4, name: 'Vikram Singh', title: 'Agile Coach', imageUrl: 'https://picsum.photos/seed/mentor4/200/200', isAvailable: true, expertise: ['Project Management', 'Agile'], mentoringMeaning: 'Empowering teams to deliver value effectively.', idealMentee: 'Someone open to new methodologies.', business: 'Reliance Retail', vertical: 'Agile COE', employeeCode: '5003456', email: 'vikram.singh@ril.com', grade: 'L6', location: 'Bangalore', experience: '9 Years', segment: 'Agile', function: 'Coaching' },
-     { id: 5, name: 'Sameer Khan', title: 'Program Manager', imageUrl: 'https://picsum.photos/seed/mentor5/200/200', isAvailable: true, expertise: ['Project Management', 'Risk Management'], mentoringMeaning: 'Navigating complexity to achieve strategic goals.', idealMentee: 'A detail-oriented and proactive planner.', business: 'Jio Platforms', vertical: 'Program Mgmt', employeeCode: '5007890', email: 'sameer.khan@ril.com', grade: 'L5', location: 'Delhi', experience: '7 Years', segment: 'PMO', function: 'Program Management' },
+     { id: 4, name: 'Vikram Singh', title: 'Agile Coach', imageUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&h=200&fit=crop&q=80', isAvailable: true, expertise: ['Project Management', 'Agile'], mentoringMeaning: 'Empowering teams to deliver value effectively.', idealMentee: 'Someone open to new methodologies.', business: 'Reliance Retail', vertical: 'Agile COE', employeeCode: '5003456', email: 'vikram.singh@ril.com', grade: 'L6', location: 'Bangalore', experience: '9 Years', segment: 'Agile', function: 'Coaching' },
+     { id: 5, name: 'Sameer Khan', title: 'Program Manager', imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&q=80', isAvailable: true, expertise: ['Project Management', 'Risk Management'], mentoringMeaning: 'Navigating complexity to achieve strategic goals.', idealMentee: 'A detail-oriented and proactive planner.', business: 'Jio Platforms', vertical: 'Program Mgmt', employeeCode: '5007890', email: 'sameer.khan@ril.com', grade: 'L5', location: 'Delhi', experience: '7 Years', segment: 'PMO', function: 'Program Management' },
   ],
   'communication': [
-     { id: 6, name: 'Isha Verma', title: 'Corporate Trainer', imageUrl: 'https://picsum.photos/seed/mentor6/200/200', isAvailable: false, expertise: ['Communication'], mentoringMeaning: 'Helping others find their voice and communicate with impact.', idealMentee: 'An active listener and dedicated practitioner.', business: 'Reliance Foundation', vertical: 'Training', employeeCode: '5002345', email: 'isha.verma@ril.com', grade: 'L5', location: 'Mumbai', experience: '6 Years', segment: 'L&D', function: 'Training' },
+     { id: 6, name: 'Isha Verma', title: 'Corporate Trainer', imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&q=80', isAvailable: false, expertise: ['Communication'], mentoringMeaning: 'Helping others find their voice and communicate with impact.', idealMentee: 'An active listener and dedicated practitioner.', business: 'Reliance Foundation', vertical: 'Training', employeeCode: '5002345', email: 'isha.verma@ril.com', grade: 'L5', location: 'Mumbai', experience: '6 Years', segment: 'L&D', function: 'Training' },
   ],
   'career-growth': [
-      { id: 7, name: 'Aditya Rao', title: 'HR Business Partner', imageUrl: 'https://picsum.photos/seed/mentor7/200/200', isAvailable: true, expertise: ['Career Growth'], mentoringMeaning: 'Partnering with individuals to build fulfilling careers.', idealMentee: 'Someone with a clear vision and drive.', business: 'Reliance Retail', vertical: 'HR', employeeCode: '5006789', email: 'aditya.rao@ril.com', grade: 'L6', location: 'Hyderabad', experience: '8 Years', segment: 'Retail HR', function: 'HR' },
-      { id: 8, name: 'Neha Reddy', title: 'Talent Development Head', imageUrl: 'https://picsum.photos/seed/mentor8/200/200', isAvailable: true, expertise: ['Career Growth'], mentoringMeaning: 'Creating pathways for professional development.', idealMentee: 'A lifelong learner.', business: 'Jio Platforms', vertical: 'Talent', employeeCode: '5001122', email: 'neha.reddy@ril.com', grade: 'L8', location: 'Mumbai', experience: '15 Years', segment: 'Corporate', function: 'Talent' },
+      { id: 7, name: 'Aditya Rao', title: 'HR Business Partner', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&q=80', isAvailable: true, expertise: ['Career Growth'], mentoringMeaning: 'Partnering with individuals to build fulfilling careers.', idealMentee: 'Someone with a clear vision and drive.', business: 'Reliance Retail', vertical: 'HR', employeeCode: '5006789', email: 'aditya.rao@ril.com', grade: 'L6', location: 'Hyderabad', experience: '8 Years', segment: 'Retail HR', function: 'HR' },
+      { id: 8, name: 'Neha Reddy', title: 'Talent Development Head', imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop&q=80', isAvailable: true, expertise: ['Career Growth'], mentoringMeaning: 'Creating pathways for professional development.', idealMentee: 'A lifelong learner.', business: 'Jio Platforms', vertical: 'Talent', employeeCode: '5001122', email: 'neha.reddy@ril.com', grade: 'L8', location: 'Mumbai', experience: '15 Years', segment: 'Corporate', function: 'Talent' },
   ]
 };
 

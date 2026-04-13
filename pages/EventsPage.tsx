@@ -171,7 +171,7 @@ const EventsPage: React.FC = () => {
             type="Classroom Training"
             venue="NHQ"
             mode="Hybrid"
-            imageUrl="https://picsum.photos/seed/csd14/400/200"
+            imageUrl="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=200&fit=crop&q=80"
           />
 
           <EventCard 
@@ -183,7 +183,7 @@ const EventsPage: React.FC = () => {
             type="Classroom Training"
             venue="NHQ"
             mode="Virtual"
-            imageUrl="https://picsum.photos/seed/csd9/400/200"
+            imageUrl="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=400&h=200&fit=crop&q=80"
           />
 
           <EventCard 

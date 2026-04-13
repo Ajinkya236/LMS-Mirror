@@ -11,84 +11,84 @@ const mockLMSCatalog: Course[] = [
         id: 'res1',
         title: 'LinkedIn Co-Founder Reid Hoffman on How to Supercharge Your Career with AI',
         provider: 'LinkedIn Learning',
-        imageUrl: 'https://picsum.photos/seed/reid/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=225&fit=crop&q=80',
         tags: ['Online', 'AI', 'Career']
     },
     {
         id: 'res2',
         title: 'Orlando Magic Co-Founder Pat Williams (Thirty Minute Mentors)',
         provider: 'LinkedIn Learning',
-        imageUrl: 'https://picsum.photos/seed/pat/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=225&fit=crop&q=80',
         tags: ['Online', 'Mentoring']
     },
     {
         id: 'res4',
         title: 'Co-Management, Updates, Reporting & Troubleshooting',
         provider: 'Coursera',
-        imageUrl: 'https://picsum.photos/seed/comanage/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=400&h=225&fit=crop&q=80',
         tags: ['Online', 'Management']
     },
     {
         id: 'res5',
         title: 'Digital Strategies: Managing Sociotechnological Co-Evolution',
         provider: 'Coursera',
-        imageUrl: 'https://picsum.photos/seed/digital/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=225&fit=crop&q=80',
         tags: ['Online', 'Strategy']
     },
     {
         id: 'ai-1',
         title: 'Generative AI for Business Leaders',
         provider: 'Udemy',
-        imageUrl: 'https://picsum.photos/seed/genai-biz/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=400&h=225&fit=crop&q=80',
         tags: ['AI', 'Leadership']
     },
     {
         id: 'ai-2',
         title: 'Python for Data Science and AI',
         provider: 'Coursera',
-        imageUrl: 'https://picsum.photos/seed/python-ai/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=225&fit=crop&q=80',
         tags: ['AI', 'Data Science', 'Python']
     },
     {
         id: 'lead-1',
         title: 'Strategic Leadership in a Volatile World',
         provider: 'Harvard',
-        imageUrl: 'https://picsum.photos/seed/strat-lead/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=225&fit=crop&q=80',
         tags: ['Leadership', 'Strategy']
     },
     {
         id: 'lead-2',
         title: 'Emotional Intelligence at Work',
         provider: 'Internal',
-        imageUrl: 'https://picsum.photos/seed/eq-work/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1497032205566-5089c1a73938?w=400&h=225&fit=crop&q=80',
         tags: ['Leadership', 'Soft Skills']
     },
     {
         id: 'tech-1',
         title: 'Advanced React Patterns',
         provider: 'Frontend Masters',
-        imageUrl: 'https://picsum.photos/seed/react-adv/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&h=225&fit=crop&q=80',
         tags: ['Technology', 'React']
     },
     {
         id: 'tech-2',
         title: 'System Design for Large Scale Systems',
         provider: 'Internal',
-        imageUrl: 'https://picsum.photos/seed/sys-design/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=225&fit=crop&q=80',
         tags: ['Technology', 'System Design']
     },
     {
         id: 'data-1',
         title: 'Data Visualization with Tableau',
         provider: 'Coursera',
-        imageUrl: 'https://picsum.photos/seed/tableau/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=225&fit=crop&q=80',
         tags: ['Data', 'Visualization']
     },
     {
         id: 'data-2',
         title: 'SQL for Data Analysis',
         provider: 'Udacity',
-        imageUrl: 'https://picsum.photos/seed/sql-data/400/225',
+        imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=225&fit=crop&q=80',
         tags: ['Data', 'SQL']
     }
 ];
@@ -1336,7 +1336,7 @@ const SearchResultsPage: React.FC = () => {
                         </div>
                     </div>
                 ) : activeTab === 'ai' ? (
-                    <div className="flex-grow w-full overflow-hidden p-4"> 
+                    <div className="flex-grow w-full overflow-hidden p-4 flex flex-col min-h-0"> 
                         <AIModeView initialQuery={query} />
                     </div>
                 ) : (

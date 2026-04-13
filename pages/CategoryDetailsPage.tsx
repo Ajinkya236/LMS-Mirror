@@ -24,7 +24,7 @@ const CategoryDetailsPage: React.FC = () => {
             id: `${prefix.toLowerCase().replace(/\s/g, '-')}-${Date.now()}-${i}`,
             title: `${prefix} Topic ${i + 1}: Advanced Concepts`,
             provider: i % 2 === 0 ? 'Internal' : 'Coursera',
-            imageUrl: `https://picsum.photos/seed/${prefix}${i}/400/225`,
+            imageUrl: `https://images.unsplash.com/photo-1427504494785-3a9a2e443ee4?w=400&h=225&fit=crop&q=80`,
             tags: ['Online']
         }));
     };

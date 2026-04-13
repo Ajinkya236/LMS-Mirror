@@ -19,7 +19,7 @@ const mockEngagements: { [id: string]: ActiveMentorship } = {
         participant: { 
             name: 'Priya Sharma', 
             title: 'Director of Engineering', 
-            imageUrl: 'https://picsum.photos/seed/mentor1/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'E50012',
                 email: 'priya.sharma@ril.com',
@@ -41,7 +41,7 @@ const mockEngagements: { [id: string]: ActiveMentorship } = {
             { id: 's4', title: 'Team Leadership Plan Review', category: 'Goal Setting', startTime: '2024-08-12T11:00:00Z', endTime: '2024-08-12T12:00:00Z', status: 'upcoming', agenda: 'Review the draft of the team leadership plan.'},
         ],
         journal: [{ date: '2024-07-23', note: 'Reflecting on the first call, I need to focus on stakeholder communication.' }],
-        assignedCourses: [{ id: 101, title: 'Leadership Principles', provider: 'Internal', imageUrl: 'https://picsum.photos/seed/lead101/400/225', tags: ['Leadership'], status: 'In Progress' }],
+        assignedCourses: [{ id: 101, title: 'Leadership Principles', provider: 'Internal', imageUrl: 'https://images.unsplash.com/photo-1497032205566-5089c1a73938?w=400&h=225&fit=crop&q=80', tags: ['Leadership'], status: 'In Progress' }],
         goals: ['Improve stakeholder communication', 'Develop a team leadership plan', 'Prepare for senior role interviews']
     },
     'active2': {
@@ -49,7 +49,7 @@ const mockEngagements: { [id: string]: ActiveMentorship } = {
         participant: { 
             name: 'Rahul Verma', 
             grade: 'Associate Product Manager', 
-            imageUrl: 'https://picsum.photos/seed/mentee2/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'E20045',
                 email: 'rahul.verma@ril.com',
@@ -70,21 +70,21 @@ const mockEngagements: { [id: string]: ActiveMentorship } = {
         ],
         journal: [],
         assignedCourses: [
-            { id: 201, title: 'Product Management Fundamentals', provider: 'Coursera', imageUrl: 'https://picsum.photos/seed/pm101/400/225', tags: ['Product'], status: 'Completed' },
-            { id: 202, title: 'Agile for Product Managers', provider: 'LinkedIn Learning', imageUrl: 'https://picsum.photos/seed/agilepm/400/225', tags: ['Agile'], status: 'In Progress' },
+            { id: 201, title: 'Product Management Fundamentals', provider: 'Coursera', imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=400&h=225&fit=crop&q=80', tags: ['Product'], status: 'Completed' },
+            { id: 202, title: 'Agile for Product Managers', provider: 'LinkedIn Learning', imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=225&fit=crop&q=80', tags: ['Agile'], status: 'In Progress' },
         ],
         goals: ['Improve PRD writing skills', 'Learn prioritization techniques']
     },
     'completed1': {
         id: 'completed1',
-        participant: { name: 'Rohan Mehta', title: 'Senior Product Manager', imageUrl: 'https://picsum.photos/seed/mentor2/100/100' },
+        participant: { name: 'Rohan Mehta', title: 'Senior Product Manager', imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&q=80' },
         topic: 'Product Strategy',
         startDate: '2024-01-10',
         status: 'completed'
     },
     'completed2': {
         id: 'completed2',
-        participant: { name: 'Anika Singh', grade: 'Junior Developer', imageUrl: 'https://picsum.photos/seed/mentee3/100/100' },
+        participant: { name: 'Anika Singh', grade: 'Junior Developer', imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&q=80' },
         topic: 'Onboarding',
         startDate: '2024-02-01',
         status: 'completed'
@@ -164,7 +164,7 @@ const MentorshipEngagementPage: React.FC = () => {
         : { 
             name: 'Ajinkya Patil', 
             title: 'Senior Engineer', 
-            imageUrl: 'https://picsum.photos/id/237/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'EMP12345',
                 email: 'ajinkya.patil@ril.com',

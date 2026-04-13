@@ -23,8 +23,8 @@ const mockCourseData = {
         }
     ],
     relatedCourses: [
-        { id: 'rel1', title: 'Operating Systems and You: Becoming a Power User', provider: 'LinkedIn Learning', duration: '40m', image: 'https://picsum.photos/seed/os/300/200' },
-        { id: 'rel2', title: 'Clean Data in SQL using MySQL Workbench', provider: 'LinkedIn Learning', duration: '40m', image: 'https://picsum.photos/seed/sql/300/200' }
+        { id: 'rel1', title: 'Operating Systems and You: Becoming a Power User', provider: 'LinkedIn Learning', duration: '40m', image: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=300&h=200&fit=crop&q=80' },
+        { id: 'rel2', title: 'Clean Data in SQL using MySQL Workbench', provider: 'LinkedIn Learning', duration: '40m', image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=300&h=200&fit=crop&q=80' }
     ]
 };
 

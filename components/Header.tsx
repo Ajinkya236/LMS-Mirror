@@ -159,7 +159,7 @@ const Header: React.FC = () => {
                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                 className="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-r-blue transition-transform active:scale-95"
               >
-                <img className="h-8 w-8 rounded-full object-cover" src="https://picsum.photos/id/177/100/100" alt="User" />
+                <img className="h-8 w-8 rounded-full object-cover" src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&q=80" alt="User" />
                 <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-green-400 ring-2 ring-nav-blue"></span>
               </button>
 
@@ -173,7 +173,7 @@ const Header: React.FC = () => {
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl transition-all ${currentRole === 'employee' ? 'bg-blue-50 ring-1 ring-r-blue/20' : 'hover:bg-gray-50'}`}
                     >
                       <div className="flex items-center gap-3">
-                        <img src="https://picsum.photos/id/177/100/100" className={`w-12 h-12 rounded-full object-cover border-2 ${currentRole === 'employee' ? 'border-r-blue' : 'border-gray-200 grayscale opacity-60'}`} alt="Employee" />
+                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&q=80" className={`w-12 h-12 rounded-full object-cover border-2 ${currentRole === 'employee' ? 'border-r-blue' : 'border-gray-200 grayscale opacity-60'}`} alt="Employee" />
                         <span className={`text-base font-bold ${currentRole === 'employee' ? 'text-gray-900' : 'text-gray-500'}`}>Employee</span>
                       </div>
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${currentRole === 'employee' ? 'border-r-blue bg-white' : 'border-gray-300'}`}>
@@ -186,7 +186,7 @@ const Header: React.FC = () => {
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl transition-all ${currentRole === 'admin' ? 'bg-blue-50 ring-1 ring-r-blue/20' : 'hover:bg-gray-50'}`}
                     >
                       <div className="flex items-center gap-3">
-                        <img src="https://picsum.photos/id/177/100/100" className={`w-12 h-12 rounded-full object-cover border-2 ${currentRole === 'admin' ? 'border-r-blue' : 'border-gray-200 grayscale opacity-60'}`} alt="Admin" />
+                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&q=80" className={`w-12 h-12 rounded-full object-cover border-2 ${currentRole === 'admin' ? 'border-r-blue' : 'border-gray-200 grayscale opacity-60'}`} alt="Admin" />
                         <span className={`text-base font-bold ${currentRole === 'admin' ? 'text-gray-900' : 'text-gray-500'}`}>Admin</span>
                       </div>
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${currentRole === 'admin' ? 'border-r-blue bg-white' : 'border-gray-300'}`}>

@@ -26,7 +26,7 @@ const mockMentorRequests: MentorshipRequest[] = [
         mentee: { 
             name: 'Ajinkya Patil', 
             grade: 'Senior Engineer', 
-            imageUrl: 'https://picsum.photos/id/237/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'EMP12345',
                 email: 'ajinkya.patil@ril.com',
@@ -38,7 +38,7 @@ const mockMentorRequests: MentorshipRequest[] = [
                 function: 'Technology'
             }
         }, 
-        mentor: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://picsum.photos/seed/mentor1/100/100'}, 
+        mentor: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80'}, 
         topic: 'Leadership', 
         status: 'pending_mentor', 
         submittedDate: '28-07-2024, 04:45 PM', 
@@ -50,7 +50,7 @@ const mockMentorRequests: MentorshipRequest[] = [
         mentee: { 
             name: 'Sneha Reddy', 
             grade: 'Software Engineer', 
-            imageUrl: 'https://picsum.photos/seed/mentee4/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'EMP67890',
                 email: 'sneha.reddy@ril.com',
@@ -62,7 +62,7 @@ const mockMentorRequests: MentorshipRequest[] = [
                 function: 'Technology'
             }
         }, 
-        mentor: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://picsum.photos/seed/mentor1/100/100'}, 
+        mentor: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80'}, 
         topic: 'Career Growth', 
         status: 'pending_mentor', 
         submittedDate: '29-07-2024, 10:20 AM', 
@@ -72,11 +72,11 @@ const mockMentorRequests: MentorshipRequest[] = [
     // Mentor's application to a program (Pending)
     { 
         id: 'req_mentor_prog_pending', 
-        mentee: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://picsum.photos/seed/mentor1/100/100'}, 
+        mentee: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Future Leaders Program', 
             title: 'Group Mentoring', 
-            imageUrl: 'https://picsum.photos/seed/future/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'PROG-003',
                 email: 'leaders@ril.com',
@@ -98,11 +98,11 @@ const mockMentorRequests: MentorshipRequest[] = [
     // Mentor's application to a program (Accepted)
     { 
         id: 'req_mentor_prog_accepted', 
-        mentee: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://picsum.photos/seed/mentor1/100/100'}, 
+        mentee: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Tech Mentoring Program', 
             title: 'Group Mentoring', 
-            imageUrl: 'https://picsum.photos/seed/techprog/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'PROG-001',
                 email: 'learning@ril.com',
@@ -124,11 +124,11 @@ const mockMentorRequests: MentorshipRequest[] = [
     // Mentor's application to a program (Rejected)
     { 
         id: 'req_mentor_prog_rejected', 
-        mentee: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://picsum.photos/seed/mentor1/100/100'}, 
+        mentee: { name: 'Priya Sharma', title: 'Director of Engineering', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Data Science for All', 
             title: 'Group Mentoring Program', 
-            imageUrl: 'https://picsum.photos/seed/data/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'PROG-002',
                 email: 'learning@ril.com',
@@ -156,7 +156,7 @@ const mockMentorActiveMentorships: ActiveMentorship[] = [
         participant: { 
             name: 'Rahul Verma', 
             grade: 'Associate Product Manager', 
-            imageUrl: 'https://picsum.photos/seed/mentee2/100/100',
+            imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'E20045',
                 email: 'rahul.verma@ril.com',
@@ -178,7 +178,7 @@ const mockMentorActiveMentorships: ActiveMentorship[] = [
 const mockMentorActivePrograms: ActiveMentorship[] = [
     {
         id: 'mentor_prog_1o1_closed',
-        participant: { name: 'Senior Mgmt Fast Track', title: 'Mentoring Program', imageUrl: 'https://picsum.photos/seed/mgmt1/100/100' },
+        participant: { name: 'Senior Mgmt Fast Track', title: 'Mentoring Program', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80' },
         topic: 'Strategic Leadership',
         startDate: '2024-07-15',
         status: 'active',
@@ -187,7 +187,7 @@ const mockMentorActivePrograms: ActiveMentorship[] = [
     },
     {
         id: 'mentor_prog_1o1_open',
-        participant: { name: 'Cloud Architecture', title: 'Mentoring Program', imageUrl: 'https://picsum.photos/seed/cloud1/100/100' },
+        participant: { name: 'Cloud Architecture', title: 'Mentoring Program', imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&q=80' },
         topic: 'Cloud Native',
         startDate: '2024-07-20',
         status: 'active',
@@ -196,7 +196,7 @@ const mockMentorActivePrograms: ActiveMentorship[] = [
     },
     {
         id: 'mentor_prog_group_open',
-        participant: { name: 'Agile Transformation', title: 'Mentoring Program', imageUrl: 'https://picsum.photos/seed/agile1/100/100' },
+        participant: { name: 'Agile Transformation', title: 'Mentoring Program', imageUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop&q=80' },
         topic: 'Agile Methodology',
         startDate: '2024-08-01',
         status: 'active',
@@ -205,7 +205,7 @@ const mockMentorActivePrograms: ActiveMentorship[] = [
     },
     {
         id: 'mentor_prog_group_closed',
-        participant: { name: 'High Potential Leaders', title: 'Mentoring Program', imageUrl: 'https://picsum.photos/seed/hipo1/100/100' },
+        participant: { name: 'High Potential Leaders', title: 'Mentoring Program', imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&q=80' },
         topic: 'Organizational Change',
         startDate: '2024-08-05',
         status: 'active',
@@ -217,7 +217,7 @@ const mockMentorActivePrograms: ActiveMentorship[] = [
 const mockMentorCompletedMentorships: ActiveMentorship[] = [
      {
         id: 'completed2',
-        participant: { name: 'Anika Singh', grade: 'Junior Developer', imageUrl: 'https://picsum.photos/seed/mentee3/100/100' },
+        participant: { name: 'Anika Singh', grade: 'Junior Developer', imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&q=80' },
         topic: 'Onboarding',
         startDate: '2024-02-01',
         status: 'completed'
@@ -784,7 +784,7 @@ const MentorJourneyPage: React.FC<MentorJourneyPageProps> = ({ isProgramManagerV
                 <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <div className="flex items-center space-x-4">
-                            <img className="h-16 w-16 rounded-full" src="https://picsum.photos/seed/mentor1/100/100" alt="Mentor" />
+                            <img className="h-16 w-16 rounded-full" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&q=80" alt="Mentor" />
                             <div>
                                 <h2 className="text-2xl font-heading font-bold text-r-gray-900">Priya Sharma</h2>
                                 <p className="text-sm text-r-gray-500">Director of Engineering</p>

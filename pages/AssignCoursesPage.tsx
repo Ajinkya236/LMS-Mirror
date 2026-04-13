@@ -24,7 +24,7 @@ const discoverCourses: Course[] = Array.from({ length: 12 }, (_, i) => ({
         'ESG and shareholder value'
     ][i % 12],
     provider: 'Video',
-    imageUrl: 'https://picsum.photos/seed/esg' + i + '/400/225',
+    imageUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&h=225&fit=crop&q=80',
     tags: ['Video'],
 }));
 
