@@ -286,11 +286,17 @@ const HomePage: React.FC = () => {
             }
         />
 
+        {/* e. What similar users are learning */}
+        <CourseRow 
+            title="What similar users are learning" 
+            courses={similarUsersCourses} 
+        />
+
         {/* c. Because you've watched "Data Analytics" */}
         <CourseRow 
             title='Because you watched "Data Analytics"' 
             courses={generateMockCourses(8, 'Data Science')} 
-            bgClass="bg-white"
+            bgClass="bg-r-gray-50"
         />
 
         {/* d. Based on Skills you follow */}
@@ -307,17 +313,11 @@ const HomePage: React.FC = () => {
             }
         />
 
-        {/* e. What similar users are learning */}
-        <CourseRow 
-            title="What similar users are learning" 
-            courses={similarUsersCourses} 
-            bgClass="bg-r-gray-50"
-        />
-
         {/* f. Trending Now in your Job Role - WITH RANK */}
         <CourseRow 
             title="Trending Now in your Job Role" 
             courses={generateMockCourses(8, 'Role Trending')} 
+            bgClass="bg-r-gray-50"
             showRank={true}
         />
 
@@ -325,7 +325,6 @@ const HomePage: React.FC = () => {
         <CourseRow 
             title="Trending Now in your Organisation" 
             courses={generateMockCourses(8, 'Org Trending')} 
-            bgClass="bg-r-gray-50"
             showRank={true}
         />
 
