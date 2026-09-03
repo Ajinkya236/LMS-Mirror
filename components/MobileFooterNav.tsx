@@ -1,13 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { HomeIcon, CalendarIcon, BookOpenIcon, MoreHorizontalIcon } from './Icons';
+import { HomeIcon, CalendarIcon, BookOpenIcon, MoreHorizontalIcon, AwardIcon } from './Icons';
 
 const MobileFooterNav: React.FC = () => {
     const navItems = [
-        { label: 'Home', path: '/', icon: <HomeIcon className="w-6 h-6" /> },
-        { label: 'Live Sessions', path: '/mark-attendance', icon: <CalendarIcon className="w-6 h-6" /> },
-        { label: 'My Learning', path: '/mylearning', icon: <BookOpenIcon className="w-6 h-6" /> },
-        { label: 'More', path: '/more', icon: <MoreHorizontalIcon className="w-6 h-6" /> },
+        { label: 'Home', path: '/', icon: <HomeIcon className="w-5 h-5" /> },
+        { label: 'Skills', path: '/skills', icon: <AwardIcon className="w-5 h-5" /> },
+        { label: 'Live', path: '/mark-attendance', icon: <CalendarIcon className="w-5 h-5" /> },
+        { label: 'My Learning', path: '/mylearning', icon: <BookOpenIcon className="w-5 h-5" /> },
+        { label: 'More', path: '/more', icon: <MoreHorizontalIcon className="w-5 h-5" /> },
     ];
 
     return (

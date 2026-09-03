@@ -122,7 +122,7 @@ const MarkAttendancePage: React.FC = () => {
       title: 'Advanced Web Architecture',
       start: '12-01-2026 01:21:00 PM',
       end: '12-01-2026 01:25:00 PM',
-      instructor: 'Ajinkya Patil',
+      instructor: 'Sandeep Gupta',
       location: 'Haryana',
       venue: 'Ambala Ua_JC , HR-AMBL-JC-01 , Haryana',
       sessionId: 'ILT-5501',

@@ -35,7 +35,7 @@ const mockEngagements: { [id: string]: ActiveMentorship } = {
         startDate: '2024-07-20',
         status: 'active',
         sessions: [
-            { id: 's1', title: 'Introductory Call', category: 'General Catch-up', startTime: '2024-07-22T14:00:00Z', endTime: '2024-07-22T14:30:00Z', status: 'completed', agenda: 'Get to know each other, discuss initial goals.', notes: { mentorNote: "Great first call. Ajinkya is very motivated.", menteeNote: "Priya seems like a great mentor. Excited to start." }, tasks: [{id: 't1', text: 'Draft 3-month goals', status: 'completed', submission: {file: new File([], 'goals.pdf'), note: 'Here are my draft goals.'}, feedback: {rating: 5, text: 'Well-defined goals!'}, dueDate: '2024-07-25'}]},
+            { id: 's1', title: 'Introductory Call', category: 'General Catch-up', startTime: '2024-07-22T14:00:00Z', endTime: '2024-07-22T14:30:00Z', status: 'completed', agenda: 'Get to know each other, discuss initial goals.', notes: { mentorNote: "Great first call. Sandeep is very motivated.", menteeNote: "Priya seems like a great mentor. Excited to start." }, tasks: [{id: 't1', text: 'Draft 3-month goals', status: 'completed', submission: {file: new File([], 'goals.pdf'), note: 'Here are my draft goals.'}, feedback: {rating: 5, text: 'Well-defined goals!'}, dueDate: '2024-07-25'}]},
             { id: 's2', title: 'Goal Refinement', category: 'Goal Setting', startTime: '2024-07-29T14:00:00Z', endTime: '2024-07-29T14:45:00Z', status: 'completed', agenda: 'Review and finalize mentorship goals.', tasks: [{id: 't2', text: 'Prepare a list of questions about team leadership', status: 'pending', dueDate: '2024-08-01'}]},
             { id: 's3', title: 'Stakeholder Communication', category: 'Skill Development', startTime: '2024-08-05T11:00:00Z', endTime: '2024-08-05T12:00:00Z', status: 'upcoming', agenda: 'Discuss strategies for effective stakeholder communication.'},
             { id: 's4', title: 'Team Leadership Plan Review', category: 'Goal Setting', startTime: '2024-08-12T11:00:00Z', endTime: '2024-08-12T12:00:00Z', status: 'upcoming', agenda: 'Review the draft of the team leadership plan.'},
@@ -162,12 +162,12 @@ const MentorshipEngagementPage: React.FC = () => {
     const otherPartyDetails = userRole === 'mentee' 
         ? engagement.participant 
         : { 
-            name: 'Ajinkya Patil', 
+            name: 'Sandeep Gupta', 
             title: 'Senior Engineer', 
             imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'EMP12345',
-                email: 'ajinkya.patil@ril.com',
+                email: 'sandeep.gupta@ril.com',
                 grade: 'L5',
                 location: 'Mumbai',
                 experience: '5 Years',

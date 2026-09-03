@@ -27,7 +27,7 @@ const discoverCourses: Course[] = Array.from({ length: 12 }, (_, i) => ({
 
 // Mock Data for active contexts
 const activeMentees = [
-    { id: 'active1', label: 'Ajinkya Patil', subLabel: 'Leadership' },
+    { id: 'active1', label: 'Sandeep Gupta', subLabel: 'Leadership' },
     { id: 'active2', label: 'Rahul Verma', subLabel: 'Product Management' },
     { id: 'completed2', label: 'Anika Singh', subLabel: 'Onboarding (Completed)' } // Typically wouldn't assign to completed, but for demo
 ];

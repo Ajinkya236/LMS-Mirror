@@ -6,13 +6,13 @@ import Breadcrumbs, { type BreadcrumbItem } from '../components/Breadcrumbs';
 // Mock data, in a real app this would come from an API based on engagementId
 const mockCertificateData: { [id: string]: any } = {
     'active1': {
-        menteeName: 'Ajinkya Patil',
+        menteeName: 'Sandeep Gupta',
         mentorName: 'Priya Sharma',
         topic: 'Leadership',
         completionDate: '2024-08-15', // Assuming it just completed
     },
     'completed1': {
-        menteeName: 'Ajinkya Patil',
+        menteeName: 'Sandeep Gupta',
         mentorName: 'Rohan Mehta',
         topic: 'Product Strategy',
         completionDate: '2024-05-10',

@@ -2,12 +2,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import { SearchIcon, BellIcon, HelpCircleIcon, AppLogoIcon, XIcon, UserIcon, LogOutIcon, CalendarIcon } from './Icons';
+import { FileText, Shield, Award } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentRole, setCurrentRole] = useState<'employee' | 'admin'>('employee');
+  const [currentRole, setCurrentRole] = useState<'employee' | 'admin'>(() => {
+    return (localStorage.getItem('lms_user_role') as 'employee' | 'admin') || 'admin';
+  });
+
+  const handleRoleChange = (newRole: 'employee' | 'admin') => {
+    setCurrentRole(newRole);
+    localStorage.setItem('lms_user_role', newRole);
+    window.dispatchEvent(new CustomEvent('lms_role_changed', { detail: { role: newRole } }));
+  };
   const searchInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -78,6 +87,7 @@ const Header: React.FC = () => {
           {!isSearchOpen && (
             <nav className="hidden md:flex md:space-x-4 absolute left-1/2 transform -translate-x-1/2">
               <NavLink to="/" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Home</NavLink>
+              <NavLink to="/skills" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Skills</NavLink>
               <NavLink to="/discover" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Discover</NavLink>
               <NavLink to="/mylearning" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>My Learning</NavLink>
               <NavLink to="/quicklinks" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Quick Links</NavLink>
@@ -169,7 +179,7 @@ const Header: React.FC = () => {
                   {/* Role Selectors */}
                   <div className="px-4 py-4 space-y-2">
                     <button 
-                      onClick={() => setCurrentRole('employee')}
+                      onClick={() => handleRoleChange('employee')}
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl transition-all ${currentRole === 'employee' ? 'bg-blue-50 ring-1 ring-r-blue/20' : 'hover:bg-gray-50'}`}
                     >
                       <div className="flex items-center gap-3">
@@ -182,7 +192,7 @@ const Header: React.FC = () => {
                     </button>
 
                     <button 
-                      onClick={() => setCurrentRole('admin')}
+                      onClick={() => handleRoleChange('admin')}
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl transition-all ${currentRole === 'admin' ? 'bg-blue-50 ring-1 ring-r-blue/20' : 'hover:bg-gray-50'}`}
                     >
                       <div className="flex items-center gap-3">
@@ -199,7 +209,49 @@ const Header: React.FC = () => {
 
                   {/* Navigation Links */}
                   <div className="py-2">
-                    <Link to="/evaluation" className="w-full flex items-center gap-4 px-6 py-3 hover:bg-gray-50 text-gray-700 transition-colors group">
+                    <Link
+                      to="/form/native-feedback-assignment"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="w-full flex items-center justify-between px-6 py-3 hover:bg-blue-50/60 text-gray-700 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 rounded-full bg-indigo-100 text-indigo-700 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-bold text-gray-900 text-sm">My Feedback & Surveys</div>
+                          <div className="text-[11px] text-gray-500">Assigned & submitted forms</div>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        Learner
+                      </span>
+                    </Link>
+
+                    <Link
+                      to="/admin/forms"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="w-full flex items-center justify-between px-6 py-3 hover:bg-blue-50/60 text-gray-700 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 rounded-full bg-blue-100 text-r-blue group-hover:bg-r-blue group-hover:text-white transition-colors">
+                          <FileText className="w-5 h-5" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-bold text-gray-900 text-sm">LMS Forms Module</div>
+                          <div className="text-[11px] text-gray-500">Create & manage forms</div>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-r-blue/10 text-r-blue border border-r-blue/20">
+                        Admin
+                      </span>
+                    </Link>
+
+                    <Link
+                      to="/evaluation"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="w-full flex items-center gap-4 px-6 py-3 hover:bg-gray-50 text-gray-700 transition-colors group"
+                    >
                       <div className="p-1.5 rounded-full bg-blue-50 text-r-blue group-hover:bg-r-blue group-hover:text-white transition-colors">
                         <UserIcon className="w-5 h-5" />
                       </div>

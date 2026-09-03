@@ -17,7 +17,7 @@ const ProctoringReportPage: React.FC = () => {
         id: reportId,
         state: 'Mumbai',
         empCode: '55077420',
-        empName: 'Ajinkya Patil',
+        empName: 'Sandeep Gupta',
         courseId: 'C-2041',
         lessonName: 'Video Assessment (28489)',
         status: 'Pending',

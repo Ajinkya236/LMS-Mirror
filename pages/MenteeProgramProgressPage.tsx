@@ -114,14 +114,14 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
         ],
         mentees: [
             { 
-                id: 'mentee_ajinkya', 
-                name: 'Ajinkya Patil', 
+                id: 'mentee_sandeep', 
+                name: 'Sandeep Gupta', 
                 grade: 'Senior Engineer', 
                 imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80', 
                 assignedCourses: [
                     {id: 3, title: 'Machine Learning A-Z', provider: 'Udemy', imageUrl: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=400&h=225&fit=crop&q=80', tags:['Online'], status: 'In Progress'}
                 ],
-                dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
+                dossier: { employeeCode: 'EMP12345', email: 'sandeep.gupta@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             },
             { 
                 id: 'mentee_rahul', 
@@ -152,7 +152,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 endTime: '2023-12-15T11:00:00Z', 
                 status: 'completed', 
                 agenda: 'Final review and feedback.', 
-                attendees: [{ menteeId: 'mentee_ajinkya', status: 'present', joinTime: '10:00 AM', leaveTime: '11:00 AM'}], 
+                attendees: [{ menteeId: 'mentee_sandeep', status: 'present', joinTime: '10:00 AM', leaveTime: '11:00 AM'}], 
                 notes: {mentorNote: 'Program complete.', menteeNote: ''},
                 tasks: [
                     { id: 'cp_t1', text: 'Submit Final Report', description: 'Upload the final project report.', isRequired: true, status: 'completed' },
@@ -162,14 +162,14 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
         ],
         mentees: [
             { 
-                id: 'mentee_ajinkya', 
-                name: 'Ajinkya Patil', 
+                id: 'mentee_sandeep', 
+                name: 'Sandeep Gupta', 
                 grade: 'Senior Engineer', 
                 imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80', 
                 assignedCourses: [
                     {id: 5, title: 'Agile Leadership', provider: 'LinkedIn Learning', imageUrl: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=400&h=225&fit=crop&q=80', tags:['Online'], status: 'Completed'}
                 ],
-                dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
+                dossier: { employeeCode: 'EMP12345', email: 'sandeep.gupta@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             },
         ],
         goals: ['Complete all leadership modules', 'Lead a team project'],
@@ -189,7 +189,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 endTime: '2024-08-05T11:00:00Z', 
                 status: 'completed', 
                 agenda: 'Define goals.', 
-                attendees: [{ menteeId: 'mentee_ajinkya', status: 'present', joinTime: '10:00 AM', leaveTime: '11:00 AM' }], 
+                attendees: [{ menteeId: 'mentee_sandeep', status: 'present', joinTime: '10:00 AM', leaveTime: '11:00 AM' }], 
                 notes: {mentorNote: 'Goals defined.', menteeNote: ''},
                 tasks: [
                     { id: 't1_cl', text: 'Define 3-Month Strategy', description: 'Outline strategic goals for the quarter.', isRequired: true, status: 'completed' }
@@ -203,7 +203,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 endTime: '2024-08-20T11:00:00Z', 
                 status: 'upcoming', 
                 agenda: 'Review strategic plans.', 
-                attendees: [{ menteeId: 'mentee_ajinkya', status: 'pending' }],
+                attendees: [{ menteeId: 'mentee_sandeep', status: 'pending' }],
                 tasks: [
                     { id: 't2_cl', text: 'Prepare Presentation', description: 'Prepare slides for the review meeting.', isRequired: true, status: 'pending' }
                 ]
@@ -211,12 +211,12 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
         ],
         mentees: [
             {
-                id: 'mentee_ajinkya',
-                name: 'Ajinkya Patil',
+                id: 'mentee_sandeep',
+                name: 'Sandeep Gupta',
                 grade: 'Senior Engineer',
                 imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
-                dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
+                dossier: { employeeCode: 'EMP12345', email: 'sandeep.gupta@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             }
         ],
         goals: ['Improve executive presence'],
@@ -236,7 +236,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 endTime: '2024-08-08T11:00:00Z', 
                 status: 'completed', 
                 agenda: 'Intro.', 
-                attendees: [{ menteeId: 'mentee_ajinkya', status: 'present', joinTime: '10:00 AM', leaveTime: '11:00 AM' }],
+                attendees: [{ menteeId: 'mentee_sandeep', status: 'present', joinTime: '10:00 AM', leaveTime: '11:00 AM' }],
                 tasks: [
                     { id: 't1_op', text: 'Self Assessment', description: 'Complete the leadership self-assessment.', isRequired: true, status: 'completed' }
                 ]
@@ -244,12 +244,12 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
         ],
         mentees: [
             {
-                id: 'mentee_ajinkya',
-                name: 'Ajinkya Patil',
+                id: 'mentee_sandeep',
+                name: 'Sandeep Gupta',
                 grade: 'Senior Engineer',
                 imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
-                dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
+                dossier: { employeeCode: 'EMP12345', email: 'sandeep.gupta@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             }
         ],
         goals: ['Become a Tech Lead'],
@@ -269,7 +269,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 endTime: '2024-08-12T12:00:00Z', 
                 status: 'completed', 
                 agenda: 'Python setup.', 
-                attendees: [{ menteeId: 'mentee_ajinkya', status: 'present', joinTime: '10:00 AM', leaveTime: '12:00 PM' }],
+                attendees: [{ menteeId: 'mentee_sandeep', status: 'present', joinTime: '10:00 AM', leaveTime: '12:00 PM' }],
                 tasks: [
                     { id: 't1_go', text: 'Install Python', description: 'Install Python and IDE.', isRequired: true, status: 'completed' }
                 ]
@@ -277,12 +277,12 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
         ],
         mentees: [
             {
-                id: 'mentee_ajinkya',
-                name: 'Ajinkya Patil',
+                id: 'mentee_sandeep',
+                name: 'Sandeep Gupta',
                 grade: 'Senior Engineer',
                 imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
-                dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
+                dossier: { employeeCode: 'EMP12345', email: 'sandeep.gupta@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             }
         ],
         goals: ['Learn Python'],
@@ -302,7 +302,7 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
                 endTime: '2024-08-15T16:00:00Z', 
                 status: 'upcoming', 
                 agenda: 'Networking skills.', 
-                attendees: [{ menteeId: 'mentee_ajinkya', status: 'pending' }],
+                attendees: [{ menteeId: 'mentee_sandeep', status: 'pending' }],
                 tasks: [
                     { id: 't1_gc', text: 'LinkedIn Profile Update', description: 'Update your LinkedIn profile with current role.', isRequired: true, status: 'pending' }
                 ]
@@ -310,12 +310,12 @@ const mockProgramData: { [id: string]: ProgramEngagement } = {
         ],
         mentees: [
             {
-                id: 'mentee_ajinkya',
-                name: 'Ajinkya Patil',
+                id: 'mentee_sandeep',
+                name: 'Sandeep Gupta',
                 grade: 'Senior Engineer',
                 imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
                 assignedCourses: [],
-                dossier: { employeeCode: 'EMP12345', email: 'ajinkya.patil@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
+                dossier: { employeeCode: 'EMP12345', email: 'sandeep.gupta@ril.com', grade: 'L5', location: 'Mumbai', experience: '5 Years', business: 'Jio Platforms', segment: 'Engineering', function: 'Technology' }
             }
         ],
         goals: ['Build a network'],

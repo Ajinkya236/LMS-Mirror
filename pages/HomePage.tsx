@@ -231,14 +231,19 @@ const HomePage: React.FC = () => {
           </div>
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-heading font-semibold">Attendance & Actionable</h2>
-              <Link to="/mark-attendance" className="px-3 py-1 text-sm font-medium text-r-blue border border-r-blue rounded-full hover:bg-r-blue-50">Mark Attendance</Link>
+              <h2 className="text-lg font-heading font-semibold">Attendance & Feedback</h2>
+              <Link to="/form/native-feedback-assignment" className="px-3 py-1 text-sm font-medium text-r-blue border border-r-blue rounded-full hover:bg-r-blue-50">My Feedback</Link>
             </div>
             <div className="mt-4 text-center p-4">
               <MessageSquareIcon className="w-8 h-8 mx-auto text-yellow-500" />
-              <h3 className="font-heading font-semibold mt-2">Feedback</h3>
-              <p className="text-sm text-r-gray-500 mt-1">Give feedback on recently completed course AI Agents for Product Leaders</p>
-              <button className="mt-4 px-4 py-2 text-sm font-semibold text-r-blue-dark bg-r-blue-100 rounded-full hover:bg-r-blue-200">Mark Feedback</button>
+              <h3 className="font-heading font-semibold mt-2">Assigned Feedback & Surveys</h3>
+              <p className="text-sm text-r-gray-500 mt-1">Provide feedback on leadership pulse surveys, course evaluations, and assigned quizzes.</p>
+              <Link
+                to="/form/native-feedback-assignment"
+                className="mt-4 inline-block px-4 py-2 text-sm font-semibold text-r-blue-dark bg-r-blue-100 rounded-full hover:bg-r-blue-200 transition-colors"
+              >
+                Open My Feedback
+              </Link>
             </div>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-sm">

@@ -27,6 +27,9 @@ import MentorPreferencesPage from './pages/MentorPreferencesPage';
 import SessionNotesPage from './pages/SessionNotesPage';
 import SearchResultsPage from './pages/SearchResultsPage';
 import CategoryDetailsPage from './pages/CategoryDetailsPage';
+import SkillsPage from './pages/SkillsPage';
+import AddAdditionalSkillPage from './pages/AddAdditionalSkillPage';
+import SkillDetailsPage from './pages/SkillDetailsPage';
 import CoursePlayerPage from './pages/CoursePlayerPage';
 import EvaluatorDashboardPage from './pages/EvaluatorDashboardPage';
 import ProctoringReportPage from './pages/ProctoringReportPage';
@@ -34,6 +37,9 @@ import EventsPage from './pages/EventsPage';
 import MarkAttendancePage from './pages/MarkAttendancePage';
 import AssessmentPlayerPage from './pages/AssessmentPlayerPage';
 import SessionFeedbackPage from './pages/SessionFeedbackPage';
+import AdminFormsPage from './pages/AdminFormsPage';
+import PublicFormPage from './pages/PublicFormPage';
+import LearnerFeedbackPage from './pages/LearnerFeedbackPage';
 
 function App() {
   return (
@@ -43,6 +49,11 @@ function App() {
         <main className="flex-grow pt-16 pb-16 md:pb-0">
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/skills" element={<SkillsPage />} />
+            <Route path="/skills/learn/:skillId" element={<SkillDetailsPage />} />
+            <Route path="/skills/details/:skillId" element={<SkillDetailsPage />} />
+            <Route path="/skills/add-additional-skill" element={<AddAdditionalSkillPage />} />
+            <Route path="/skills/edit-additional-skill/:skillId" element={<AddAdditionalSkillPage isEdit={true} />} />
             <Route path="/discover" element={<DiscoverPage />} />
             <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/category/:categoryId" element={<CategoryDetailsPage />} />
@@ -73,6 +84,11 @@ function App() {
             <Route path="/program/:programId" element={<ProgramDetailsPage />} />
             <Route path="/program-engagement/:programId" element={<ProgramEngagementPage />} />
             <Route path="/program-engagement/:programId/mentee/:menteeId" element={<MenteeProgramProgressPage />} />
+            <Route path="/admin/forms" element={<AdminFormsPage />} />
+            <Route path="/form/native-feedback-assignment" element={<LearnerFeedbackPage />} />
+            <Route path="/my-feedback" element={<LearnerFeedbackPage />} />
+            <Route path="/nfb/:token" element={<PublicFormPage />} />
+            <Route path="/f/:token" element={<PublicFormPage />} />
             <Route path="/certificate/:engagementId" element={<CertificatePage />} />
             <Route path="/session/:sessionId/notes" element={<SessionNotesPage />} />
           </Routes>

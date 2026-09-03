@@ -24,12 +24,12 @@ const mockMentorRequests: MentorshipRequest[] = [
     { 
         id: 'req1', 
         mentee: { 
-            name: 'Ajinkya Patil', 
+            name: 'Sandeep Gupta', 
             grade: 'Senior Engineer', 
             imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80',
             dossier: {
                 employeeCode: 'EMP12345',
-                email: 'ajinkya.patil@ril.com',
+                email: 'sandeep.gupta@ril.com',
                 grade: 'L5',
                 location: 'Mumbai',
                 experience: '5 Years',

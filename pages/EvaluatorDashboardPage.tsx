@@ -45,8 +45,8 @@ const EvaluatorDashboardPage: React.FC = () => {
     const [durationFilter, setDurationFilter] = useState('All');
 
     const mockData = [
-        { id: 1, state: 'Mumbai', joType: 'NHQ', empCode: '55077420', empName: 'Ajinkya Patil', courseName: 'Service Foundations', courseId: 'C-2041', lessonName: 'Video Assessment (28489)', status: 'Pending', activityName: 'OJT ACTIVITY TEST (25288)', redFlags: 24 },
-        { id: 2, state: 'Mumbai', joType: 'NHQ', empCode: '55077420', empName: 'Ajinkya Patil', courseName: 'Safety Protocols', courseId: 'C-9901', lessonName: 'OJT module (28409)', status: 'Pending', activityName: 'OJT ACTIVITY TEST (25288)', redFlags: 12 },
+        { id: 1, state: 'Mumbai', joType: 'NHQ', empCode: '55077420', empName: 'Sandeep Gupta', courseName: 'Service Foundations', courseId: 'C-2041', lessonName: 'Video Assessment (28489)', status: 'Pending', activityName: 'OJT ACTIVITY TEST (25288)', redFlags: 24 },
+        { id: 2, state: 'Mumbai', joType: 'NHQ', empCode: '55077420', empName: 'Sandeep Gupta', courseName: 'Safety Protocols', courseId: 'C-9901', lessonName: 'OJT module (28409)', status: 'Pending', activityName: 'OJT ACTIVITY TEST (25288)', redFlags: 12 },
         { id: 3, state: 'Delhi', joType: 'Field', empCode: '52219081', empName: 'Ravi Verma', courseName: 'Advanced Retail', courseId: 'C-3112', lessonName: 'Final Quiz (11029)', status: 'Pending', activityName: 'QUIZ LEVEL 2 (9901)', redFlags: 5 },
     ];
 

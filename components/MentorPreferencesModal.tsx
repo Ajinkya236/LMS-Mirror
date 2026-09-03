@@ -10,9 +10,9 @@ interface MentorPreferencesModalProps {
 }
 
 const defaultPreferences: MenteePreferences = {
-  name: 'Ajinkya Patil',
+  name: 'Sandeep Gupta',
   employeeCode: 'EMP12345',
-  email: 'ajinkya.patil@new-lms.com',
+  email: 'sandeep.gupta@new-lms.com',
   grade: 'Senior Engineer',
   location: 'Mumbai',
   experience: '5 Years',

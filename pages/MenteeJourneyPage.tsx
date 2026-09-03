@@ -11,9 +11,9 @@ import Breadcrumbs, { type BreadcrumbItem } from '../components/Breadcrumbs';
 const REQUEST_FILTERS = ['Pending', 'Programs Applied', 'Accepted', 'Rejected'];
 
 const mockMenteePreferences: MenteePreferences = {
-  name: 'Ajinkya Patil',
+  name: 'Sandeep Gupta',
   employeeCode: 'EMP12345',
-  email: 'ajinkya.patil@r-university.com',
+  email: 'sandeep.gupta@r-university.com',
   grade: 'Senior Engineer',
   location: 'Mumbai',
   experience: '5 Years',
@@ -25,7 +25,7 @@ const mockMenteePreferences: MenteePreferences = {
 const mockMenteeRequests: MentorshipRequest[] = [
     { 
         id: 'req2', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
+        mentee: { name: 'Sandeep Gupta', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Rohan Mehta', 
             title: 'Senior Product Manager', 
@@ -50,7 +50,7 @@ const mockMenteeRequests: MentorshipRequest[] = [
     },
     { 
         id: 'req3', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
+        mentee: { name: 'Sandeep Gupta', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Anjali Desai', 
             title: 'Lead Architect', 
@@ -75,7 +75,7 @@ const mockMenteeRequests: MentorshipRequest[] = [
     },
     { 
         id: 'req_prog_pending', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
+        mentee: { name: 'Sandeep Gupta', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Tech Mentoring Program', 
             title: 'Group Mentoring', 
@@ -100,7 +100,7 @@ const mockMenteeRequests: MentorshipRequest[] = [
     },
     { 
         id: 'req_accepted', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
+        mentee: { name: 'Sandeep Gupta', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Sameer Khan', 
             title: 'Program Manager', 
@@ -124,7 +124,7 @@ const mockMenteeRequests: MentorshipRequest[] = [
     },
     { 
         id: 'req_prog_accepted', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
+        mentee: { name: 'Sandeep Gupta', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Data Science for All', 
             title: 'Group Mentoring Program', 
@@ -149,7 +149,7 @@ const mockMenteeRequests: MentorshipRequest[] = [
     },
     { 
         id: 'req_prog_rejected', 
-        mentee: { name: 'Ajinkya Patil', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
+        mentee: { name: 'Sandeep Gupta', grade: 'Senior Engineer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&q=80'}, 
         mentor: { 
             name: 'Future Leaders Program', 
             title: 'Group Mentoring', 
