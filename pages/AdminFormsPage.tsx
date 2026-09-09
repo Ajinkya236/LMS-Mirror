@@ -21,7 +21,6 @@ import {
   exportResponsesToCSV,
   downloadBlobFile
 } from '../utils/formsStorage';
-import { FormBuilderModal } from '../components/forms/FormBuilderModal';
 import { ShareFormModal } from '../components/forms/ShareFormModal';
 import { FormAnalyticsModal } from '../components/forms/FormAnalyticsModal';
 import { DeleteConfirmModal, ConfirmationType } from '../components/forms/DeleteConfirmModal';
@@ -34,7 +33,6 @@ import {
   Search,
   Filter,
   ArrowUpDown,
-  ArrowRight,
   MoreVertical,
   Share2,
   Edit3,
@@ -62,7 +60,6 @@ import {
   Send,
   X,
   FileSpreadsheet,
-  UploadCloud,
   MessageSquareCheck
 } from 'lucide-react';
 
@@ -77,28 +74,6 @@ export const AdminFormsPage: React.FC = () => {
   const [assignments, setAssignments] = useState<FeedbackAssignment[]>([]);
   const [responses, setResponses] = useState<FormSubmissionRecord[]>([]);
 
-  // Role Awareness State
-  const [activeRole, setActiveRole] = useState<'admin' | 'employee'>(() => {
-    return (localStorage.getItem('lms_user_role') as 'admin' | 'employee') || 'admin';
-  });
-
-  useEffect(() => {
-    const handleRoleChanged = (e: any) => {
-      if (e.detail?.role) {
-        setActiveRole(e.detail.role);
-      }
-    };
-    window.addEventListener('lms_role_changed', handleRoleChanged);
-    return () => window.removeEventListener('lms_role_changed', handleRoleChanged);
-  }, []);
-
-  const handleRoleToggle = (newRole: 'admin' | 'employee') => {
-    setActiveRole(newRole);
-    localStorage.setItem('lms_user_role', newRole);
-    window.dispatchEvent(new CustomEvent('lms_role_changed', { detail: { role: newRole } }));
-    showToast(`Switched active view to ${newRole === 'admin' ? 'Administrator' : 'Learner'} mode`, 'info');
-  };
-
   // Forms Filter & Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('All');
@@ -111,9 +86,6 @@ export const AdminFormsPage: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
   // Modals State
-  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
-  const [formToEdit, setFormToEdit] = useState<LMSForm | null>(null);
-
   const [shareModalForm, setShareModalForm] = useState<LMSForm | null>(null);
   const [analyticsModalForm, setAnalyticsModalForm] = useState<LMSForm | null>(null);
   const [isCSVUploadOpen, setIsCSVUploadOpen] = useState(false);
@@ -222,24 +194,12 @@ export const AdminFormsPage: React.FC = () => {
 
   // Form Operations Handlers
   const handleOpenCreate = () => {
-    setFormToEdit(null);
-    setIsBuilderOpen(true);
+    navigate('/admin/forms/create');
   };
 
   const handleOpenEdit = (form: LMSForm, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setFormToEdit(form);
-    setIsBuilderOpen(true);
-  };
-
-  const handleFormSaved = (savedForm: LMSForm, isPublish: boolean) => {
-    loadAllData();
-    if (isPublish) {
-      showToast(`Form "${savedForm.title}" published! Shareable link generated.`, 'success');
-      setShareModalForm(savedForm);
-    } else {
-      showToast(`Form "${savedForm.title}" saved successfully as Draft.`, 'info');
-    }
+    navigate(`/admin/forms/edit/${form.id}`);
   };
 
   const handleDuplicate = (formId: string, e?: React.MouseEvent) => {
@@ -343,56 +303,21 @@ export const AdminFormsPage: React.FC = () => {
                 <span>LMS Forms & Response Center</span>
               </h1>
               <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-2xl">
-                Design multi-section surveys & quizzes, upload CSV recipient rosters, monitor live response streams, and inspect question-level scoring analytics.
+                Design multi-section surveys & quizzes, monitor live response streams, and inspect question-level scoring analytics.
               </p>
             </div>
 
-              {/* Role Context & Quick Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                {/* Role Switcher Pill for UAT */}
-                <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
-                  <button
-                    type="button"
-                    onClick={() => handleRoleToggle('admin')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      activeRole === 'admin'
-                        ? 'bg-r-blue text-white shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Admin Mode
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRoleToggle('employee')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      activeRole === 'employee'
-                        ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    Learner Mode
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsCSVUploadOpen(true)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center gap-2 cursor-pointer border border-slate-300"
-                >
-                  <UploadCloud className="w-4 h-4 text-slate-600" />
-                  <span>Upload CSV Roster</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleOpenCreate}
-                  className="px-5 py-2.5 bg-r-blue hover:bg-r-blue-dark text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Create Form</span>
-                </button>
-              </div>
+            {/* Quick Action Buttons */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                onClick={handleOpenCreate}
+                className="px-5 py-2.5 bg-r-blue hover:bg-r-blue-dark text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create Form</span>
+              </button>
+            </div>
           </div>
 
           {/* Module Navigation Tabs */}
@@ -449,45 +374,6 @@ export const AdminFormsPage: React.FC = () => {
 
       {/* Main Container Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
-        {/* Role Notice Banner for Learner Mode */}
-        {activeRole === 'employee' && (
-          <div className="bg-gradient-to-r from-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-lg border border-indigo-700/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center flex-shrink-0">
-                <Users className="w-6 h-6 text-indigo-300" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/20">
-                    Learner Portal View
-                  </span>
-                  <span className="text-xs text-slate-300">Logged in as Employee</span>
-                </div>
-                <h2 className="text-base font-bold text-white mt-1">Learner Experience & Assigned Forms Mode</h2>
-                <p className="text-xs text-slate-300">
-                  Preview forms directly as a learner, complete assigned surveys or quizzes, and verify grading & completion status.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                to="/form/native-feedback-assignment"
-                className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
-              >
-                <span>Open My Feedback Page</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-              <button
-                type="button"
-                onClick={() => handleRoleToggle('admin')}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all border border-white/20 cursor-pointer"
-              >
-                Switch to Admin Mode
-              </button>
-            </div>
-          </div>
-        )}
         {/* TAB 1: FORMS DIRECTORY */}
         {activeModuleTab === 'forms' && (
           <div className="space-y-4 animate-fade-in">
@@ -1147,18 +1033,7 @@ export const AdminFormsPage: React.FC = () => {
       </div>
 
       {/* ALL MODALS */}
-      {/* 1. Form Builder (Create & Edit) */}
-      <FormBuilderModal
-        isOpen={isBuilderOpen}
-        onClose={() => {
-          setIsBuilderOpen(false);
-          setFormToEdit(null);
-        }}
-        formToEdit={formToEdit}
-        onFormSaved={handleFormSaved}
-      />
-
-      {/* 2. Share Form Modal */}
+      {/* 1. Share Form Modal */}
       {shareModalForm && (
         <ShareFormModal
           isOpen={Boolean(shareModalForm)}

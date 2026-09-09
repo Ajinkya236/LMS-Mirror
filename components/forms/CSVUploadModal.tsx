@@ -231,39 +231,6 @@ export const CSVUploadModal: React.FC<CSVUploadModalProps> = ({
                   <strong className="text-slate-800">FeedbackID, username</strong>
                 </div>
               </div>
-
-              {/* Active Forms Reference Table for Fast Copy */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-r-blue" />
-                    Available Form IDs for Reference ({forms.length})
-                  </h4>
-                  <span className="text-[11px] text-slate-500 font-medium">Click any FID to copy</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                  {forms.slice(0, 6).map(f => (
-                    <div
-                      key={f.id}
-                      onClick={() => {
-                        navigator.clipboard.writeText(f.fid);
-                      }}
-                      className="p-2.5 bg-white border border-slate-200 rounded-xl hover:border-r-blue transition-colors cursor-pointer flex items-center justify-between"
-                      title="Click to copy FID"
-                    >
-                      <div className="min-w-0 pr-2">
-                        <span className="font-mono text-xs font-bold text-r-blue block">{f.fid}</span>
-                        <span className="text-[11px] text-slate-600 truncate block font-medium">{f.title}</span>
-                      </div>
-                      <span className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded ${
-                        f.status === 'Published' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        {f.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           )}
 

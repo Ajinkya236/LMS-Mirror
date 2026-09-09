@@ -8,6 +8,7 @@ import {
   generateSampleCSV,
   downloadBlobFile
 } from '../../utils/formsStorage';
+import { CSVRemoveAssignmentsModal } from './CSVRemoveAssignmentsModal';
 import {
   Search,
   Filter,
@@ -54,6 +55,7 @@ export const AssignmentHistoryView: React.FC<AssignmentHistoryViewProps> = ({
 
   // Multi-select for bulk pending deletion
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isRemoveCSVOpen, setIsRemoveCSVOpen] = useState<boolean>(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -223,6 +225,15 @@ export const AssignmentHistoryView: React.FC<AssignmentHistoryViewProps> = ({
             </button>
 
             <button
+              type="button"
+              onClick={() => setIsRemoveCSVOpen(true)}
+              className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs rounded-xl shadow-2xs transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+            >
+              <Trash2 className="w-4 h-4 text-rose-600" />
+              <span>Upload Remove Assignments CSV</span>
+            </button>
+
+            <button
               onClick={handleDownloadSample}
               className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200"
             >
@@ -231,7 +242,7 @@ export const AssignmentHistoryView: React.FC<AssignmentHistoryViewProps> = ({
             </button>
           </div>
 
-          {/* Bulk Delete pending buttons */}
+          {/* Bulk Delete selected pending buttons */}
           <div className="flex items-center gap-2">
             {selectedIds.length > 0 && (
               <button
@@ -244,21 +255,6 @@ export const AssignmentHistoryView: React.FC<AssignmentHistoryViewProps> = ({
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Delete Selected ({selectedIds.length})</span>
-              </button>
-            )}
-
-            {pendingCount > 0 && selectedIds.length === 0 && (
-              <button
-                onClick={() => setDeleteConfirmState({
-                  isOpen: true,
-                  type: 'all-pending',
-                  targetTitle: `all ${pendingCount} pending assignments`
-                })}
-                className="px-3 py-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
-                title="Remove all pending assignments"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Clear All Pending</span>
               </button>
             )}
           </div>
@@ -586,6 +582,17 @@ export const AssignmentHistoryView: React.FC<AssignmentHistoryViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* CSV Remove Assignments Modal */}
+      <CSVRemoveAssignmentsModal
+        isOpen={isRemoveCSVOpen}
+        onClose={() => setIsRemoveCSVOpen(false)}
+        assignments={assignments}
+        onAssignmentsRemoved={(count) => {
+          onRefresh();
+          onShowToast(`Successfully removed ${count} assignments via CSV.`, 'success');
+        }}
+      />
     </div>
   );
 };

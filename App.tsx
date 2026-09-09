@@ -38,6 +38,7 @@ import MarkAttendancePage from './pages/MarkAttendancePage';
 import AssessmentPlayerPage from './pages/AssessmentPlayerPage';
 import SessionFeedbackPage from './pages/SessionFeedbackPage';
 import AdminFormsPage from './pages/AdminFormsPage';
+import { CreateFormPage } from './pages/CreateFormPage';
 import PublicFormPage from './pages/PublicFormPage';
 import LearnerFeedbackPage from './pages/LearnerFeedbackPage';
 
@@ -85,6 +86,8 @@ function App() {
             <Route path="/program-engagement/:programId" element={<ProgramEngagementPage />} />
             <Route path="/program-engagement/:programId/mentee/:menteeId" element={<MenteeProgramProgressPage />} />
             <Route path="/admin/forms" element={<AdminFormsPage />} />
+            <Route path="/admin/forms/create" element={<CreateFormPage />} />
+            <Route path="/admin/forms/edit/:formId" element={<CreateFormPage />} />
             <Route path="/form/native-feedback-assignment" element={<LearnerFeedbackPage />} />
             <Route path="/my-feedback" element={<LearnerFeedbackPage />} />
             <Route path="/nfb/:token" element={<PublicFormPage />} />

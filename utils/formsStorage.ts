@@ -7,6 +7,8 @@ import {
   AssignmentStatus,
   CSVValidationSummary,
   CSVValidationRowResult,
+  CSVRemovalValidationSummary,
+  CSVRemovalRowResult,
   FormResponseItem
 } from '../types/forms';
 
@@ -1198,6 +1200,17 @@ export const deletePendingAssignments = (ids?: string[]): number => {
   return removedCount;
 };
 
+export const deleteAssignmentsByIds = (ids: string[]): number => {
+  const current = getStoredAssignments();
+  const idSet = new Set(ids);
+  const remaining = current.filter(a => !idSet.has(a.id));
+  const removedCount = current.length - remaining.length;
+  if (removedCount > 0) {
+    saveStoredAssignments(remaining);
+  }
+  return removedCount;
+};
+
 export const updateAssignmentStatus = (id: string, status: AssignmentStatus): FeedbackAssignment | undefined => {
   const current = getStoredAssignments();
   const index = current.findIndex(a => a.id === id);
@@ -1658,6 +1671,158 @@ export const generateSampleCSV = (forms: LMSForm[]): string => {
   ];
 
   return rows.join('\n');
+};
+
+export const generateSampleRemovalCSV = (assignments: FeedbackAssignment[]): string => {
+  const header = 'FeedbackID,username';
+  if (assignments.length === 0) {
+    return `${header}\nFID-1092,alex.chen\nFID-1088,priya.sharma@enterprise.com`;
+  }
+  const sampleRows = assignments.slice(0, 6).map(a => `${a.feedbackId},${a.username}`);
+  return [header, ...sampleRows].join('\n');
+};
+
+export const validateRemovalAssignmentCSV = (
+  csvContent: string,
+  existingAssignments: FeedbackAssignment[]
+): CSVRemovalValidationSummary => {
+  const lines = csvContent.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  
+  if (lines.length === 0) {
+    return {
+      totalRows: 0,
+      matchedRows: 0,
+      unmatchedRows: 0,
+      duplicateRows: 0,
+      results: []
+    };
+  }
+
+  // Detect header
+  const headerLine = lines[0].toLowerCase();
+  const hasFeedbackIdCol = headerLine.includes('feedbackid') || headerLine.includes('feedback_id') || headerLine.includes('fid') || headerLine.includes('formid');
+  const hasUsernameCol = headerLine.includes('username') || headerLine.includes('user_name') || headerLine.includes('user') || headerLine.includes('email');
+  const hasAssignmentIdCol = headerLine.includes('assignmentid') || headerLine.includes('assignment_id') || headerLine.includes('asgid');
+
+  let dataLines = lines;
+  if ((hasFeedbackIdCol && hasUsernameCol) || hasAssignmentIdCol) {
+    dataLines = lines.slice(1);
+  }
+
+  const results: CSVRemovalRowResult[] = [];
+  const maxRowsLimit = 2000;
+  const processedKeys = new Set<string>();
+  let duplicateCount = 0;
+
+  // Build lookup maps for existing assignments
+  const pairMap = new Map<string, FeedbackAssignment[]>();
+  const idMap = new Map<string, FeedbackAssignment>();
+
+  existingAssignments.forEach(a => {
+    const key = `${a.feedbackId.trim().toUpperCase()}|${a.username.trim().toLowerCase()}`;
+    const list = pairMap.get(key) || [];
+    list.push(a);
+    pairMap.set(key, list);
+
+    idMap.set(a.id.trim().toUpperCase(), a);
+  });
+
+  // Keep track of matched assignment IDs so we don't double remove
+  const matchedAssignmentIds = new Set<string>();
+
+  const linesToProcess = dataLines.slice(0, maxRowsLimit);
+
+  linesToProcess.forEach((line, index) => {
+    const rowNumber = dataLines === lines ? index + 1 : index + 2;
+    const errors: string[] = [];
+
+    // Parse columns (handling comma, tab or semicolon)
+    let parts: string[] = [];
+    if (line.includes(',')) {
+      parts = line.split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
+    } else if (line.includes('\t')) {
+      parts = line.split('\t').map(s => s.trim().replace(/^["']|["']$/g, ''));
+    } else if (line.includes(';')) {
+      parts = line.split(';').map(s => s.trim().replace(/^["']|["']$/g, ''));
+    } else {
+      parts = [line.trim()];
+    }
+
+    const col1 = (parts[0] || '').trim();
+    const col2 = (parts[1] || '').trim();
+
+    let rawFid = '';
+    let rawUsername = '';
+    let rawAsgId = '';
+
+    if (col1.toUpperCase().startsWith('ASG-') && !col2) {
+      rawAsgId = col1;
+    } else {
+      rawFid = col1;
+      rawUsername = col2;
+    }
+
+    if (!rawAsgId && (!rawFid || !rawUsername)) {
+      errors.push('Missing required column(s). Required: FeedbackID, username (or AssignmentID)');
+    }
+
+    let matched: FeedbackAssignment | undefined;
+
+    if (rawAsgId) {
+      matched = idMap.get(rawAsgId.toUpperCase());
+      if (!matched) {
+        errors.push(`No assignment found with ID "${rawAsgId}"`);
+      } else {
+        rawFid = matched.feedbackId;
+        rawUsername = matched.username;
+      }
+    } else if (rawFid && rawUsername) {
+      const key = `${rawFid.toUpperCase()}|${rawUsername.toLowerCase()}`;
+      const candidates = pairMap.get(key);
+      if (!candidates || candidates.length === 0) {
+        errors.push(`No active assignment found for user "${rawUsername}" with FeedbackID "${rawFid}"`);
+      } else {
+        // Pick an un-matched candidate if possible
+        matched = candidates.find(c => !matchedAssignmentIds.has(c.id)) || candidates[0];
+      }
+    }
+
+    // Check duplicate row in CSV
+    const rowKey = rawAsgId ? rawAsgId.toUpperCase() : `${rawFid.toUpperCase()}|${rawUsername.toLowerCase()}`;
+    if (rowKey && processedKeys.has(rowKey)) {
+      errors.push(`Duplicate row in removal CSV: "${rowKey}"`);
+      duplicateCount++;
+    } else if (rowKey) {
+      processedKeys.add(rowKey);
+    }
+
+    if (matched && !matchedAssignmentIds.has(matched.id)) {
+      matchedAssignmentIds.add(matched.id);
+    }
+
+    const isValid = errors.length === 0 && Boolean(matched);
+
+    results.push({
+      rowNumber,
+      feedbackId: rawFid,
+      username: rawUsername,
+      assignmentId: matched?.id || rawAsgId || undefined,
+      matchedAssignment: matched,
+      isValid,
+      errors
+    });
+  });
+
+  const matchedRows = results.filter(r => r.isValid && r.matchedAssignment).length;
+  const unmatchedRows = results.filter(r => !r.isValid || !r.matchedAssignment).length;
+
+  return {
+    totalRows: dataLines.length,
+    matchedRows,
+    unmatchedRows,
+    duplicateRows: duplicateCount,
+    results
+  };
 };
 
 export const exportResponsesToCSV = (responses: FormSubmissionRecord[], forms: LMSForm[]): string => {

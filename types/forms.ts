@@ -198,6 +198,24 @@ export interface CSVValidationSummary {
   results: CSVValidationRowResult[];
 }
 
+export interface CSVRemovalRowResult {
+  rowNumber: number;
+  feedbackId: string;
+  username: string;
+  assignmentId?: string;
+  matchedAssignment?: FeedbackAssignment;
+  isValid: boolean;
+  errors: string[];
+}
+
+export interface CSVRemovalValidationSummary {
+  totalRows: number;
+  matchedRows: number;
+  unmatchedRows: number;
+  duplicateRows: number;
+  results: CSVRemovalRowResult[];
+}
+
 export interface LMSForm {
   id: string;
   fid: string; // e.g. "FID-1042"
