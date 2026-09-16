@@ -2581,9 +2581,10 @@ const SkillsPage: React.FC = () => {
           {/* Skill Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredLibrary.map((skill) => {
-              const truncatedDesc = skill.description.length > 105 
-                ? skill.description.slice(0, 102) + '...' 
-                : skill.description;
+              const desc = skill.description || '';
+              const truncatedDesc = desc.length > 105 
+                ? desc.slice(0, 102) + '...' 
+                : desc;
               return (
                 <div key={skill.id} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs hover:border-r-blue hover:shadow-md transition-all flex flex-col justify-between space-y-4">
                   <div>
@@ -2893,7 +2894,7 @@ const SkillsPage: React.FC = () => {
                                         )}
                                       </div>
                                       <span className="text-[11px] text-gray-500">
-                                        {member.roleSkills.length} Role Skills &bull; {member.additionalSkills?.length || 0} Additional Skills
+                                        {(member.roleSkills || []).length} Role Skills &bull; {member.additionalSkills?.length || 0} Additional Skills
                                       </span>
                                     </div>
                                   </div>
@@ -2929,7 +2930,7 @@ const SkillsPage: React.FC = () => {
                                         In Progress
                                       </span>
                                       <span className="text-[10px] text-amber-800 font-bold mt-0.5">
-                                        {ratedSkillsCount}/{member.roleSkills.length} rated
+                                        {ratedSkillsCount}/{(member.roleSkills || []).length} rated
                                       </span>
                                     </div>
                                   ) : (
@@ -3059,7 +3060,7 @@ const SkillsPage: React.FC = () => {
                                         <div className="flex items-center gap-2">
                                           <AwardIcon className="w-4 h-4 text-r-blue" />
                                           <span className="font-heading font-extrabold text-xs text-slate-900">
-                                            Role Competency Matrix for {member.name} ({member.roleSkills.length} Mapped Skills)
+                                            Role Competency Matrix for {member.name} ({(member.roleSkills || []).length} Mapped Skills)
                                           </span>
                                         </div>
                                         <div className="flex items-center gap-3">
@@ -3080,7 +3081,7 @@ const SkillsPage: React.FC = () => {
                                         </div>
                                       </div>
 
-                                      {member.roleSkills.length === 0 ? (
+                                      {(member.roleSkills || []).length === 0 ? (
                                         <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
                                           <AlertCircleIcon className="w-4 h-4 text-amber-600 flex-shrink-0" />
                                           <span>
@@ -3298,17 +3299,17 @@ const SkillsPage: React.FC = () => {
 
                                 <span className="text-gray-300 font-normal">|</span>
 
-                                {/* Category and Criticality */}
+                                 {/* Category and Criticality */}
                                 <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-bold">
-                                  {item.category}
+                                  {item.category || item.skillType || 'Technical'}
                                 </span>
                                 <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
                                   item.criticality === 'High' ? 'bg-amber-100 text-amber-900' : 'bg-blue-100 text-blue-900'
                                 }`}>
-                                  {item.criticality} Criticality
+                                  {item.criticality || 'High'} Criticality
                                 </span>
                                 <span className="text-[11px] text-gray-400">
-                                  Submitted {item.submittedAt}
+                                  Submitted {item.submittedAt || item.submittedDate || 'Recently'}
                                 </span>
                               </div>
 
@@ -3319,16 +3320,16 @@ const SkillsPage: React.FC = () => {
                                     {item.skillName}
                                   </h4>
                                   <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200 text-xs font-extrabold">
-                                    Requested: Level {item.selectedLevel} ({levelName})
+                                    Requested: Level {item.selectedLevel || item.proficiencyLevel || 1} ({levelName})
                                   </span>
-                                  {item.validatedLevel !== undefined && (
+                                  {(item.validatedLevel !== undefined || item.validatedProficiencyLevel !== undefined) && (
                                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-black">
-                                      Manager Validated: Level {item.validatedLevel}
+                                      Manager Validated: Level {item.validatedLevel !== undefined ? item.validatedLevel : item.validatedProficiencyLevel}
                                     </span>
                                   )}
                                 </div>
                                 <p className="text-xs text-gray-600 mt-1 line-clamp-2 leading-relaxed">
-                                  {item.skillDescription}
+                                  {item.skillDescription || item.applicationText || 'Competency validation request.'}
                                 </p>
                               </div>
 
@@ -3338,77 +3339,86 @@ const SkillsPage: React.FC = () => {
                                   Employee Application & Practical Experience Justification
                                 </span>
                                 <p className="text-slate-700 italic leading-relaxed">
-                                  "{item.applicationStatement}"
+                                  "{item.applicationStatement || item.applicationText || (item.applicationSummaries ? item.applicationSummaries.join(' ') : 'Practical experience applied on enterprise workloads.')}"
                                 </p>
                               </div>
 
                               {/* Evidence Files List */}
-                              <div className="space-y-1.5">
-                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
-                                  Attached Evidence Artifacts ({item.evidenceDocs.length} files)
-                                </span>
-                                <div className="flex flex-wrap gap-2">
-                                  {item.evidenceDocs.map((doc) => (
-                                    <div 
-                                      key={doc.id}
-                                      className="px-3 py-1.5 bg-white border border-gray-300 hover:border-r-blue rounded-xl flex items-center gap-2 text-xs transition-colors shadow-3xs"
-                                    >
-                                      <AwardIcon className="w-3.5 h-3.5 text-r-blue flex-shrink-0" />
-                                      <span className="font-bold text-slate-800 max-w-[180px] truncate">{doc.title}</span>
-                                      <span className="text-[10px] text-gray-400">({doc.type})</span>
-                                      
-                                      <div className="flex items-center gap-1 border-l border-gray-200 pl-2 ml-1">
-                                        <button
-                                          type="button"
-                                          onClick={() => setActiveEvidenceModalDoc({ doc, employeeName: item.employeeName, skillName: item.skillName })}
-                                          className="text-r-blue hover:text-r-blue-dark font-bold text-[11px] cursor-pointer hover:underline"
-                                          title="Preview document artifact in interactive viewer"
-                                        >
-                                          Preview
-                                        </button>
-                                        <span className="text-gray-300">&bull;</span>
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            const blob = new Blob([
-                                              `=======================================================\n` +
-                                              `JIO LEARNING & COMPETENCY MANAGEMENT ARTIFACT\n` +
-                                              `=======================================================\n\n` +
-                                              `Document: ${doc.title}\n` +
-                                              `Employee: ${item.employeeName} (${item.employeeRole})\n` +
-                                              `Skill: ${item.skillName} (Level ${item.selectedLevel})\n` +
-                                              `Verification Key: ${doc.verificationId || 'JIO-CERT-AUTO-GEN'}\n` +
-                                              `Issuer / Institute: ${doc.issuer || 'Jio Platform Architecture Guild'}\n` +
-                                              `Accreditation Date: ${doc.issuedDate || 'Verified'}\n\n` +
-                                              `Description & Key Learnings:\n${doc.description || 'Comprehensive competency validation artifact.'}\n\n` +
-                                              `Key Skills Validated:\n- ${item.skillName}\n- Platform Architecture Standard\n\n` +
-                                              `Status: Manager Review Pipeline Verified\n`
-                                            ], { type: 'text/plain;charset=utf-8' });
-                                            const url = URL.createObjectURL(blob);
-                                            const a = document.createElement('a');
-                                            a.href = url;
-                                            a.download = `${doc.fileName || `${item.skillName.toLowerCase().replace(/\s+/g, '-')}-evidence.txt`}`;
-                                            document.body.appendChild(a);
-                                            a.click();
-                                            document.body.removeChild(a);
-                                            URL.revokeObjectURL(url);
-                                          }}
-                                          className="text-slate-600 hover:text-slate-900 font-bold text-[11px] cursor-pointer hover:underline"
-                                          title="Download evidence document"
-                                        >
-                                          Download
-                                        </button>
+                              {(() => {
+                                const docs = item.evidenceDocs || item.evidences || [];
+                                return (
+                                  <div className="space-y-1.5">
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                                      Attached Evidence Artifacts ({docs.length} files)
+                                    </span>
+                                    {docs.length === 0 ? (
+                                      <span className="text-xs text-gray-400 italic">No evidence artifacts uploaded</span>
+                                    ) : (
+                                      <div className="flex flex-wrap gap-2">
+                                        {docs.map((doc) => (
+                                          <div 
+                                            key={doc.id}
+                                            className="px-3 py-1.5 bg-white border border-gray-300 hover:border-r-blue rounded-xl flex items-center gap-2 text-xs transition-colors shadow-3xs"
+                                          >
+                                            <AwardIcon className="w-3.5 h-3.5 text-r-blue flex-shrink-0" />
+                                            <span className="font-bold text-slate-800 max-w-[180px] truncate">{doc.title}</span>
+                                            <span className="text-[10px] text-gray-400">({doc.type || 'Artifact'})</span>
+                                            
+                                            <div className="flex items-center gap-1 border-l border-gray-200 pl-2 ml-1">
+                                              <button
+                                                type="button"
+                                                onClick={() => setActiveEvidenceModalDoc({ doc, employeeName: item.employeeName, skillName: item.skillName })}
+                                                className="text-r-blue hover:text-r-blue-dark font-bold text-[11px] cursor-pointer hover:underline"
+                                                title="Preview document artifact in interactive viewer"
+                                              >
+                                                Preview
+                                              </button>
+                                              <span className="text-gray-300">&bull;</span>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const blob = new Blob([
+                                                    `=======================================================\n` +
+                                                    `JIO LEARNING & COMPETENCY MANAGEMENT ARTIFACT\n` +
+                                                    `=======================================================\n\n` +
+                                                    `Document: ${doc.title}\n` +
+                                                    `Employee: ${item.employeeName} (${item.employeeRole})\n` +
+                                                    `Skill: ${item.skillName} (Level ${item.selectedLevel || item.proficiencyLevel || 1})\n` +
+                                                    `Verification Key: ${doc.verificationId || doc.credentialId || 'JIO-CERT-AUTO-GEN'}\n` +
+                                                    `Issuer / Institute: ${doc.issuer || 'Jio Platform Architecture Guild'}\n` +
+                                                    `Accreditation Date: ${doc.issuedDate || doc.issueDate || 'Verified'}\n\n` +
+                                                    `Description & Key Learnings:\n${doc.description || 'Comprehensive competency validation artifact.'}\n\n` +
+                                                    `Key Skills Validated:\n- ${item.skillName}\n- Platform Architecture Standard\n\n` +
+                                                    `Status: Manager Review Pipeline Verified\n`
+                                                  ], { type: 'text/plain;charset=utf-8' });
+                                                  const url = URL.createObjectURL(blob);
+                                                  const a = document.createElement('a');
+                                                  a.href = url;
+                                                  a.download = `${doc.fileName || `${item.skillName.toLowerCase().replace(/\s+/g, '-')}-evidence.txt`}`;
+                                                  document.body.appendChild(a);
+                                                  a.click();
+                                                  document.body.removeChild(a);
+                                                  URL.revokeObjectURL(url);
+                                                }}
+                                                className="text-slate-600 hover:text-slate-900 font-bold text-[11px] cursor-pointer hover:underline"
+                                                title="Download evidence document"
+                                              >
+                                                Download
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ))}
                                       </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
 
                               {/* Manager Notes if Decided */}
-                              {item.managerNotes && (
+                              {(item.managerNotes || item.managerComment) && (
                                 <div className="p-3 bg-emerald-50/70 rounded-xl border border-emerald-200 text-xs text-emerald-900 space-y-0.5">
-                                  <span className="font-bold block">Manager Review Remarks ({item.decidedAt}):</span>
-                                  <p className="text-emerald-800">{item.managerNotes}</p>
+                                  <span className="font-bold block">Manager Review Remarks ({item.decidedAt || item.validatedAt || 'Completed'}):</span>
+                                  <p className="text-emerald-800">{item.managerNotes || item.managerComment}</p>
                                 </div>
                               )}
                             </div>

@@ -189,7 +189,7 @@ ${doc.description || 'Verified engineering artifact and technical competency sub
                   </span>
                   <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 text-xs font-black border border-indigo-200 flex items-center gap-1">
                     <AwardIcon className="w-3.5 h-3.5 text-indigo-700" />
-                    Level {validationItem.selectedLevel}: {validationItem.levelName}
+                    Level {validationItem.selectedLevel || validationItem.proficiencyLevel || 1}: {validationItem.levelName || 'Practitioner'}
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed">
@@ -210,27 +210,30 @@ ${doc.description || 'Verified engineering artifact and technical competency sub
                 <span>Application & Practical Work Impact</span>
               </div>
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-gray-800 leading-relaxed whitespace-pre-line font-normal">
-                {validationItem.applicationText}
+                {validationItem.applicationText || validationItem.applicationStatement || 'Demonstrated practical competence in enterprise engineering.'}
               </div>
             </div>
 
             {/* Evidence Files List */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-extrabold text-gray-700 uppercase tracking-wider">
-                  <ShieldCheckIcon className="w-4 h-4 text-emerald-600" />
-                  <span>Evidence Files & Artifact Proofs ({validationItem.evidenceDocs.length})</span>
-                </div>
-                <span className="text-[11px] text-gray-500">Click preview or download to inspect</span>
-              </div>
+            {(() => {
+              const evidenceList = validationItem.evidenceDocs || validationItem.evidences || [];
+              return (
+                <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-extrabold text-gray-700 uppercase tracking-wider">
+                      <ShieldCheckIcon className="w-4 h-4 text-emerald-600" />
+                      <span>Evidence Files & Artifact Proofs ({evidenceList.length})</span>
+                    </div>
+                    <span className="text-[11px] text-gray-500">Click preview or download to inspect</span>
+                  </div>
 
-              {validationItem.evidenceDocs.length === 0 ? (
-                <div className="p-4 rounded-xl bg-slate-50 text-center text-xs text-gray-500 border border-dashed border-gray-300">
-                  No evidence files attached to this validation request.
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {validationItem.evidenceDocs.map((doc) => (
+                  {evidenceList.length === 0 ? (
+                    <div className="p-4 rounded-xl bg-slate-50 text-center text-xs text-gray-500 border border-dashed border-gray-300">
+                      No evidence files attached to this validation request.
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {evidenceList.map((doc) => (
                     <div
                       key={doc.id}
                       className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-gray-200 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
@@ -276,6 +279,8 @@ ${doc.description || 'Verified engineering artifact and technical competency sub
                 </div>
               )}
             </div>
+            );
+          })()}
 
             {/* Manager Decision Section */}
             <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-5 border border-r-blue/30 shadow-xs space-y-4">

@@ -1796,24 +1796,44 @@ export const INITIAL_MANAGER_VALIDATIONS: ManagerSkillValidationItem[] = [
   }
 ];
 
+export function normalizeManagerValidation(v: ManagerSkillValidationItem): ManagerSkillValidationItem {
+  const docs = v.evidenceDocs || v.evidences || [];
+  const level = v.selectedLevel || v.proficiencyLevel || 1;
+  const levelNames: Record<number, string> = { 1: 'Awareness', 2: 'Working', 3: 'Practitioner', 4: 'Expert' };
+  return {
+    ...v,
+    selectedLevel: level,
+    proficiencyLevel: level,
+    levelName: v.levelName || levelNames[level] || 'Practitioner',
+    evidenceDocs: docs,
+    evidences: docs,
+    submittedDate: v.submittedDate || 'Recent',
+    applicationText: v.applicationText || v.applicationStatement || 'Technical skill applied to enterprise telecommunications and platform infrastructure.',
+    applicationStatement: v.applicationStatement || v.applicationText || 'Technical skill applied to enterprise telecommunications and platform infrastructure.',
+    skillDescription: v.skillDescription || v.applicationText || 'Competency evaluated for enterprise platform capability.',
+    status: v.status || 'Pending'
+  };
+}
+
 export function getStoredManagerValidations(): ManagerSkillValidationItem[] {
   try {
     const raw = localStorage.getItem(VALIDATIONS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.map(normalizeManagerValidation);
       }
     }
   } catch (e) {
     console.error('Failed to parse manager validations from localStorage', e);
   }
 
+  const initialNormalized = INITIAL_MANAGER_VALIDATIONS.map(normalizeManagerValidation);
   try {
-    localStorage.setItem(VALIDATIONS_STORAGE_KEY, JSON.stringify(INITIAL_MANAGER_VALIDATIONS));
+    localStorage.setItem(VALIDATIONS_STORAGE_KEY, JSON.stringify(initialNormalized));
   } catch {}
 
-  return INITIAL_MANAGER_VALIDATIONS;
+  return initialNormalized;
 }
 
 export function saveStoredManagerValidations(validations: ManagerSkillValidationItem[]): void {

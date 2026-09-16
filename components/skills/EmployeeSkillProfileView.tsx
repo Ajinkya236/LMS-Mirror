@@ -462,54 +462,58 @@ ${doc.description || 'Verified enterprise engineering artifact submitted as proo
                           Practical Application & Project Impact:
                         </h4>
                         <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-gray-800 leading-relaxed whitespace-pre-line">
-                          {skill.applicationText}
+                          {skill.applicationText || skill.applicationSummaries?.join('\n') || 'Enterprise engineering implementation across microservices and cloud infrastructure.'}
                         </div>
                       </div>
 
                       {/* Evidence Files List with Preview & Download */}
-                      {skill.evidenceDocs && skill.evidenceDocs.length > 0 && (
-                        <div className="space-y-2.5 pt-2 border-t border-gray-100">
-                          <h4 className="text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                            <FileTextIcon className="w-3.5 h-3.5 text-r-blue" />
-                            <span>Attached Evidence Artifacts ({skill.evidenceDocs.length})</span>
-                          </h4>
+                      {(() => {
+                        const docs = skill.evidenceDocs || skill.evidences || [];
+                        if (docs.length === 0) return null;
+                        return (
+                          <div className="space-y-2.5 pt-2 border-t border-gray-100">
+                            <h4 className="text-xs font-extrabold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                              <FileTextIcon className="w-3.5 h-3.5 text-r-blue" />
+                              <span>Attached Evidence Artifacts ({docs.length})</span>
+                            </h4>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            {skill.evidenceDocs.map((doc) => (
-                              <div
-                                key={doc.id}
-                                className="p-3 rounded-xl bg-slate-50 border border-gray-200 flex items-center justify-between gap-2"
-                              >
-                                <div className="truncate">
-                                  <span className="text-xs font-bold text-gray-900 block truncate">{doc.title}</span>
-                                  <span className="text-[10px] text-gray-500 block truncate">
-                                    {doc.issuer || 'Jio Platforms'} • {doc.issueDate || '2025'}
-                                  </span>
-                                </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                              {docs.map((doc) => (
+                                <div
+                                  key={doc.id}
+                                  className="p-3 rounded-xl bg-slate-50 border border-gray-200 flex items-center justify-between gap-2"
+                                >
+                                  <div className="truncate">
+                                    <span className="text-xs font-bold text-gray-900 block truncate">{doc.title}</span>
+                                    <span className="text-[10px] text-gray-500 block truncate">
+                                      {doc.issuer || 'Jio Platforms'} • {doc.issueDate || '2025'}
+                                    </span>
+                                  </div>
 
-                                <div className="flex items-center gap-1 flex-shrink-0">
-                                  <button
-                                    type="button"
-                                    onClick={() => setActivePreviewDoc({ doc, skillName: skill.name })}
-                                    className="p-1.5 text-slate-600 hover:text-r-blue hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
-                                    title="Preview evidence"
-                                  >
-                                    <EyeIcon className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDownloadFile(doc, skill.name)}
-                                    className="p-1.5 text-slate-600 hover:text-emerald-600 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
-                                    title="Download evidence file"
-                                  >
-                                    <DownloadIcon className="w-4 h-4" />
-                                  </button>
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => setActivePreviewDoc({ doc, skillName: skill.name })}
+                                      className="p-1.5 text-slate-600 hover:text-r-blue hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                                      title="Preview evidence"
+                                    >
+                                      <EyeIcon className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDownloadFile(doc, skill.name)}
+                                      className="p-1.5 text-slate-600 hover:text-emerald-600 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                                      title="Download evidence file"
+                                    >
+                                      <DownloadIcon className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* Manager Feedback Note */}
                       {skill.managerFeedback && (
