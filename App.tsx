@@ -29,6 +29,7 @@ import SearchResultsPage from './pages/SearchResultsPage';
 import CategoryDetailsPage from './pages/CategoryDetailsPage';
 import SkillsPage from './pages/SkillsPage';
 import AddAdditionalSkillPage from './pages/AddAdditionalSkillPage';
+import RoleSkillSelfSurveyPage from './pages/RoleSkillSelfSurveyPage';
 import SkillDetailsPage from './pages/SkillDetailsPage';
 import CoursePlayerPage from './pages/CoursePlayerPage';
 import EvaluatorDashboardPage from './pages/EvaluatorDashboardPage';
@@ -51,6 +52,8 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/skills" element={<SkillsPage />} />
+            <Route path="/skills/self-survey" element={<RoleSkillSelfSurveyPage />} />
+            <Route path="/skills/survey" element={<RoleSkillSelfSurveyPage />} />
             <Route path="/skills/learn/:skillId" element={<SkillDetailsPage />} />
             <Route path="/skills/details/:skillId" element={<SkillDetailsPage />} />
             <Route path="/skills/add-additional-skill" element={<AddAdditionalSkillPage />} />

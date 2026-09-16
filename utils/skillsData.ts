@@ -1,7 +1,7 @@
 // utils/skillsData.ts
-import { ValidationStatus } from '../pages/SkillsPage';
+export type ValidationStatus = 'Relevant' | 'Not Relevant' | 'Future Relevant' | 'Need More Evidence' | 'Pending Review' | 'Pending';
 
-export type EvidenceType = 'certificate' | 'project' | 'assessment' | 'link' | 'document';
+export type EvidenceType = 'certificate' | 'project' | 'assessment' | 'link' | 'document' | 'Certification' | 'Project' | 'Assessment' | 'Training' | 'Document' | 'Link';
 
 export interface EvidenceItem {
   id: string;
@@ -17,31 +17,45 @@ export interface EvidenceItem {
   expiryDate?: string;
   credentialId?: string;
   description: string;
-  addedDate: string;
+  addedDate?: string;
   verificationStatus?: 'Pending' | 'Verified' | 'Requires Review';
+  skills?: string[];
+  issuedDate?: string;
+  verificationId?: string;
 }
+
+export type SkillEvidenceDoc = EvidenceItem;
 
 export interface AdditionalSkillItem {
   id: string;
   name: string;
   type: 'Technical' | 'Functional' | 'Behavioral' | 'Domain';
   category?: string;
-  criticality: 'High' | 'Medium' | 'Low';
+  criticality: 'Critical' | 'High' | 'Medium' | 'Low';
   proficiencyLevel?: number; // 1: Awareness, 2: Working, 3: Practitioner, 4: Expert
+  selectedLevel?: number;
+  levelName?: string;
+  levelDescription?: string;
   validatedProficiencyLevel?: number; // Currently validated proficiency level
   underRevalidation?: boolean; // Set to true when edited after validation
   revalidationStatus?: 'Pending Revalidation' | 'Under Review';
-  addedDate: string;
+  addedDate?: string;
+  submittedDate?: string;
   validationStatus: ValidationStatus;
   evidences: EvidenceItem[];
+  evidenceDocs?: EvidenceItem[];
   managerComment?: string;
+  managerFeedback?: string;
   experienceYears?: string;
   notes?: string;
+  applicationText?: string;
   applicationSummaries?: string[];
   explored?: boolean;
   skillScore?: number;
   assessmentCompleted?: boolean;
 }
+
+export type ReporteeAdditionalSkill = AdditionalSkillItem;
 
 const STORAGE_KEY = 'jio_learning_additional_skills_v3';
 
@@ -383,25 +397,182 @@ export function deleteEvidenceFromSkill(skillId: string, evidenceId: string): vo
 // Epic A: Role Focus Skill Self-Survey & Persistence
 // ---------------------------------------------------------------------------
 
+export interface RoleSkillLevel {
+  level: number;
+  name: string;
+  description: string;
+}
+
+export interface RoleSkillItem {
+  id: string;
+  name: string;
+  type: 'Technical' | 'Functional' | 'Behavioral' | 'Domain';
+  category: string;
+  criticality: 'Critical' | 'High' | 'Medium' | 'Low';
+  targetLevel: number;
+  currentLevel: number;
+  selfRating?: number;
+  managerRating?: number;
+  status: 'Met' | '1 level short' | '2 levels short' | 'Not Met';
+  skillMeaning?: string;
+  description?: string;
+  levels: RoleSkillLevel[];
+  recommendedCourses?: { title: string; provider: string; duration: string }[];
+}
+
+export const ROLE_SKILLS: RoleSkillItem[] = [
+  {
+    id: 'sk-1',
+    name: 'eNB / gNB Config & Commissioning',
+    type: 'Technical',
+    category: 'Deployment',
+    criticality: 'High',
+    targetLevel: 3,
+    currentLevel: 3,
+    selfRating: 4,
+    managerRating: 3,
+    status: 'Met',
+    skillMeaning: 'Configuring, integrating and commissioning base station nodes, and bringing them on air to acceptance standards.',
+    levels: [
+      { level: 1, name: 'Awareness', description: 'Assists commissioning under supervision, following the checklist.' },
+      { level: 2, name: 'Working', description: 'Commissions standard nodes end to end and closes routine integration faults.' },
+      { level: 3, name: 'Practitioner', description: 'Commissions and integrates independently, including non-standard and multi-vendor configurations.' },
+      { level: 4, name: 'Expert', description: 'Owns the commissioning standard. Resolves escalated integration failures and audits quality.' }
+    ],
+    recommendedCourses: [
+      { title: 'Advanced 5G gNB Node Integration & Multi-Vendor Setup', provider: 'Jio Academy', duration: '4h 30m' },
+      { title: 'Base Station Acceptance & Field Audit Protocol', provider: 'Internal Engineering', duration: '3h 15m' }
+    ]
+  },
+  {
+    id: 'sk-2',
+    name: 'Small Cell & In-Building Solutions',
+    type: 'Technical',
+    category: 'RF Engineering',
+    criticality: 'High',
+    targetLevel: 3,
+    currentLevel: 3,
+    selfRating: 3,
+    managerRating: 3,
+    status: 'Met',
+    skillMeaning: 'Designing and deploying indoor cellular coverage solutions, distributed antenna systems (DAS), and indoor small cells.',
+    levels: [
+      { level: 1, name: 'Awareness', description: 'Understands basic indoor RF propagation and DAS components.' },
+      { level: 2, name: 'Working', description: 'Installs and tests indoor small cells following coverage blueprints.' },
+      { level: 3, name: 'Practitioner', description: 'Designs and optimizes complex in-building wireless coverage for enterprise facilities.' },
+      { level: 4, name: 'Expert', description: 'Leads nationwide indoor cellular architecture and multi-tenant DAS guidelines.' }
+    ],
+    recommendedCourses: [
+      { title: 'Indoor DAS Architecture & High-Density Stadium RF Design', provider: 'Telecom Guild', duration: '3h 45m' },
+      { title: 'Small Cell Integration Protocols & Backhaul Planning', provider: 'Jio Academy', duration: '2h 30m' }
+    ]
+  },
+  {
+    id: 'sk-3',
+    name: '5G Core Network Slicing & Edge UPF',
+    type: 'Domain',
+    category: 'Core Network',
+    criticality: 'Critical',
+    targetLevel: 4,
+    currentLevel: 3,
+    selfRating: 3,
+    managerRating: 3,
+    status: '1 level short',
+    skillMeaning: 'Configuring network slices for eMBB, URLLC, and mMTC and deploying User Plane Function (UPF) at enterprise edge nodes.',
+    levels: [
+      { level: 1, name: 'Awareness', description: 'Understands 5G SA core architecture, NFs, and slicing concept.' },
+      { level: 2, name: 'Working', description: 'Configures standard slices and verifies QoS parameters and slice selection.' },
+      { level: 3, name: 'Practitioner', description: 'Designs custom enterprise slices and optimizes edge UPF routing for sub-5ms latency.' },
+      { level: 4, name: 'Expert', description: 'Defines 5G core slicing policy engine, URLLC fault recovery, and multi-access edge computing (MEC) standards.' }
+    ],
+    recommendedCourses: [
+      { title: '5G Standalone (SA) Core Architecture & Network Slicing Masterclass', provider: 'Jio 5G COE', duration: '6h 00m' },
+      { title: 'Edge Computing & UPF Micro-Data Center Deployment', provider: 'Jio Academy', duration: '4h 15m' }
+    ]
+  },
+  {
+    id: 'sk-4',
+    name: 'Fiber Backhaul & Transport Sync (PTP / SyncE)',
+    type: 'Technical',
+    category: 'Transmission',
+    criticality: 'Medium',
+    targetLevel: 3,
+    currentLevel: 2,
+    selfRating: 2,
+    managerRating: 2,
+    status: '1 level short',
+    skillMeaning: 'Commissioning IP/MPLS cell site routers (CSR) and configuring IEEE 1588v2 Precision Time Protocol (PTP) synchronization.',
+    levels: [
+      { level: 1, name: 'Awareness', description: 'Understands fiber OTDR traces, optical power budgets, and timing concepts.' },
+      { level: 2, name: 'Working', description: 'Configures CSR interfaces, VLANs, and verifies PTP lock state.' },
+      { level: 3, name: 'Practitioner', description: 'Troubleshoots complex sync wander/jitter, asymmetric fiber delays, and boundary clock failovers.' },
+      { level: 4, name: 'Expert', description: 'Architects nationwide transport synchronization topology and telecom profile clock grids.' }
+    ],
+    recommendedCourses: [
+      { title: 'IEEE 1588v2 & SyncE for 5G Fronthaul/Midhaul Networks', provider: 'Optical & Transport Guild', duration: '3h 30m' },
+      { title: 'IP/MPLS Cell Site Router Commissioning & QoS Engineering', provider: 'Jio Academy', duration: '5h 00m' }
+    ]
+  },
+  {
+    id: 'sk-5',
+    name: 'RF Optimization & Drive Test Analysis',
+    type: 'Technical',
+    category: 'RF Engineering',
+    criticality: 'High',
+    targetLevel: 4,
+    currentLevel: 4,
+    selfRating: 4,
+    managerRating: 4,
+    status: 'Met',
+    skillMeaning: 'Analyzing drive-test layer 3 logs, diagnosing call drops and handover failures, and tuning antenna tilt and power parameters.',
+    levels: [
+      { level: 1, name: 'Awareness', description: 'Collects scanner and UE logs, identifies basic coverage holes.' },
+      { level: 2, name: 'Working', description: 'Post-processes drive test logs and recommends electrical down-tilt adjustments.' },
+      { level: 3, name: 'Practitioner', description: 'Performs root-cause analysis on complex handovers, pilot pollution, and inter-frequency interference.' },
+      { level: 4, name: 'Expert', description: 'Designs automated self-organizing network (SON) algorithms and network-wide RF golden parameters.' }
+    ],
+    recommendedCourses: [
+      { title: 'Advanced 5G NR Layer 3 Signaling & Protocol Analysis', provider: 'Telecom Guild', duration: '5h 30m' },
+      { title: 'Automated SON Optimization & MIMO Beamforming Tuning', provider: 'Jio Academy', duration: '4h 00m' }
+    ]
+  }
+];
+
+export interface RoleSurveyRecord {
+  status: 'Completed' | 'In progress' | 'Not started';
+  completed: boolean;
+  completedAt?: string;
+  draftRatings: Record<string, number>; // skillId -> level (1-4)
+  submittedRatings: Record<string, number>; // skillId -> level (1-4)
+}
+
 export interface RoleSurveyState {
   completed: boolean;
   completedAt?: string;
   draftRatings: Record<string, number>; // skillId -> level (1-4)
+  submittedRatings?: Record<string, number>;
 }
 
 const ROLE_SKILLS_STORAGE_KEY = 'jio_learning_role_skills_inventory_v1';
 const ROLE_SURVEY_STORAGE_KEY = 'jio_learning_role_survey_state_v1';
 
-export function getStoredRoleSurveyState(): RoleSurveyState {
+export function getStoredRoleSurvey(): RoleSurveyRecord {
   try {
     const raw = localStorage.getItem(ROLE_SURVEY_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
+        const completed = Boolean(parsed.completed);
+        const draft = parsed.draftRatings || {};
+        const submitted = parsed.submittedRatings || (completed ? draft : {});
+        const hasDraft = Object.keys(draft).length > 0;
+        const status = completed ? 'Completed' : (hasDraft ? 'In progress' : 'Not started');
         return {
-          completed: Boolean(parsed.completed),
+          status,
+          completed,
           completedAt: parsed.completedAt,
-          draftRatings: parsed.draftRatings || {}
+          draftRatings: draft,
+          submittedRatings: submitted
         };
       }
     }
@@ -409,26 +580,41 @@ export function getStoredRoleSurveyState(): RoleSurveyState {
     console.error('Failed to parse role survey state from localStorage', e);
   }
   return {
+    status: 'Not started',
     completed: false,
-    draftRatings: {}
+    draftRatings: {},
+    submittedRatings: {}
   };
 }
 
-export function saveRoleSurveyDraft(draftRatings: Record<string, number>): void {
+export function getStoredRoleSurveyState(): RoleSurveyState {
+  const record = getStoredRoleSurvey();
+  return {
+    completed: record.completed,
+    completedAt: record.completedAt,
+    draftRatings: record.draftRatings,
+    submittedRatings: record.submittedRatings
+  };
+}
+
+export function saveRoleSurveyDraft(draftRatings: Record<string, number>): RoleSurveyRecord {
   try {
-    const current = getStoredRoleSurveyState();
-    const updated: RoleSurveyState = {
+    const current = getStoredRoleSurvey();
+    const updated: RoleSurveyRecord = {
       ...current,
+      status: current.completed ? 'Completed' : (Object.keys(draftRatings).length > 0 ? 'In progress' : 'Not started'),
       draftRatings
     };
     localStorage.setItem(ROLE_SURVEY_STORAGE_KEY, JSON.stringify(updated));
     window.dispatchEvent(new Event('role-survey-updated'));
+    return updated;
   } catch (e) {
     console.error('Failed to save survey draft to localStorage', e);
+    return getStoredRoleSurvey();
   }
 }
 
-export function submitRoleSurvey(ratings: Record<string, number>): { completedAt: string } {
+export function submitRoleSurvey(ratings: Record<string, number>): { completedAt: string; surveyRecord: RoleSurveyRecord } {
   const now = new Date();
   const formattedTime = now.toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -440,13 +626,16 @@ export function submitRoleSurvey(ratings: Record<string, number>): { completedAt
     hour12: true
   });
 
+  const updatedRecord: RoleSurveyRecord = {
+    status: 'Completed',
+    completed: true,
+    completedAt: formattedTime,
+    draftRatings: ratings,
+    submittedRatings: ratings
+  };
+
   try {
-    const updatedState: RoleSurveyState = {
-      completed: true,
-      completedAt: formattedTime,
-      draftRatings: ratings
-    };
-    localStorage.setItem(ROLE_SURVEY_STORAGE_KEY, JSON.stringify(updatedState));
+    localStorage.setItem(ROLE_SURVEY_STORAGE_KEY, JSON.stringify(updatedRecord));
 
     // Also update role skills inventory if stored
     const rawRoleSkills = localStorage.getItem(ROLE_SKILLS_STORAGE_KEY);
@@ -475,7 +664,7 @@ export function submitRoleSurvey(ratings: Record<string, number>): { completedAt
     console.error('Failed to persist completed survey state', e);
   }
 
-  return { completedAt: formattedTime };
+  return { completedAt: formattedTime, surveyRecord: updatedRecord };
 }
 
 export function getStoredRoleSkills<T>(fallbackSkills: T[]): T[] {
@@ -556,6 +745,7 @@ export interface TeamMemberProfile {
   criticalGap: string;
   readiness: number;
   roleSkills: ReporteeRoleSkill[];
+  additionalSkills?: AdditionalSkillItem[];
 }
 
 export interface ManagerSurveyRecord {
@@ -634,6 +824,70 @@ export const INITIAL_TEAM_MEMBERS: TeamMemberProfile[] = [
         selfRating: 2,
         description: 'OpenTelemetry integration, Prometheus metric instrumentation, and Jaeger tracing.'
       }
+    ],
+    additionalSkills: [
+      {
+        id: 'ps-add-1',
+        name: 'Apache Kafka & Event Streaming',
+        category: 'Data & Event Streaming',
+        type: 'Technical',
+        criticality: 'High',
+        proficiencyLevel: 3,
+        experienceYears: '3 Years',
+        validationStatus: 'Pending',
+        applicationSummaries: [
+          'Implemented high-volume message partitioning and idempotent producer streams handling 50k msgs/sec for telecom billing.',
+          'Configured schema registry with Avro serialization and mirror-maker replication across availability zones.'
+        ],
+        evidences: [
+          {
+            id: 'ev-ps-1',
+            type: 'Certification',
+            title: 'Confluent Certified Developer for Apache Kafka (CCDAK)',
+            issuer: 'Confluent Inc.',
+            issueDate: 'August 2025',
+            credentialId: 'CCDAK-984214',
+            fileUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80',
+            description: 'Official certification demonstrating mastery of Kafka streams, consumer groups, schema evolution, and performance tuning.',
+            skills: ['Apache Kafka', 'Distributed Streaming', 'Avro Serialization']
+          },
+          {
+            id: 'ev-ps-2',
+            type: 'Project',
+            title: 'Telecom Stream Slicing Pipeline Architecture Doc & Code Repo',
+            issuer: 'Jio 5G Platform Engineering',
+            issueDate: 'June 2026',
+            description: 'Architecture and benchmarks for real-time CDR stream ingestion with automated lag monitoring.',
+            skills: ['Kafka Streams', 'Prometheus Kafka Exporter']
+          }
+        ]
+      },
+      {
+        id: 'ps-add-2',
+        name: 'GraphQL API Federation',
+        category: 'Backend Architecture',
+        type: 'Technical',
+        criticality: 'Medium',
+        proficiencyLevel: 3,
+        experienceYears: '2 Years',
+        validationStatus: 'Relevant',
+        validatedProficiencyLevel: 3,
+        managerComment: 'Verified production schema federation setup and Apollo router configurations across subscriber microservices.',
+        applicationSummaries: [
+          'Migrated 12 legacy REST microservices into a unified GraphQL subgraph gateway reducing client round-trips by 65%.'
+        ],
+        evidences: [
+          {
+            id: 'ev-ps-3',
+            type: 'Training',
+            title: 'Apollo GraphQL Enterprise Federation Professional',
+            issuer: 'Apollo GraphQL',
+            issueDate: 'January 2026',
+            credentialId: 'AGQL-77812',
+            description: 'Federated schema design, entity resolvers, and subgraphs caching.'
+          }
+        ]
+      }
     ]
   },
   {
@@ -692,6 +946,34 @@ export const INITIAL_TEAM_MEMBERS: TeamMemberProfile[] = [
         managerRating: 4,
         description: 'Architecture review boards, RFD processes, and staff engineer talent coaching.'
       }
+    ],
+    additionalSkills: [
+      {
+        id: 'rm-add-1',
+        name: 'Generative AI Architecture & LLM Orchestration',
+        category: 'Artificial Intelligence',
+        type: 'Technical',
+        criticality: 'Critical',
+        proficiencyLevel: 4,
+        experienceYears: '2 Years',
+        validationStatus: 'Relevant',
+        validatedProficiencyLevel: 4,
+        managerComment: 'Exceptional architectural delivery of RAG search indexing and Gemini enterprise gateway.',
+        applicationSummaries: [
+          'Engineered vector database indexing pipeline with Milvus and LangChain for enterprise internal knowledge retrieval.'
+        ],
+        evidences: [
+          {
+            id: 'ev-rm-1',
+            type: 'Certification',
+            title: 'Google Cloud Professional Machine Learning Engineer',
+            issuer: 'Google Cloud',
+            issueDate: 'October 2025',
+            credentialId: 'GCP-MLE-88190',
+            description: 'Architecting enterprise GenAI solutions, embeddings models, and vector storage.'
+          }
+        ]
+      }
     ]
   },
   {
@@ -745,6 +1027,41 @@ export const INITIAL_TEAM_MEMBERS: TeamMemberProfile[] = [
         targetLevel: 3,
         selfRating: undefined, // Not submitted yet
         description: 'Robot framework, end-to-end simulated UE test scripts, and regression suites.'
+      }
+    ],
+    additionalSkills: [
+      {
+        id: 'vv-add-1',
+        name: 'Open RAN (O-RAN) Architecture',
+        category: 'Telecom Standards',
+        type: 'Technical',
+        criticality: 'High',
+        proficiencyLevel: 3,
+        experienceYears: '2.5 Years',
+        validationStatus: 'Pending',
+        applicationSummaries: [
+          'Spearheaded O-DU and O-CU functional split testing over 7.2x Fronthaul interfaces and E2 interface telemetry integration.'
+        ],
+        evidences: [
+          {
+            id: 'ev-vv-1',
+            type: 'Certification',
+            title: 'O-RAN Alliance Certified Engineer',
+            issuer: 'O-RAN Software Community / Linux Foundation',
+            issueDate: 'May 2026',
+            credentialId: 'ORAN-CERT-44120',
+            description: 'Mastery over O-RAN disaggregated architecture, near-RT RIC, and xApps deployment.',
+            skills: ['O-RAN Architecture', 'Near-RT RIC', 'E2 / A1 Interfaces']
+          },
+          {
+            id: 'ev-vv-2',
+            type: 'Project',
+            title: 'Fronthaul Latency Analysis Whitepaper & Lab Test Results',
+            issuer: 'Jio 5G Lab Core Group',
+            issueDate: 'July 2026',
+            description: 'Comprehensive timing synchronization and eCPRI throughput performance validation logs.'
+          }
+        ]
       }
     ]
   },
@@ -800,6 +1117,57 @@ export const INITIAL_TEAM_MEMBERS: TeamMemberProfile[] = [
         selfRating: undefined,
         description: 'Jest, Playwright, mock API servers, and testing pyramid discipline.'
       }
+    ],
+    additionalSkills: [
+      {
+        id: 'ar-add-1',
+        name: 'Tailwind CSS & Design Systems Engineering',
+        category: 'Design Engineering',
+        type: 'Technical',
+        criticality: 'High',
+        proficiencyLevel: 4,
+        experienceYears: '3 Years',
+        validationStatus: 'Relevant',
+        validatedProficiencyLevel: 4,
+        managerComment: 'Authored company design token package and built reusable component library used by 5 squads.',
+        applicationSummaries: [
+          'Built accessible UI primitive tokens, dark-mode themes, and Storybook components for Jio Consumer Web apps.'
+        ],
+        evidences: [
+          {
+            id: 'ev-ar-1',
+            type: 'Project',
+            title: 'Jio Unified Design System Token Package & NPM Registry',
+            issuer: 'Jio Frontend Center of Excellence',
+            issueDate: 'March 2026',
+            description: 'Component documentation, unit tests, and accessibility audit report passing WCAG AA.'
+          }
+        ]
+      },
+      {
+        id: 'ar-add-2',
+        name: 'Rust Systems Programming',
+        category: 'Low-Level Programming',
+        type: 'Technical',
+        criticality: 'Medium',
+        proficiencyLevel: 2,
+        experienceYears: '1 Year',
+        validationStatus: 'Need More Evidence',
+        managerComment: 'Promising self-learning progress. Please submit code repository or production project sample for Level 3 validation.',
+        applicationSummaries: [
+          'Built CLI log analyzer and WebAssembly micro-parser in Rust for high-speed client data transformations.'
+        ],
+        evidences: [
+          {
+            id: 'ev-ar-2',
+            type: 'Training',
+            title: 'Rust Fundamentals & Memory Safety Certificate',
+            issuer: 'The Rust Foundation Education Track',
+            issueDate: 'February 2026',
+            description: 'Ownership models, lifetimes, concurrency, and WebAssembly compilation.'
+          }
+        ]
+      }
     ]
   },
   {
@@ -854,6 +1222,33 @@ export const INITIAL_TEAM_MEMBERS: TeamMemberProfile[] = [
         selfRating: 3,
         description: 'Error budget tracking, alert burn rates, and synthetic blackbox monitoring.'
       }
+    ],
+    additionalSkills: [
+      {
+        id: 'sr-add-1',
+        name: 'ArgoCD & Progressive Delivery',
+        category: 'GitOps & CI/CD',
+        type: 'Technical',
+        criticality: 'High',
+        proficiencyLevel: 4,
+        experienceYears: '3 Years',
+        validationStatus: 'Pending',
+        applicationSummaries: [
+          'Configured multi-tenant GitOps rollouts using Argo Rollouts with automated blue/green canary analysis with Prometheus.'
+        ],
+        evidences: [
+          {
+            id: 'ev-sr-1',
+            type: 'Certification',
+            title: 'GitOps Certified Practitioner with ArgoCD',
+            issuer: 'Codefresh & Linux Foundation',
+            issueDate: 'April 2026',
+            credentialId: 'GITOPS-ARGO-11029',
+            description: 'Declarative cluster management, sealed secrets, and automated canary analysis.',
+            skills: ['ArgoCD', 'GitOps', 'Canary Deployments']
+          }
+        ]
+      }
     ]
   },
   {
@@ -867,7 +1262,8 @@ export const INITIAL_TEAM_MEMBERS: TeamMemberProfile[] = [
     pendingEvidence: 0,
     criticalGap: 'Role Profile Unmapped',
     readiness: 0,
-    roleSkills: [] // Empty role-mapped skills to test empty/missing state
+    roleSkills: [],
+    additionalSkills: []
   }
 ];
 
@@ -1112,4 +1508,396 @@ export function saveStoredTeamMembers(members: TeamMemberProfile[]): void {
     console.error('Failed to save team members', e);
   }
 }
+
+// =========================================================================
+// MANAGER SKILL VALIDATIONS DATA MODEL & STORAGE
+// =========================================================================
+
+export interface ManagerSkillValidationItem {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  employeeRole: string;
+  employeeGrade: string;
+  employeePhoto: string;
+  department?: string;
+  employeeDepartment?: string;
+  skillId: string;
+  skillName: string;
+  skillType?: 'Technical' | 'Functional' | 'Behavioral' | 'Domain';
+  type?: 'Technical' | 'Functional' | 'Behavioral' | 'Domain';
+  category?: string;
+  criticality?: 'Critical' | 'High' | 'Medium' | 'Low';
+  proficiencyLevel?: number; // 1 to 4
+  selectedLevel?: number;
+  levelName?: string;
+  levelDescription?: string;
+  validatedProficiencyLevel?: number;
+  submittedDate?: string;
+  applicationText?: string;
+  applicationStatement?: string;
+  skillDescription?: string;
+  experienceYears?: string;
+  status: 'Pending' | 'Relevant' | 'Future Relevant' | 'Need More Evidence' | 'Not Relevant';
+  managerComment?: string;
+  managerFeedback?: string;
+  managerNotes?: string;
+  validatedAt?: string;
+  decidedAt?: string;
+  evidences?: EvidenceItem[];
+  evidenceDocs?: EvidenceItem[];
+}
+
+export const VALIDATIONS_STORAGE_KEY = 'jio_learning_skill_validations_v1';
+
+export const INITIAL_MANAGER_VALIDATIONS: ManagerSkillValidationItem[] = [
+  {
+    id: 'val-1',
+    employeeId: 'tm-1',
+    employeeName: 'Priya Sharma',
+    employeeRole: 'Staff Software Engineer',
+    employeeGrade: 'Grade E4',
+    employeePhoto: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&q=80',
+    department: 'Platform Tech',
+    skillId: 'ps-add-1',
+    skillName: 'Apache Kafka & Event Streaming',
+    skillType: 'Technical',
+    category: 'Data & Event Streaming',
+    criticality: 'High',
+    proficiencyLevel: 3,
+    submittedDate: '14 Sep 2026',
+    experienceYears: '3 Years',
+    applicationText: 'Implemented high-volume message partitioning and idempotent producer streams handling 50k msgs/sec for telecom billing. Configured schema registry with Avro serialization and mirror-maker replication across multi-region availability zones.',
+    status: 'Pending',
+    evidences: [
+      {
+        id: 'ev-ps-1',
+        type: 'Certification',
+        title: 'Confluent Certified Developer for Apache Kafka (CCDAK)',
+        issuer: 'Confluent Inc.',
+        issueDate: 'August 2025',
+        credentialId: 'CCDAK-984214',
+        fileUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80',
+        description: 'Official credential demonstrating expertise in Kafka Streams API, consumer group rebalancing, Avro serialization schemas, and high-throughput low-latency partition topologies.',
+        skills: ['Apache Kafka', 'Distributed Streaming', 'Avro Serialization']
+      },
+      {
+        id: 'ev-ps-2',
+        type: 'Project',
+        title: 'Telecom Stream Slicing Pipeline Architecture & Benchmarks Doc',
+        issuer: 'Jio 5G Platform Engineering',
+        issueDate: 'June 2026',
+        description: 'Production technical document, latency test logs (p99 < 12ms), and Grafana metrics dashboard snapshots for CDR event ingestion.',
+        skills: ['Kafka Streams', 'Prometheus Kafka Exporter', 'Grafana']
+      }
+    ]
+  },
+  {
+    id: 'val-2',
+    employeeId: 'tm-3',
+    employeeName: 'Vikram Verma',
+    employeeRole: 'Senior Developer',
+    employeeGrade: 'Grade E4',
+    employeePhoto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&q=80',
+    department: '5G RAN Engineering',
+    skillId: 'vv-add-1',
+    skillName: 'Open RAN (O-RAN) Architecture',
+    skillType: 'Technical',
+    category: 'Telecom Standards',
+    criticality: 'High',
+    proficiencyLevel: 3,
+    submittedDate: '12 Sep 2026',
+    experienceYears: '2.5 Years',
+    applicationText: 'Spearheaded O-DU and O-CU functional split testing over 7.2x Fronthaul interfaces and E2 interface telemetry integration with near-RT RIC controller to automate cell load balancing.',
+    status: 'Pending',
+    evidences: [
+      {
+        id: 'ev-vv-1',
+        type: 'Certification',
+        title: 'O-RAN Alliance Certified Engineer',
+        issuer: 'O-RAN Software Community / Linux Foundation',
+        issueDate: 'May 2026',
+        credentialId: 'ORAN-CERT-44120',
+        fileUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80',
+        description: 'Mastery over O-RAN disaggregated architecture, near-RT RIC, and xApps deployment for automated cellular networks.',
+        skills: ['O-RAN Architecture', 'Near-RT RIC', 'E2 / A1 Interfaces']
+      },
+      {
+        id: 'ev-vv-2',
+        type: 'Project',
+        title: 'Fronthaul Latency Analysis Whitepaper & Lab Test Results',
+        issuer: 'Jio 5G Lab Core Group',
+        issueDate: 'July 2026',
+        description: 'Comprehensive timing synchronization and eCPRI throughput performance validation logs across simulated gNodeBs.',
+        skills: ['eCPRI Fronthaul', 'SyncE / IEEE 1588v2', 'Wireshark Protocol Analysis']
+      }
+    ]
+  },
+  {
+    id: 'val-3',
+    employeeId: 'tm-5',
+    employeeName: 'Siddharth Rao',
+    employeeRole: 'DevOps Lead',
+    employeeGrade: 'Grade E4',
+    employeePhoto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&q=80',
+    department: 'SRE & Reliability',
+    skillId: 'sr-add-1',
+    skillName: 'ArgoCD & Progressive Delivery',
+    skillType: 'Technical',
+    category: 'GitOps & CI/CD',
+    criticality: 'High',
+    proficiencyLevel: 4,
+    submittedDate: '10 Sep 2026',
+    experienceYears: '3 Years',
+    applicationText: 'Configured multi-tenant GitOps rollouts using Argo Rollouts with automated blue/green canary analysis with Prometheus metrics, automated rollback triggers, and sealed secrets orchestration.',
+    status: 'Pending',
+    evidences: [
+      {
+        id: 'ev-sr-1',
+        type: 'Certification',
+        title: 'GitOps Certified Practitioner with ArgoCD',
+        issuer: 'Codefresh & Linux Foundation',
+        issueDate: 'April 2026',
+        credentialId: 'GITOPS-ARGO-11029',
+        fileUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80',
+        description: 'Declarative cluster management, sync waves, sealed secrets, and automated canary analysis with Argo Rollouts.',
+        skills: ['ArgoCD', 'GitOps', 'Canary Deployments', 'Kubernetes']
+      }
+    ]
+  },
+  {
+    id: 'val-4',
+    employeeId: 'tm-1',
+    employeeName: 'Priya Sharma',
+    employeeRole: 'Staff Software Engineer',
+    employeeGrade: 'Grade E4',
+    employeePhoto: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&q=80',
+    department: 'Platform Tech',
+    skillId: 'ps-add-2',
+    skillName: 'GraphQL API Federation',
+    skillType: 'Technical',
+    category: 'Backend Architecture',
+    criticality: 'Medium',
+    proficiencyLevel: 3,
+    validatedProficiencyLevel: 3,
+    submittedDate: '01 Sep 2026',
+    validatedAt: '03 Sep 2026, 03:15 PM',
+    experienceYears: '2 Years',
+    applicationText: 'Migrated 12 legacy REST microservices into a unified GraphQL subgraph gateway reducing client round-trips by 65%.',
+    status: 'Relevant',
+    managerComment: 'Verified production schema federation setup and Apollo router configurations across subscriber microservices. Solid practitioner delivery.',
+    evidences: [
+      {
+        id: 'ev-ps-3',
+        type: 'Training',
+        title: 'Apollo GraphQL Enterprise Federation Professional',
+        issuer: 'Apollo GraphQL',
+        issueDate: 'January 2026',
+        credentialId: 'AGQL-77812',
+        description: 'Federated schema design, entity resolvers, and subgraphs caching.'
+      }
+    ]
+  },
+  {
+    id: 'val-5',
+    employeeId: 'tm-2',
+    employeeName: 'Rohan Mehta',
+    employeeRole: 'Lead Architect',
+    employeeGrade: 'Grade E5',
+    employeePhoto: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&q=80',
+    department: 'Cloud Infra',
+    skillId: 'rm-add-1',
+    skillName: 'Generative AI Architecture & LLM Orchestration',
+    skillType: 'Technical',
+    category: 'Artificial Intelligence',
+    criticality: 'Critical',
+    proficiencyLevel: 4,
+    validatedProficiencyLevel: 4,
+    submittedDate: '28 Aug 2026',
+    validatedAt: '30 Aug 2026, 11:20 AM',
+    experienceYears: '2 Years',
+    applicationText: 'Engineered vector database indexing pipeline with Milvus and LangChain for enterprise internal knowledge retrieval.',
+    status: 'Relevant',
+    managerComment: 'Exceptional architectural delivery of RAG search indexing and Gemini enterprise gateway across our cloud footprint.',
+    evidences: [
+      {
+        id: 'ev-rm-1',
+        type: 'Certification',
+        title: 'Google Cloud Professional Machine Learning Engineer',
+        issuer: 'Google Cloud',
+        issueDate: 'October 2025',
+        credentialId: 'GCP-MLE-88190',
+        description: 'Architecting enterprise GenAI solutions, embeddings models, and vector storage.'
+      }
+    ]
+  },
+  {
+    id: 'val-6',
+    employeeId: 'tm-4',
+    employeeName: 'Ananya Roy',
+    employeeRole: 'Full Stack Engineer',
+    employeeGrade: 'Grade E3',
+    employeePhoto: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&h=150&fit=crop&q=80',
+    department: 'Consumer Platform',
+    skillId: 'ar-add-1',
+    skillName: 'Tailwind CSS & Design Systems Engineering',
+    skillType: 'Technical',
+    category: 'Design Engineering',
+    criticality: 'High',
+    proficiencyLevel: 4,
+    validatedProficiencyLevel: 4,
+    submittedDate: '25 Aug 2026',
+    validatedAt: '27 Aug 2026, 04:45 PM',
+    experienceYears: '3 Years',
+    applicationText: 'Built accessible UI primitive tokens, dark-mode themes, and Storybook components for Jio Consumer Web apps.',
+    status: 'Relevant',
+    managerComment: 'Authored company design token package and built reusable component library used by 5 squads.',
+    evidences: [
+      {
+        id: 'ev-ar-1',
+        type: 'Project',
+        title: 'Jio Unified Design System Token Package & NPM Registry',
+        issuer: 'Jio Frontend Center of Excellence',
+        issueDate: 'March 2026',
+        description: 'Component documentation, unit tests, and accessibility audit report passing WCAG AA.'
+      }
+    ]
+  },
+  {
+    id: 'val-7',
+    employeeId: 'tm-4',
+    employeeName: 'Ananya Roy',
+    employeeRole: 'Full Stack Engineer',
+    employeeGrade: 'Grade E3',
+    employeePhoto: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&h=150&fit=crop&q=80',
+    department: 'Consumer Platform',
+    skillId: 'ar-add-2',
+    skillName: 'Rust Systems Programming',
+    skillType: 'Technical',
+    category: 'Low-Level Programming',
+    criticality: 'Medium',
+    proficiencyLevel: 2,
+    submittedDate: '20 Aug 2026',
+    validatedAt: '22 Aug 2026, 10:10 AM',
+    experienceYears: '1 Year',
+    applicationText: 'Built CLI log analyzer and WebAssembly micro-parser in Rust for high-speed client data transformations.',
+    status: 'Need More Evidence',
+    managerComment: 'Promising self-learning progress. Please submit code repository or production project sample for Level 3 validation.',
+    evidences: [
+      {
+        id: 'ev-ar-2',
+        type: 'Training',
+        title: 'Rust Fundamentals & Memory Safety Certificate',
+        issuer: 'The Rust Foundation Education Track',
+        issueDate: 'February 2026',
+        description: 'Ownership models, lifetimes, concurrency, and WebAssembly compilation.'
+      }
+    ]
+  }
+];
+
+export function getStoredManagerValidations(): ManagerSkillValidationItem[] {
+  try {
+    const raw = localStorage.getItem(VALIDATIONS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to parse manager validations from localStorage', e);
+  }
+
+  try {
+    localStorage.setItem(VALIDATIONS_STORAGE_KEY, JSON.stringify(INITIAL_MANAGER_VALIDATIONS));
+  } catch {}
+
+  return INITIAL_MANAGER_VALIDATIONS;
+}
+
+export function saveStoredManagerValidations(validations: ManagerSkillValidationItem[]): void {
+  try {
+    localStorage.setItem(VALIDATIONS_STORAGE_KEY, JSON.stringify(validations));
+    window.dispatchEvent(new Event('manager-validations-updated'));
+  } catch (e) {
+    console.error('Failed to save manager validations', e);
+  }
+}
+
+export function updateManagerValidationDecision(
+  validationId: string,
+  decisionOrStatus: 'Pending' | 'Relevant' | 'Future Relevant' | 'Need More Evidence' | 'Not Relevant' | {
+    status: 'Pending' | 'Relevant' | 'Future Relevant' | 'Need More Evidence' | 'Not Relevant';
+    managerComment?: string;
+    managerNotes?: string;
+    validatedProficiencyLevel?: number;
+  },
+  managerCommentParam?: string,
+  validatedProficiencyLevelParam?: number
+): ManagerSkillValidationItem | null {
+  const validations = getStoredManagerValidations();
+  const index = validations.findIndex(v => v.id === validationId);
+  if (index === -1) return null;
+
+  const now = new Date();
+  const formattedTime = now.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }) + ', ' + now.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+
+  let status: 'Pending' | 'Relevant' | 'Future Relevant' | 'Need More Evidence' | 'Not Relevant' = 'Pending';
+  let managerComment = '';
+  let validatedProficiencyLevel: number | undefined = undefined;
+
+  if (typeof decisionOrStatus === 'object') {
+    status = decisionOrStatus.status;
+    managerComment = decisionOrStatus.managerComment || decisionOrStatus.managerNotes || '';
+    validatedProficiencyLevel = decisionOrStatus.validatedProficiencyLevel;
+  } else {
+    status = decisionOrStatus;
+    managerComment = managerCommentParam || '';
+    validatedProficiencyLevel = validatedProficiencyLevelParam;
+  }
+
+  const updated: ManagerSkillValidationItem = {
+    ...validations[index],
+    status,
+    managerComment,
+    validatedProficiencyLevel: validatedProficiencyLevel || validations[index].proficiencyLevel,
+    validatedAt: formattedTime
+  };
+
+  validations[index] = updated;
+  saveStoredManagerValidations(validations);
+
+  // Synchronize with team member's additional skill if present
+  try {
+    const members = getStoredTeamMembers();
+    const mIdx = members.findIndex(m => m.id === updated.employeeId);
+    if (mIdx !== -1 && members[mIdx].additionalSkills) {
+      const addSkillIdx = members[mIdx].additionalSkills!.findIndex(s => s.id === updated.skillId || s.name === updated.skillName);
+      if (addSkillIdx !== -1) {
+        members[mIdx].additionalSkills![addSkillIdx] = {
+          ...members[mIdx].additionalSkills![addSkillIdx],
+          validationStatus: status,
+          managerComment: managerComment,
+          validatedProficiencyLevel: updated.validatedProficiencyLevel,
+          underRevalidation: false
+        };
+        saveStoredTeamMembers(members);
+      }
+    }
+  } catch (e) {
+    console.error('Error synchronizing team member additional skill', e);
+  }
+
+  return updated;
+}
+
 
