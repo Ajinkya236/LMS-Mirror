@@ -1,16 +1,20 @@
 import React from 'react';
 
-export type SkillsTab = 'home' | 'explore' | 'my-team' | 'leaderboard' | 'skill-admin';
+export type SkillsTab = 'home' | 'explore' | 'my-team' | 'leaderboard' | 'rewards' | 'badges' | 'skill-admin';
 
 interface SkillsSubHeaderProps {
   activeTab: SkillsTab;
   onSelectTab: (tab: SkillsTab) => void;
+  activeRewardSubTab?: 'leaderboard' | 'points' | 'badges';
 }
 
-const SkillsSubHeader: React.FC<SkillsSubHeaderProps> = ({ activeTab, onSelectTab }) => {
+const SkillsSubHeader: React.FC<SkillsSubHeaderProps> = ({ activeTab, onSelectTab, activeRewardSubTab }) => {
   const navLinkClasses = "px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap";
   const activeClasses = "text-white bg-white/20 shadow-xs border-b-2 border-white";
   const inactiveClasses = "text-r-gray-200 hover:text-white hover:bg-white/10";
+
+  const isRewardsActive = (activeTab === 'leaderboard' || activeTab === 'rewards') && activeRewardSubTab !== 'badges';
+  const isBadgesActive = activeTab === 'badges' || ((activeTab === 'leaderboard' || activeTab === 'rewards') && activeRewardSubTab === 'badges');
 
   return (
     <div className="border-b border-white/10 bg-subnav-blue sticky top-16 z-40 shadow-sm">
@@ -58,14 +62,26 @@ const SkillsSubHeader: React.FC<SkillsSubHeaderProps> = ({ activeTab, onSelectTa
 
             <button
               type="button"
-              onClick={() => onSelectTab('leaderboard')}
-              className={`${navLinkClasses} ${activeTab === 'leaderboard' ? activeClasses : inactiveClasses}`}
-              title="Leaderboard & Points"
+              onClick={() => onSelectTab('rewards')}
+              className={`${navLinkClasses} ${isRewardsActive ? activeClasses : inactiveClasses}`}
+              title="Rewards"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.36 1.246.588 1.81l-3.97 2.883a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.971-2.883a1 1 0 00-1.175 0l-3.97 2.883c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.49 10.1c-.772-.564-.373-1.81.588-1.81h4.907a1 1 0 00.95-.69l1.52-4.674z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
               </svg>
-              <span>Leaderboard</span>
+              <span>Rewards</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onSelectTab('badges')}
+              className={`${navLinkClasses} ${isBadgesActive ? activeClasses : inactiveClasses}`}
+              title="View skill badges and role readiness badges"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+              <span>Badges</span>
             </button>
 
             <button

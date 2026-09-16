@@ -30,7 +30,7 @@ export interface CatalogSkill {
   id: string;
   name: string;
   type: 'Technical' | 'Functional' | 'Behavioral' | 'Domain';
-  criticality: 'Critical' | 'High' | 'Medium' | 'Low';
+  criticality: 'High' | 'Medium' | 'Low';
   description: string;
 }
 
@@ -53,7 +53,7 @@ export const INTERNAL_SKILLS_CATALOG: CatalogSkill[] = [
     id: 'cat-soft-dev',
     name: 'Software Development',
     type: 'Technical',
-    criticality: 'Critical',
+    criticality: 'High',
     description: 'Design, write, test, and package robust software products. Mastering programming paradigms, algorithms, and microservice structures.'
   },
   {
@@ -81,14 +81,14 @@ export const INTERNAL_SKILLS_CATALOG: CatalogSkill[] = [
     id: 'cat-aws',
     name: 'AWS Solutions Architecture',
     type: 'Technical',
-    criticality: 'Critical',
+    criticality: 'High',
     description: 'Well-Architected Framework design, multi-region failover, VPC peering, and serverless compute.'
   },
   {
     id: 'cat-5gc',
     name: '5G Core (5GC) Control Plane & Network Slicing',
     type: 'Domain',
-    criticality: 'Critical',
+    criticality: 'High',
     description: 'Service-Based Architecture (SBA), NSSF, AMF, SMF, UPF deployment, and dynamic QoS slice routing.'
   },
   {
@@ -109,7 +109,7 @@ export const INTERNAL_SKILLS_CATALOG: CatalogSkill[] = [
     id: 'cat-kafka',
     name: 'Kafka Real-Time Event Streaming & Pipeline Design',
     type: 'Technical',
-    criticality: 'Critical',
+    criticality: 'High',
     description: 'Partition strategy, consumer group tuning, Schema Registry governance, and Exactly-Once Semantics (EOS).'
   },
   {
@@ -123,7 +123,7 @@ export const INTERNAL_SKILLS_CATALOG: CatalogSkill[] = [
     id: 'cat-genai',
     name: 'Generative AI & LLM Systems Engineering',
     type: 'Technical',
-    criticality: 'Critical',
+    criticality: 'High',
     description: 'RAG pipeline design, vector embedding databases (Qdrant/Milvus), prompt evaluation, and fine-tuning.'
   },
   {
@@ -213,9 +213,10 @@ const AddAdditionalSkillPage: React.FC<AddAdditionalSkillPageProps> = ({ isEdit 
   // ----------------------------------------------------
   // SINGLE EDIT MODE STATES (Preserves Edit Screen)
   // ----------------------------------------------------
+  const [existingItem, setExistingItem] = useState<AdditionalSkillItem | null>(null);
   const [editSkillName, setEditSkillName] = useState('');
   const [editSkillType, setEditSkillType] = useState<'Technical' | 'Functional' | 'Behavioral' | 'Domain'>('Technical');
-  const [editCriticality, setEditCriticality] = useState<'Critical' | 'High' | 'Medium' | 'Low'>('High');
+  const [editCriticality, setEditCriticality] = useState<'High' | 'Medium' | 'Low'>('High');
   const [editProfLevel, setEditProfLevel] = useState<number>(3);
   const [editEvidences, setEditEvidences] = useState<EvidenceItem[]>([]);
   const [editNotes, setEditNotes] = useState('');
@@ -250,9 +251,10 @@ const AddAdditionalSkillPage: React.FC<AddAdditionalSkillPageProps> = ({ isEdit 
     if (isEditing && skillIdFromUrl) {
       const existing = getAdditionalSkillById(skillIdFromUrl);
       if (existing) {
+        setExistingItem(existing);
         setEditSkillName(existing.name);
         setEditSkillType(existing.type);
-        setEditCriticality(existing.criticality);
+        setEditCriticality(existing.criticality || 'High');
         setEditProfLevel(existing.proficiencyLevel || 3);
         setEditEvidences(existing.evidences || []);
         setEditNotes(existing.notes || '');
@@ -498,23 +500,45 @@ const AddAdditionalSkillPage: React.FC<AddAdditionalSkillPageProps> = ({ isEdit 
       return;
     }
 
+    // Check if the skill was previously validated by manager
+    const wasValidated = Boolean(
+      existingItem && (
+        existingItem.validationStatus === 'Relevant' || 
+        existingItem.validationStatus === 'Future Relevant' || 
+        Boolean(existingItem.validatedProficiencyLevel)
+      )
+    );
+    const currentValidatedLevel = existingItem?.validatedProficiencyLevel || existingItem?.proficiencyLevel || 3;
+
     const skillItem: AdditionalSkillItem = {
       id: skillIdFromUrl,
       name: editSkillName,
       type: editSkillType,
       criticality: editCriticality,
       proficiencyLevel: editProfLevel,
-      experienceYears: '3 Years',
+      validatedProficiencyLevel: wasValidated ? currentValidatedLevel : undefined,
+      underRevalidation: Boolean(wasValidated),
+      revalidationStatus: wasValidated ? 'Pending Revalidation' : undefined,
+      experienceYears: existingItem?.experienceYears || '3 Years',
       applicationSummaries: [editNotes],
       notes: editNotes,
-      addedDate: 'Today',
-      validationStatus: 'Need More Evidence',
+      addedDate: existingItem?.addedDate || 'Today',
+      // If previously validated, the current validation status remains active for the current validated proficiency
+      validationStatus: wasValidated ? existingItem.validationStatus : 'Need More Evidence',
       evidences: editEvidences,
-      managerComment: 'Newly updated skill details. Awaiting validation.'
+      managerComment: wasValidated
+        ? `Submitted for revalidation with Proficiency Level ${editProfLevel}. Current validated Level ${currentValidatedLevel} status remains active.`
+        : 'Newly updated skill details. Awaiting validation.',
+      skillScore: existingItem?.skillScore,
+      assessmentCompleted: existingItem?.assessmentCompleted
     };
 
     saveOrUpdateAdditionalSkill(skillItem);
-    setToastMessage('Changes saved successfully!');
+    setToastMessage(
+      wasValidated
+        ? `Changes submitted for revalidation. Current validated Level ${currentValidatedLevel} status remains active.`
+        : 'Changes saved successfully!'
+    );
     setShowSuccessToast(true);
     setTimeout(() => {
       navigate('/skills?tab=home');
@@ -641,6 +665,30 @@ const AddAdditionalSkillPage: React.FC<AddAdditionalSkillPageProps> = ({ isEdit 
               </h1>
             </div>
 
+            {/* If skill was previously validated, notify that modifications trigger revalidation while current validated status stays active */}
+            {Boolean(
+              existingItem && (
+                existingItem.validationStatus === 'Relevant' || 
+                existingItem.validationStatus === 'Future Relevant' || 
+                Boolean(existingItem.validatedProficiencyLevel)
+              )
+            ) && (
+              <div className="p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl flex items-start gap-3 shadow-3xs">
+                <CheckCircleIcon className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-slate-700">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-extrabold text-emerald-950">Active Validated Proficiency:</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold border border-emerald-300">
+                      Level {existingItem?.validatedProficiencyLevel || existingItem?.proficiencyLevel || 3} ({PROFICIENCY_LEVELS.find(p => p.level === (existingItem?.validatedProficiencyLevel || existingItem?.proficiencyLevel || 3))?.name.split(': ')[1] || 'Practitioner'}) &middot; {existingItem?.validationStatus}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-slate-600 leading-relaxed">
+                    If you edit this additional skill after it has been validated, it will go for <strong>revalidation</strong> by your manager. Your current validation status will remain active for the currently validated proficiency level until review is completed.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-bold text-slate-800 block mb-1.5">Skill Name</label>
@@ -648,37 +696,22 @@ const AddAdditionalSkillPage: React.FC<AddAdditionalSkillPageProps> = ({ isEdit 
                   type="text"
                   value={editSkillName}
                   onChange={(e) => setEditSkillName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-hidden focus:border-r-blue"
+                  className="w-full px-4 py-2.5 bg-slate-100 border border-gray-200 rounded-xl text-sm font-bold text-slate-700 cursor-not-allowed"
                   disabled
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-800 block mb-1.5">Skill Type Category</label>
-                <select
-                  value={editSkillType}
-                  onChange={(e) => setEditSkillType(e.target.value as any)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-hidden focus:border-r-blue"
-                >
-                  <option value="Technical">Technical</option>
-                  <option value="Functional">Functional</option>
-                  <option value="Behavioral">Behavioral</option>
-                  <option value="Domain">Domain</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-800 block mb-1.5">Criticality</label>
-                <select
-                  value={editCriticality}
-                  onChange={(e) => setEditCriticality(e.target.value as any)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-hidden focus:border-r-blue"
-                >
-                  <option value="Critical">Critical</option>
-                  <option value="High">High</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Low">Low</option>
-                </select>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-800">Skill Type Category</label>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Non-editable</span>
+                </div>
+                <div className="w-full px-4 py-2.5 bg-slate-100 border border-gray-200 rounded-xl text-sm font-bold text-slate-700 flex items-center justify-between cursor-not-allowed">
+                  <span>{editSkillType}</span>
+                  <span className="px-2 py-0.5 rounded-md bg-white border border-gray-200 text-xs text-r-blue font-bold shadow-3xs">
+                    {editSkillType}
+                  </span>
+                </div>
               </div>
 
               <div>

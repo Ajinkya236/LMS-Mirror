@@ -28,14 +28,30 @@ import {
   AlertCircleIcon,
   FilterIcon,
   CompassIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  SparklesIcon
 } from '../components/Icons';
 import { 
   AdditionalSkillItem, 
   EvidenceItem, 
   getStoredAdditionalSkills, 
-  deleteAdditionalSkill 
+  deleteAdditionalSkill,
+  RoleSurveyState,
+  getStoredRoleSurveyState,
+  saveRoleSurveyDraft,
+  submitRoleSurvey,
+  getStoredRoleSkills,
+  saveStoredRoleSkills,
+  TeamMemberProfile,
+  ManagerSurveyRecord,
+  ManagerSurveyStatus,
+  getStoredTeamMembers,
+  getStoredManagerSurveys,
+  saveManagerSurveyDraft,
+  submitManagerSurvey
 } from '../utils/skillsData';
+import { RoleSkillSelfSurveyModal } from '../components/skills/RoleSkillSelfSurveyModal';
+import { ManagerRoleSkillSurveyModal } from '../components/skills/ManagerRoleSkillSurveyModal';
 
 // --- Types ---
 interface SkillLevelDetail {
@@ -49,7 +65,7 @@ interface SkillItem {
   name: string;
   type: 'Technical' | 'Functional' | 'Behavioral' | 'Domain';
   category: string;
-  criticality: 'Critical' | 'High' | 'Medium' | 'Low';
+  criticality: 'High' | 'Medium' | 'Low';
   staleText?: string;
   targetLevel: number; // e.g. 3
   currentLevel: number; // Final current level (e.g. 3)
@@ -100,17 +116,17 @@ const USER_PROFILE = {
 
 // Available Skills Library for "Add Additional Skill" & Skills Library View
 const SKILL_LIBRARY = [
-  { id: 'lib-1', name: 'Kubernetes & Container Orchestration', type: 'Technical', category: 'DevOps & Infrastructure', criticality: 'Critical', demand: 'High Demand', description: 'Container deployment, cluster scaling, and production orchestration using Helm & K8s.' },
-  { id: 'lib-2', name: 'Cloud Architecture (AWS / GCP / Azure)', type: 'Technical', category: 'Cloud Infrastructure', criticality: 'Critical', demand: 'High Demand', description: 'Designing high-availability multi-cloud landing zones, IAM security, and serverless architectures.' },
-  { id: 'lib-3', name: 'React & Modern Frontend Engineering', type: 'Technical', category: 'Frontend Development', criticality: 'High', demand: 'Core Tech', description: 'Building scalable SPA applications with React 18, state synchronization, and micro-frontends.' },
-  { id: 'lib-4', name: 'Python Data Engineering & PySpark', type: 'Technical', category: 'Data & Analytics', criticality: 'High', demand: 'Emerging', description: 'Big data processing pipelines, ETL workflows, and distributed Spark streaming.' },
-  { id: 'lib-5', name: 'Cyber Security & Network Defense', type: 'Technical', category: 'Information Security', criticality: 'Critical', demand: 'Critical Core', description: 'Zero-trust architecture, threat analysis, API gateway hardening, and vulnerability mitigation.' },
-  { id: 'lib-6', name: 'Agile & Scrum Leadership', type: 'Functional', category: 'Management', criticality: 'Medium', demand: 'Core Tech', description: 'Leading agile sprint cycles, sprint planning, backlog refinement, and cross-team velocity optimization.' },
-  { id: 'lib-7', name: 'Strategic Stakeholder Management', type: 'Behavioral', category: 'Leadership', criticality: 'Medium', demand: 'Leadership', description: 'Aligning business priorities across executive sponsors, product management, and engineering teams.' },
-  { id: 'lib-8', name: '5G Core Network Slicing & Edge Computing', type: 'Domain', category: 'Telecom Engineering', criticality: 'Critical', demand: 'Emerging Tech', description: 'Configuring 5G SA core slicing, UPF deployment, and low-latency MEC edge nodes.' },
-  { id: 'lib-9', name: 'AI / Machine Learning Model Deployment', type: 'Technical', category: 'Artificial Intelligence', criticality: 'High', demand: 'Emerging Tech', description: 'Deploying LLMs, fine-tuning embeddings, MLOps, and vector database retrieval systems.' },
-  { id: 'lib-10', name: 'RESTful API & GraphQL Design', type: 'Technical', category: 'Software Architecture', criticality: 'High', demand: 'Core Tech', description: 'Designing resilient microservices API contracts, GraphQL schemas, and rate-limiting gateways.' },
-  { id: 'lib-11', name: 'Microservices Design Patterns', type: 'Technical', category: 'Software Architecture', criticality: 'High', demand: 'Core Tech', description: 'Event-driven architecture, saga patterns, message queues (Kafka/RabbitMQ), and circuit breakers.' },
+  { id: 'lib-1', name: 'Kubernetes & Container Orchestration', type: 'Technical', category: 'DevOps & Infrastructure', criticality: 'High' as const, demand: 'High Demand', description: 'Container deployment, cluster scaling, and production orchestration using Helm & K8s.' },
+  { id: 'lib-2', name: 'Cloud Architecture (AWS / GCP / Azure)', type: 'Technical', category: 'Cloud Infrastructure', criticality: 'High' as const, demand: 'High Demand', description: 'Designing high-availability multi-cloud landing zones, IAM security, and serverless architectures.' },
+  { id: 'lib-3', name: 'React & Modern Frontend Engineering', type: 'Technical', category: 'Frontend Development', criticality: 'High' as const, demand: 'Core Tech', description: 'Building scalable SPA applications with React 18, state synchronization, and micro-frontends.' },
+  { id: 'lib-4', name: 'Python Data Engineering & PySpark', type: 'Technical', category: 'Data & Analytics', criticality: 'High' as const, demand: 'Emerging', description: 'Big data processing pipelines, ETL workflows, and distributed Spark streaming.' },
+  { id: 'lib-5', name: 'Cyber Security & Network Defense', type: 'Technical', category: 'Information Security', criticality: 'High' as const, demand: 'Critical Core', description: 'Zero-trust architecture, threat analysis, API gateway hardening, and vulnerability mitigation.' },
+  { id: 'lib-6', name: 'Agile & Scrum Leadership', type: 'Functional', category: 'Management', criticality: 'Medium' as const, demand: 'Core Tech', description: 'Leading agile sprint cycles, sprint planning, backlog refinement, and cross-team velocity optimization.' },
+  { id: 'lib-7', name: 'Strategic Stakeholder Management', type: 'Behavioral', category: 'Leadership', criticality: 'Medium' as const, demand: 'Leadership', description: 'Aligning business priorities across executive sponsors, product management, and engineering teams.' },
+  { id: 'lib-8', name: '5G Core Network Slicing & Edge Computing', type: 'Domain', category: 'Telecom Engineering', criticality: 'High' as const, demand: 'Emerging Tech', description: 'Configuring 5G SA core slicing, UPF deployment, and low-latency MEC edge nodes.' },
+  { id: 'lib-9', name: 'AI / Machine Learning Model Deployment', type: 'Technical', category: 'Artificial Intelligence', criticality: 'High' as const, demand: 'Emerging Tech', description: 'Deploying LLMs, fine-tuning embeddings, MLOps, and vector database retrieval systems.' },
+  { id: 'lib-10', name: 'RESTful API & GraphQL Design', type: 'Technical', category: 'Software Architecture', criticality: 'High' as const, demand: 'Core Tech', description: 'Designing resilient microservices API contracts, GraphQL schemas, and rate-limiting gateways.' },
+  { id: 'lib-11', name: 'Microservices Design Patterns', type: 'Technical', category: 'Software Architecture', criticality: 'High' as const, demand: 'Core Tech', description: 'Event-driven architecture, saga patterns, message queues (Kafka/RabbitMQ), and circuit breakers.' },
 ];
 
 // Role Focus Skills
@@ -120,7 +136,7 @@ const INITIAL_ROLE_SKILLS: SkillItem[] = [
     name: 'eNB / gNB Config & Commissioning',
     type: 'Technical',
     category: 'Deployment',
-    criticality: 'Critical',
+    criticality: 'High',
     targetLevel: 3,
     currentLevel: 3,
     selfRating: 4,
@@ -143,7 +159,7 @@ const INITIAL_ROLE_SKILLS: SkillItem[] = [
     name: 'Small Cell & In-Building Solutions',
     type: 'Technical',
     category: 'RF Engineering',
-    criticality: 'Critical',
+    criticality: 'High',
     targetLevel: 3,
     currentLevel: 3,
     selfRating: 3,
@@ -165,7 +181,7 @@ const INITIAL_ROLE_SKILLS: SkillItem[] = [
     name: '5G NR Radio Access',
     type: 'Technical',
     category: 'RF Engineering',
-    criticality: 'Critical',
+    criticality: 'High',
     targetLevel: 3,
     currentLevel: 2,
     selfRating: 3,
@@ -188,7 +204,7 @@ const INITIAL_ROLE_SKILLS: SkillItem[] = [
     name: 'RF Optimisation & Drive Test',
     type: 'Technical',
     category: 'RF Engineering',
-    criticality: 'Critical',
+    criticality: 'High',
     staleText: 'Stale — last assessed Jun 2025',
     targetLevel: 3,
     currentLevel: 3,
@@ -211,7 +227,7 @@ const INITIAL_ROLE_SKILLS: SkillItem[] = [
     name: 'Fault Management & Troubleshooting',
     type: 'Functional',
     category: 'Operations',
-    criticality: 'Critical',
+    criticality: 'High',
     staleText: 'Stale — last assessed Apr 2025',
     targetLevel: 3,
     currentLevel: 3,
@@ -300,7 +316,7 @@ const INITIAL_ROLE_SKILLS: SkillItem[] = [
     name: '5G Core Slicing & Edge Protocol Architecture',
     type: 'Domain',
     category: 'Telecom Engineering',
-    criticality: 'Critical',
+    criticality: 'High',
     targetLevel: 3,
     currentLevel: 2,
     selfRating: 3,
@@ -361,25 +377,184 @@ const TEAM_MEMBERS_DATA = [
   { id: 'tm-5', name: 'Siddharth Rao', role: 'DevOps Lead', grade: 'Grade E4', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&q=80', readiness: 81, skillsCount: 13, pendingEvidence: 0, criticalGap: 'None' }
 ];
 
+export interface SkillBadgeItem {
+  id: string;
+  title: string;
+  type: 'skill' | 'role_readiness';
+  tier: 'Platinum' | 'Gold' | 'Silver' | 'In Progress';
+  category: string;
+  description: string;
+  scoreOrCriteria: string;
+  status: 'Earned' | 'In Progress' | 'Locked';
+  accreditedDate?: string;
+  credentialId: string;
+  issuer: string;
+  skillsCovered: string[];
+}
+
+export const SKILL_BADGES_DATA: SkillBadgeItem[] = [
+  // Skill Badges
+  {
+    id: 'badge-sk-1',
+    title: '5G gNB Node Integration Master',
+    type: 'skill',
+    tier: 'Platinum',
+    category: 'Telecom Engineering',
+    description: 'Awarded for scoring 90%+ on advanced 5G gNB node commissioning, multi-vendor carrier aggregation, and verified field audit approval.',
+    scoreOrCriteria: 'Score: 92/100 (Pass ≥ 85)',
+    status: 'Earned',
+    accreditedDate: '12 Jan 2026',
+    credentialId: 'JIO-SKB-2026-9041',
+    issuer: 'Jio Engineering Standards & Accreditation Council',
+    skillsCovered: ['eNB / gNB Config & Commissioning', 'Base Station Quality Audit']
+  },
+  {
+    id: 'badge-sk-2',
+    title: 'Kubernetes Cloud Orchestrator',
+    type: 'skill',
+    tier: 'Gold',
+    category: 'DevOps & Cloud',
+    description: 'Demonstrates certified mastery of container orchestration, Helm chart deployments, ingress controllers, and microservice autoscaling.',
+    scoreOrCriteria: 'Score: 88/100 (Pass ≥ 80)',
+    status: 'Earned',
+    accreditedDate: '28 Nov 2025',
+    credentialId: 'JIO-SKB-2025-7812',
+    issuer: 'Cloud Center of Excellence (CCoE)',
+    skillsCovered: ['Kubernetes & Container Orchestration', 'Microservices Design Patterns']
+  },
+  {
+    id: 'badge-sk-3',
+    title: '5G NR Radio Access Practitioner',
+    type: 'skill',
+    tier: 'Gold',
+    category: 'RF Engineering',
+    description: 'Validation in 5G NR frame structures, numerology configuration, Massive MIMO beamforming, and spectrum optimization.',
+    scoreOrCriteria: 'Score: 86/100 (Pass ≥ 85)',
+    status: 'Earned',
+    accreditedDate: '14 Oct 2025',
+    credentialId: 'JIO-SKB-2025-6320',
+    issuer: 'Radio Access Network Practice Guild',
+    skillsCovered: ['5G NR Radio Access', 'RF Optimisation & Drive Test']
+  },
+  {
+    id: 'badge-sk-4',
+    title: 'React & Modern Frontend Architect',
+    type: 'skill',
+    tier: 'Silver',
+    category: 'Frontend Engineering',
+    description: 'Recognizes competence in building high-performance modern web apps, reactive state stores, micro-frontends, and accessible UI kits.',
+    scoreOrCriteria: 'Score: 80/100 (Pass ≥ 75)',
+    status: 'Earned',
+    accreditedDate: '05 Sep 2025',
+    credentialId: 'JIO-SKB-2025-4109',
+    issuer: 'Digital Product Engineering Academy',
+    skillsCovered: ['React & Modern Frontend Engineering', 'RESTful API & GraphQL Design']
+  },
+  {
+    id: 'badge-sk-5',
+    title: 'AI & Machine Learning MLOps Specialist',
+    type: 'skill',
+    tier: 'In Progress',
+    category: 'Artificial Intelligence',
+    description: 'Focuses on scalable model serving, vector search embeddings, LLM guardrails, and automated training pipeline monitoring.',
+    scoreOrCriteria: 'Progress: 2/3 Sections Completed',
+    status: 'In Progress',
+    credentialId: 'JIO-SKB-IP-0911',
+    issuer: 'Jio AI Labs',
+    skillsCovered: ['AI / Machine Learning Model Deployment', 'Python Data Engineering']
+  },
+
+  // Role Readiness Badges
+  {
+    id: 'badge-rr-1',
+    title: 'Senior Platform Engineer — Role Ready',
+    type: 'role_readiness',
+    tier: 'Platinum',
+    category: 'Role Benchmark',
+    description: 'Certified role readiness for Grade E4 Senior Platform Engineer, having met 100% of required technical and functional role skills with verified manager validations.',
+    scoreOrCriteria: 'Overall Readiness: 94% (Target ≥ 85%)',
+    status: 'Earned',
+    accreditedDate: '02 Feb 2026',
+    credentialId: 'JIO-RRB-2026-1188',
+    issuer: 'Jio Talent & Organizational Readiness Board',
+    skillsCovered: ['eNB / gNB Config', 'RF Optimisation', 'Fault Management', 'Kubernetes Orchestration']
+  },
+  {
+    id: 'badge-rr-2',
+    title: '5G Core Network Slicing Lead — Stage 2 Qualified',
+    type: 'role_readiness',
+    tier: 'Gold',
+    category: 'Role Benchmark',
+    description: 'Role capability accreditation validating independence in designing mission-critical enterprise slicing architectures and UPF edge deployments.',
+    scoreOrCriteria: 'Overall Readiness: 86% (Target ≥ 80%)',
+    status: 'Earned',
+    accreditedDate: '19 Dec 2025',
+    credentialId: 'JIO-RRB-2025-0845',
+    issuer: 'Telecom Core Technical Board',
+    skillsCovered: ['5G Core Slicing & Edge Protocol', 'Fault Management & Troubleshooting']
+  },
+  {
+    id: 'badge-rr-3',
+    title: 'Enterprise Solutions Architect — Associate Ready',
+    type: 'role_readiness',
+    tier: 'Silver',
+    category: 'Role Benchmark',
+    description: 'Validates cross-domain solution architecture capabilities across cloud landing zones, microservices topology, and zero-trust security postures.',
+    scoreOrCriteria: 'Overall Readiness: 78% (Target ≥ 75%)',
+    status: 'Earned',
+    accreditedDate: '10 Aug 2025',
+    credentialId: 'JIO-RRB-2025-0312',
+    issuer: 'Enterprise Architectural Review Board',
+    skillsCovered: ['Cloud Architecture', 'Cyber Security & Network Defense', 'Strategic Stakeholder Management']
+  },
+  {
+    id: 'badge-rr-4',
+    title: 'DevOps & Site Reliability Lead — Candidate',
+    type: 'role_readiness',
+    tier: 'In Progress',
+    category: 'Role Benchmark',
+    description: 'Evaluates production incident leadership, automated SLO/SLA management, chaos engineering, and zero-downtime deployment pipelines.',
+    scoreOrCriteria: 'Overall Readiness: 68% (Target ≥ 80%)',
+    status: 'In Progress',
+    credentialId: 'JIO-RRB-IP-0552',
+    issuer: 'Jio Reliability Engineering Guild',
+    skillsCovered: ['Kubernetes & Container Orchestration', 'Fault Management & Troubleshooting']
+  }
+];
+
 const SkillsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Top Nav Sub-Menu Active Tab
   const tabParam = searchParams.get('tab') as SkillsTab;
-  const [activeSubTab, setActiveSubTab] = useState<SkillsTab>(
-    tabParam && ['home', 'explore', 'my-team', 'leaderboard', 'skill-admin'].includes(tabParam)
-      ? tabParam
-      : 'home'
-  );
+  const [activeSubTab, setActiveSubTab] = useState<SkillsTab>(() => {
+    if (tabParam === 'badges') return 'rewards';
+    if (tabParam && ['home', 'explore', 'my-team', 'leaderboard', 'rewards', 'skill-admin'].includes(tabParam)) {
+      return tabParam;
+    }
+    return 'home';
+  });
 
   useEffect(() => {
-    if (tabParam && ['home', 'explore', 'my-team', 'leaderboard', 'skill-admin'].includes(tabParam)) {
+    if (tabParam === 'badges') {
+      setActiveSubTab('rewards');
+      setLeaderboardTab('badges');
+    } else if (tabParam && ['home', 'explore', 'my-team', 'leaderboard', 'rewards', 'skill-admin'].includes(tabParam)) {
       setActiveSubTab(tabParam);
     }
   }, [tabParam]);
 
   const handleSelectSubTab = (tab: SkillsTab) => {
+    if (tab === 'badges') {
+      setActiveSubTab('rewards');
+      setLeaderboardTab('badges');
+      setSearchParams({ tab: 'badges' });
+      return;
+    }
+    if (tab === 'rewards' || tab === 'leaderboard') {
+      setLeaderboardTab('leaderboard');
+    }
     setActiveSubTab(tab);
     setSearchParams({ tab });
   };
@@ -401,6 +576,140 @@ const SkillsPage: React.FC = () => {
 
   // Modal State for Learn/Courses
   const [activeSkillModal, setActiveSkillModal] = useState<SkillItem | null>(null);
+
+  // Role Skills & Employee Self-Survey State (Epic A)
+  const [surveyState, setSurveyState] = useState<RoleSurveyState>(() => getStoredRoleSurveyState());
+  const [roleSkills, setRoleSkills] = useState<SkillItem[]>(() => {
+    const storedSurvey = getStoredRoleSurveyState();
+    const seeded = INITIAL_ROLE_SKILLS.map(skill => {
+      // If survey is completed or has draft ratings, prioritize them
+      const draftRating = storedSurvey.draftRatings?.[skill.id];
+      const selfRating = storedSurvey.completed ? (draftRating ?? skill.selfRating) : (draftRating !== undefined ? draftRating : undefined);
+      const targetLevel = skill.targetLevel || 3;
+      let status = skill.status;
+      if (selfRating !== undefined) {
+        status = selfRating >= targetLevel ? 'Met' : (targetLevel - selfRating === 1 ? '1 level short' : 'Not Met');
+      }
+      return {
+        ...skill,
+        selfRating,
+        status
+      };
+    });
+    return getStoredRoleSkills<SkillItem>(seeded);
+  });
+  const [isSurveyModalOpen, setIsSurveyModalOpen] = useState<boolean>(false);
+  const [surveyToastMessage, setSurveyToastMessage] = useState<string | null>(null);
+
+  // Sync role survey updates across windows/events
+  useEffect(() => {
+    const handleSurveySync = () => {
+      const updatedState = getStoredRoleSurveyState();
+      setSurveyState(updatedState);
+      const updatedSkills = getStoredRoleSkills<SkillItem>(INITIAL_ROLE_SKILLS);
+      setRoleSkills(updatedSkills);
+    };
+    window.addEventListener('role-survey-updated', handleSurveySync);
+    window.addEventListener('role-skills-updated', handleSurveySync);
+    return () => {
+      window.removeEventListener('role-survey-updated', handleSurveySync);
+      window.removeEventListener('role-skills-updated', handleSurveySync);
+    };
+  }, []);
+
+  const handleOpenSurvey = () => {
+    setIsSurveyModalOpen(true);
+  };
+
+  const handleSaveSurveyDraft = (draftRatings: Record<string, number>) => {
+    saveRoleSurveyDraft(draftRatings);
+    setSurveyState(getStoredRoleSurveyState());
+    setSurveyToastMessage('Draft survey saved! You can resume anytime without losing your selections.');
+    setTimeout(() => setSurveyToastMessage(null), 3500);
+  };
+
+  const handleSubmitSurvey = (finalRatings: Record<string, number>) => {
+    const result = submitRoleSurvey(finalRatings);
+    const updatedState = getStoredRoleSurveyState();
+    setSurveyState(updatedState);
+    
+    // Update roleSkills in state & storage
+    setRoleSkills(prev => {
+      const updated = prev.map(sk => {
+        const rating = finalRatings[sk.id];
+        const targetLevel = sk.targetLevel || 3;
+        if (rating !== undefined) {
+          return {
+            ...sk,
+            selfRating: rating,
+            status: rating >= targetLevel ? 'Met' : (targetLevel - rating === 1 ? '1 level short' : 'Not Met') as any
+          };
+        }
+        return sk;
+      });
+      saveStoredRoleSkills(updated);
+      return updated;
+    });
+
+    setIsSurveyModalOpen(false);
+    setSurveyToastMessage(
+      surveyState.completed 
+        ? `Survey resubmitted successfully! Prior ratings overwritten (${result.completedAt}).`
+        : `Self-survey submitted successfully! (${result.completedAt})`
+    );
+    setTimeout(() => setSurveyToastMessage(null), 4000);
+  };
+
+  // Epic B & C: My Team & Manager Survey State
+  const [teamMembers, setTeamMembers] = useState<TeamMemberProfile[]>(() => getStoredTeamMembers());
+  const [managerSurveys, setManagerSurveys] = useState<Record<string, ManagerSurveyRecord>>(() => getStoredManagerSurveys());
+  const [evaluatingMember, setEvaluatingMember] = useState<TeamMemberProfile | null>(null);
+  const [isManagerModalOpen, setIsManagerModalOpen] = useState<boolean>(false);
+  const [managerSuccessToast, setManagerSuccessToast] = useState<string | null>(null);
+  const [teamSurveyFilter, setTeamSurveyFilter] = useState<'All' | ManagerSurveyStatus>('All');
+  const [expandedTeamMemberId, setExpandedTeamMemberId] = useState<string | null>(null);
+
+  // Sync team members and manager surveys across windows/events
+  useEffect(() => {
+    const handleManagerSurveySync = () => {
+      setManagerSurveys(getStoredManagerSurveys());
+      setTeamMembers(getStoredTeamMembers());
+    };
+    window.addEventListener('manager-surveys-updated', handleManagerSurveySync);
+    window.addEventListener('team-members-updated', handleManagerSurveySync);
+    return () => {
+      window.removeEventListener('manager-surveys-updated', handleManagerSurveySync);
+      window.removeEventListener('team-members-updated', handleManagerSurveySync);
+    };
+  }, []);
+
+  const handleOpenManagerSurvey = (member: TeamMemberProfile) => {
+    setEvaluatingMember(member);
+    setIsManagerModalOpen(true);
+  };
+
+  const handleSaveManagerSurveyDraft = (reporteeId: string, draftRatings: Record<string, number>) => {
+    saveManagerSurveyDraft(reporteeId, draftRatings);
+    setManagerSurveys(getStoredManagerSurveys());
+    setManagerSuccessToast(`Draft evaluation for ${evaluatingMember?.name || 'reportee'} saved successfully.`);
+    setTimeout(() => setManagerSuccessToast(null), 3500);
+  };
+
+  const handleSubmitManagerSurvey = (reporteeId: string, finalRatings: Record<string, number>) => {
+    const record = submitManagerSurvey(reporteeId, finalRatings);
+    setManagerSurveys(getStoredManagerSurveys());
+    setTeamMembers(getStoredTeamMembers());
+    setIsManagerModalOpen(false);
+    
+    // Ensure user stays on or returns to originating 'my-team' tab (Epic C requirement)
+    setActiveSubTab('my-team');
+    setSearchParams({ tab: 'my-team' });
+
+    setManagerSuccessToast(
+      `Manager competency evaluation for ${evaluatingMember?.name || 'reportee'} submitted successfully (${record.completedAt}). Role capability matrix and gap metrics updated.`
+    );
+    setTimeout(() => setManagerSuccessToast(null), 5000);
+  };
 
   // Additional Skills State (synced with persistent storage)
   const [additionalSkills, setAdditionalSkills] = useState<AdditionalSkillItem[]>(() => getStoredAdditionalSkills());
@@ -432,17 +741,20 @@ const SkillsPage: React.FC = () => {
   const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
   const [librarySkills, setLibrarySkills] = useState(SKILL_LIBRARY);
 
-  // Leaderboard & Points State
-  const [leaderboardTab, setLeaderboardTab] = useState<'leaderboard' | 'points'>('leaderboard');
+  // Rewards & Recognitions (Leaderboard, Points, Badges) State
+  const [leaderboardTab, setLeaderboardTab] = useState<'leaderboard' | 'points' | 'badges'>('leaderboard');
   const [leaderboardScope, setLeaderboardScope] = useState<'role' | 'org'>('role');
   const [leaderboardTime, setLeaderboardTime] = useState<'30d' | '6m'>('30d');
+  const [badgeCategoryFilter, setBadgeCategoryFilter] = useState<'all' | 'skill' | 'role_readiness'>('all');
+  const [badgeSearchQuery, setBadgeSearchQuery] = useState<string>('');
+  const [selectedBadgeForModal, setSelectedBadgeForModal] = useState<SkillBadgeItem | null>(null);
 
   // Skill Admin Dashboard State
   const [newSkillName, setNewSkillName] = useState('');
   const [newSkillDesc, setNewSkillDesc] = useState('');
   const [newSkillType, setNewSkillType] = useState('Technical');
   const [newSkillCategory, setNewSkillCategory] = useState('Cloud Architecture');
-  const [newSkillCriticality, setNewSkillCriticality] = useState<'Critical' | 'High' | 'Medium' | 'Low'>('High');
+  const [newSkillCriticality, setNewSkillCriticality] = useState<'High' | 'Medium' | 'Low'>('High');
   const [pendingSubmissions, setPendingSubmissions] = useState([
     { id: 'sub-1', name: 'Aarav Mehta', role: 'Staff Engineer', skill: '5G Core Network Slicing', date: 'Yesterday', status: 'Pending Verification', evidence: 'Jio 5G Specialist Cert #3391' },
     { id: 'sub-2', name: 'Priya Sharma', role: 'Senior Analyst', skill: 'Agile & Scrum Leadership', date: '2 days ago', status: 'Pending Review', evidence: 'Scrum Alliance CSM-4049' },
@@ -468,8 +780,8 @@ const SkillsPage: React.FC = () => {
     return null;
   };
 
-  // Filtered Role Skills for My Skills section
-  const filteredRoleSkills = INITIAL_ROLE_SKILLS.filter((skill) => {
+  // Filtered Role Skills for My Skills section (dynamic roleSkills)
+  const filteredRoleSkills = roleSkills.filter((skill) => {
     const matchesType = skillTypeFilter === 'All' || skill.type === skillTypeFilter;
     const matchesCriticality = criticalityFilter === 'All' || skill.criticality === criticalityFilter;
     const matchesStatus = skillStatusFilter === 'All' || 
@@ -507,6 +819,7 @@ const SkillsPage: React.FC = () => {
       <SkillsSubHeader 
         activeTab={activeSubTab} 
         onSelectTab={handleSelectSubTab} 
+        activeRewardSubTab={leaderboardTab}
       />
 
       {/* ========================================================= */}
@@ -683,7 +996,7 @@ const SkillsPage: React.FC = () => {
                     {/* Filter 2: Criticality */}
                     <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-xl border border-gray-300 shadow-3xs">
                       <label className="text-xs font-bold text-gray-700 whitespace-nowrap flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                        <span className="w-2 h-2 rounded-full bg-orange-500"></span>
                         Criticality:
                       </label>
                       <select
@@ -692,7 +1005,6 @@ const SkillsPage: React.FC = () => {
                         className="text-xs font-bold text-gray-900 bg-transparent border-none outline-none cursor-pointer pr-1"
                       >
                         <option value="All">All Criticalities</option>
-                        <option value="Critical">🔴 Critical</option>
                         <option value="High">🟠 High</option>
                         <option value="Medium">🟡 Medium</option>
                         <option value="Low">🔵 Low</option>
@@ -749,6 +1061,89 @@ const SkillsPage: React.FC = () => {
                     </span>
                   </div>
 
+                  {/* Epic A: Role-Mapped Skill Self-Survey Entry Point Banner (Pending vs Completed) */}
+                  {!surveyState.completed ? (
+                    <div 
+                      id="survey-entry-point-banner"
+                      className="m-4 mb-2 p-4 sm:p-5 bg-gradient-to-r from-blue-50/90 via-sky-50/80 to-indigo-50/90 border border-blue-200 rounded-2xl shadow-3xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div className="flex items-start gap-3.5">
+                        <div className="w-10 h-10 rounded-2xl bg-r-blue text-white flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+                          <AwardIcon className="w-5 h-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-black uppercase tracking-wider">
+                              Survey Pending
+                            </span>
+                            {Object.keys(surveyState.draftRatings || {}).length > 0 && (
+                              <span className="px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-300 text-[10px] font-bold">
+                                Draft Saved ({Object.keys(surveyState.draftRatings).length}/9 skills answered)
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="text-base font-black text-slate-900 font-heading">
+                            Role-Mapped Skill Self-Survey
+                          </h3>
+                          <p className="text-xs text-slate-600 font-medium max-w-xl leading-relaxed">
+                            Evaluate your current proficiency (L1–L4) across all 9 role-mapped skills for your role profile (Senior Platform Architect) to baseline your capabilities and target growth areas.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 sm:self-center flex-shrink-0">
+                        <button
+                          type="button"
+                          id="btn-take-self-survey"
+                          onClick={handleOpenSurvey}
+                          className="w-full sm:w-auto px-5 py-2.5 bg-r-blue hover:bg-r-blue-dark text-white text-xs font-black rounded-xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                        >
+                          <SparklesIcon className="w-4 h-4 text-amber-300" />
+                          <span>
+                            {Object.keys(surveyState.draftRatings || {}).length > 0 ? 'Resume Draft Survey' : 'Take Self-Survey'}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      id="survey-completed-status-banner"
+                      className="m-4 mb-2 p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl shadow-3xs flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                      <div className="flex items-start sm:items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-2xs">
+                          <CheckCircleIcon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-xs font-black text-emerald-950 font-heading">
+                              Self-Survey Completed
+                            </span>
+                            <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-300">
+                              Completed on {surveyState.completedAt || 'Recently'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-emerald-800 font-medium mt-0.5">
+                            All 9 role-mapped skills have been self-assessed. Your self-ratings are reflected below.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-shrink-0 sm:self-center">
+                        <button
+                          type="button"
+                          id="btn-update-resubmit-survey"
+                          onClick={handleOpenSurvey}
+                          className="w-full sm:w-auto px-3.5 py-2 bg-white hover:bg-emerald-50 text-emerald-900 text-xs font-bold rounded-xl border border-emerald-300 shadow-3xs hover:shadow-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                          title="Update your self-assessed proficiency ratings"
+                        >
+                          <EditIcon className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>Update / Resubmit Survey</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Empty State */}
                   {filteredRoleSkills.length === 0 ? (
                     <div className="p-8 text-center bg-white space-y-2.5">
@@ -772,64 +1167,95 @@ const SkillsPage: React.FC = () => {
                   ) : (
                     /* Horizontal Skill Tiles with Spacing & Met/Not Met status column */
                     <div className="p-4 space-y-3 bg-slate-50/50">
-                      {filteredRoleSkills.map((skill) => (
-                        <div 
-                          key={skill.id} 
-                          className="bg-white p-4 rounded-2xl border border-gray-200 hover:border-r-blue/40 hover:shadow-xs transition-all flex flex-col gap-3"
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                             {/* Skill Name & Badges */}
-                             <div className="flex flex-wrap items-center gap-2">
-                               <h3 className="font-bold text-sm sm:text-base text-gray-900">
-                                 {skill.name}
-                               </h3>
-                               {/* Criticality strict badge/pill hierarchy (Critical/High/Medium/Low) */}
-                               <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full border ${
-                                 skill.criticality === 'Critical'
-                                   ? 'bg-rose-50 text-rose-700 border-rose-200 font-extrabold shadow-3xs'
-                                   : skill.criticality === 'High'
-                                   ? 'bg-orange-50 text-orange-750 border-orange-200 font-extrabold shadow-3xs'
-                                   : skill.criticality === 'Medium'
-                                   ? 'bg-amber-50 text-amber-700 border-amber-200 shadow-3xs'
-                                   : 'bg-sky-50 text-sky-700 border-sky-200 font-semibold shadow-3xs'
-                               }`}>
-                                 {skill.criticality}
-                               </span>
+                      {filteredRoleSkills.map((skill) => {
+                        const targetLevel = skill.targetLevel || 3;
+                        const selfRating = skill.selfRating;
+                        const isSelfMet = selfRating !== undefined && selfRating >= targetLevel;
+
+                        return (
+                          <div 
+                            key={skill.id} 
+                            id={`role-skill-card-${skill.id}`}
+                            className="bg-white p-4 rounded-2xl border border-gray-200 hover:border-r-blue/40 hover:shadow-xs transition-all flex flex-col gap-3"
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                               {/* Skill Name & Badges */}
+                               <div className="flex flex-wrap items-center gap-2">
+                                 <h3 className="font-bold text-sm sm:text-base text-gray-900">
+                                   {skill.name}
+                                 </h3>
+                                 {/* Criticality: Key title is criticality and value is high/medium/low */}
+                                 <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full border ${
+                                   skill.criticality === 'High'
+                                     ? 'bg-orange-50 text-orange-750 border-orange-200 font-extrabold shadow-3xs'
+                                     : skill.criticality === 'Medium'
+                                     ? 'bg-amber-50 text-amber-700 border-amber-200 shadow-3xs'
+                                     : 'bg-sky-50 text-sky-700 border-sky-200 font-semibold shadow-3xs'
+                                 }`}>
+                                   Criticality: {skill.criticality}
+                                 </span>
+                               </div>
+
+                               {/* Action Button: Learn Icon (BookOpenIcon) for both Met and Not Met, matched to w-5 h-5 */}
+                               <button
+                                 onClick={() => navigate(`/skills/learn/${skill.id}`)}
+                                 className="self-start sm:self-auto p-1 text-r-blue hover:text-r-blue-dark bg-transparent border-none shadow-none transition-colors flex items-center justify-center cursor-pointer flex-shrink-0"
+                                 title="Learn Skill"
+                               >
+                                 <BookOpenIcon className="w-5 h-5" style={{ strokeWidth: '2.5px' }} />
+                               </button>
                              </div>
 
-                             {/* Action Button: Learn Icon (BookOpenIcon) for both Met and Not Met, matched to w-5 h-5 */}
-                             <button
-                               onClick={() => navigate(`/skills/learn/${skill.id}`)}
-                               className="self-start sm:self-auto p-1 text-r-blue hover:text-r-blue-dark bg-transparent border-none shadow-none transition-colors flex items-center justify-center cursor-pointer flex-shrink-0"
-                               title="Learn Skill"
-                             >
-                               <BookOpenIcon className="w-5 h-5" style={{ strokeWidth: '2.5px' }} />
-                             </button>
-                           </div>
+                            {/* Progress & Met/Gap Status Row */}
+                            <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-gray-100 text-xs sm:text-sm">
+                              <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-1.5">
+                                  {skill.status === 'Met' ? (
+                                    <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 text-[10px] font-extrabold rounded-full border border-emerald-200 inline-flex items-center gap-1 shadow-2xs">
+                                      <CheckCircleIcon className="w-3 h-3 text-emerald-600" />
+                                      Met
+                                    </span>
+                                  ) : (
+                                    <span className="px-2.5 py-0.5 bg-amber-50 text-amber-900 text-[10px] font-extrabold rounded-full border border-amber-200 inline-flex items-center gap-1 shadow-2xs">
+                                      <AlertCircleIcon className="w-3 h-3 text-amber-600" />
+                                      Gap
+                                    </span>
+                                  )}
+                                </div>
 
-                          {/* Progress & Met/Gap Status Row */}
-                          <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-gray-100 text-xs sm:text-sm">
-                            <div className="flex flex-wrap items-center gap-3">
-                              <div className="flex items-center gap-1.5">
-                                {skill.status === 'Met' ? (
-                                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 text-[10px] font-extrabold rounded-full border border-emerald-200 inline-flex items-center gap-1 shadow-2xs">
-                                    <CheckCircleIcon className="w-3 h-3 text-emerald-600" />
-                                    Met
-                                  </span>
+                                {/* Self-Assessed Proficiency Display */}
+                                {selfRating !== undefined ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="px-2.5 py-0.5 bg-blue-50 text-r-blue border border-blue-200 rounded-full text-xs font-bold flex items-center gap-1">
+                                      <span className="text-slate-500 font-semibold">Self-Assessed:</span>
+                                      <strong className="font-black">L{selfRating}</strong>
+                                      <span className="text-[10px] font-medium text-slate-600">
+                                        ({skill.levels.find(l => l.level === selfRating)?.name || 'Practitioner'})
+                                      </span>
+                                    </span>
+
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${
+                                      isSelfMet 
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                                    }`}>
+                                      {isSelfMet ? 'Self: Met' : `Self: Gap (-${targetLevel - selfRating} lvl)`}
+                                    </span>
+                                  </div>
                                 ) : (
-                                  <span className="px-2.5 py-0.5 bg-amber-50 text-amber-900 text-[10px] font-extrabold rounded-full border border-amber-200 inline-flex items-center gap-1 shadow-2xs">
-                                    <AlertCircleIcon className="w-3 h-3 text-amber-600" />
-                                    Gap
+                                  <span className="px-2.5 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded-full text-xs font-semibold">
+                                    Self-Assessed: <span className="text-amber-700 font-bold">Survey Pending</span>
                                   </span>
                                 )}
+
+                                <span className="text-gray-500 font-semibold text-xs">
+                                  Required: <strong className="text-slate-800">L{skill.targetLevel}</strong> &middot; Current: <strong className="text-slate-800">L{skill.currentLevel}</strong>
+                                </span>
                               </div>
-                              <span className="text-gray-500 font-semibold text-xs">
-                                Current L{skill.currentLevel} &rarr; Required L{skill.targetLevel} &middot; {Math.round((skill.currentLevel / skill.targetLevel) * 100)}%
-                              </span>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 
@@ -907,38 +1333,48 @@ const SkillsPage: React.FC = () => {
                                 <div className="flex flex-wrap items-center gap-2">
                                   <span className="font-bold text-sm sm:text-base text-gray-900">{item.name}</span>
                                   
-                                  {/* Explored Badge */}
-                                  {item.explored && (
-                                    <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full border bg-purple-50 text-purple-700 border-purple-200 inline-flex items-center gap-1 shadow-3xs">
-                                      <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                      </svg>
-                                      Explored
-                                    </span>
+                                  {/* Criticality: Key title is criticality and value is high/medium/low */}
+                                  <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full border ${
+                                    item.criticality === 'High'
+                                      ? 'bg-orange-50 text-orange-750 border-orange-200 font-extrabold shadow-3xs'
+                                      : item.criticality === 'Medium'
+                                      ? 'bg-amber-50 text-amber-700 border-amber-200 shadow-3xs'
+                                      : 'bg-sky-50 text-sky-700 border-sky-200 font-semibold shadow-3xs'
+                                  }`}>
+                                    Criticality: {item.criticality || 'High'}
+                                  </span>
+
+                                  {/* Completed Tag & Score /100 if skill assessment completed for the skill */}
+                                  {(item.assessmentCompleted || (item.skillScore !== undefined && item.skillScore >= 75)) && (
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200 inline-flex items-center gap-1 shadow-3xs">
+                                        <CheckCircleIcon className="w-3 h-3 text-emerald-600" />
+                                        Completed
+                                      </span>
+                                      <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-full border bg-teal-50 text-teal-800 border-teal-200 inline-flex items-center shadow-3xs">
+                                        {item.skillScore ?? 85}/100
+                                      </span>
+                                    </div>
                                   )}
 
-                                  {/* Skill Score Badge */}
-                                  {item.skillScore !== undefined && (
-                                    <span className={`px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full border inline-flex items-center gap-1 shadow-3xs ${
-                                      item.skillScore >= 75
-                                        ? 'bg-teal-50 text-teal-700 border-teal-200'
-                                        : 'bg-amber-50 text-amber-700 border-amber-200'
-                                    }`}>
-                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                      </svg>
-                                      Score: {item.skillScore}% {item.skillScore >= 75 && '(Passed)'}
-                                    </span>
-                                  )}
-
-                                  {/* Validated Tag */}
-                                  {isManagerValidated && (
+                                  {/* Validation / Revalidation status */}
+                                  {item.underRevalidation ? (
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                      <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200 inline-flex items-center gap-1 shadow-3xs" title={`Currently validated at Level ${item.validatedProficiencyLevel || item.proficiencyLevel}`}>
+                                        <CheckCircleIcon className="w-3 h-3 text-emerald-600" />
+                                        Validated (L{item.validatedProficiencyLevel || item.proficiencyLevel})
+                                      </span>
+                                      <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full border bg-amber-50 text-amber-800 border-amber-300 inline-flex items-center gap-1 shadow-3xs" title="Modifications submitted for revalidation review">
+                                        <ClockIcon className="w-3 h-3 text-amber-600" />
+                                        Revalidation Pending (L{item.proficiencyLevel})
+                                      </span>
+                                    </div>
+                                  ) : isManagerValidated ? (
                                     <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 inline-flex items-center gap-1 shadow-3xs">
                                       <CheckCircleIcon className="w-3 h-3 text-emerald-600" />
-                                      Validated
+                                      Validated (L{item.proficiencyLevel || 3})
                                     </span>
-                                  )}
+                                  ) : null}
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-600 font-medium">
                                   <span>Exp: <strong className="text-gray-900">{item.experienceYears || '2 Years'}</strong></span>
@@ -995,12 +1431,17 @@ const SkillsPage: React.FC = () => {
                                 {proofCount} {proofCount === 1 ? 'Proof' : 'Proofs'}
                               </span>
                               <div>
-                                {(item.validationStatus === 'Relevant' || item.validationStatus === 'Future Relevant') && (
+                                {item.underRevalidation ? (
+                                  <span className="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full border bg-amber-50 text-amber-800 border-amber-300 inline-flex items-center gap-1.5 shadow-3xs" title="Revalidation in progress for updated details">
+                                    <ClockIcon className="w-3 h-3 text-amber-600" />
+                                    Revalidation In Progress
+                                  </span>
+                                ) : (item.validationStatus === 'Relevant' || item.validationStatus === 'Future Relevant') ? (
                                   <span className="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 inline-flex items-center gap-1.5 shadow-3xs" title="Validated by Manager">
                                     <CheckCircleIcon className="w-3 h-3 text-emerald-600" />
                                     Validated
                                   </span>
-                                )}
+                                ) : null}
                               </div>
                             </div>
                           </div>
@@ -1134,9 +1575,9 @@ const SkillsPage: React.FC = () => {
       )}
 
       {/* ========================================================= */}
-      {/* SUB-TAB: LEADERBOARD (Independent page)                    */}
+      {/* SUB-TAB: REWARDS (Leaderboard, Points, Badges)             */}
       {/* ========================================================= */}
-      {activeSubTab === 'leaderboard' && (
+      {(activeSubTab === 'leaderboard' || activeSubTab === 'rewards') && (
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-fade-in">
           {/* Breadcrumb & Back Header */}
           <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-500 font-medium">
@@ -1157,7 +1598,7 @@ const SkillsPage: React.FC = () => {
                 <span>/</span>
                 <span className="text-gray-900 font-bold">Skills Intelligence</span>
                 <span>/</span>
-                <span className="text-r-blue font-bold">Leaderboard</span>
+                <span className="text-r-blue font-bold">Rewards</span>
               </div>
             </div>
           </div>
@@ -1169,22 +1610,22 @@ const SkillsPage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2.5">
                   <StarIcon className="w-6 h-6 text-amber-500 fill-amber-400" />
-                  <h2 className="text-2xl font-heading font-extrabold text-gray-900">Skill Points & Standing</h2>
+                  <h2 className="text-2xl font-heading font-extrabold text-gray-900">Rewards & Recognitions</h2>
                 </div>
                 <p className="text-sm sm:text-base text-gray-600 mt-1">
-                  Earn skill points by completing role-mapped learning modules, assessments, and certifications.
+                  Track your standing, skill points, digital skill badges, and enterprise role readiness credentials.
                 </p>
               </div>
             </div>
 
-            {/* Sub-Filters: Leaderboard vs Points (Requirement 2) */}
-            <div className="flex border-b border-gray-150 pb-px">
+            {/* Sub-Filters: Leaderboard vs Points vs Badges */}
+            <div className="flex border-b border-gray-150 pb-px gap-2">
               <button
                 type="button"
                 onClick={() => setLeaderboardTab('leaderboard')}
-                className={`px-6 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+                className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
                   leaderboardTab === 'leaderboard'
-                    ? 'border-r-blue text-r-blue border-r-blue font-extrabold'
+                    ? 'border-r-blue text-r-blue font-extrabold'
                     : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300 font-bold'
                 }`}
               >
@@ -1194,14 +1635,26 @@ const SkillsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setLeaderboardTab('points')}
-                className={`px-6 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+                className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
                   leaderboardTab === 'points'
-                    ? 'border-r-blue text-r-blue border-r-blue font-extrabold'
+                    ? 'border-r-blue text-r-blue font-extrabold'
                     : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300 font-bold'
                 }`}
               >
                 <AwardIcon className="w-4 h-4" />
                 Points
+              </button>
+              <button
+                type="button"
+                onClick={() => setLeaderboardTab('badges')}
+                className={`px-5 py-3 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+                  leaderboardTab === 'badges'
+                    ? 'border-r-blue text-r-blue font-extrabold'
+                    : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300 font-bold'
+                }`}
+              >
+                <ShieldCheckIcon className="w-4 h-4" />
+                Badges
               </button>
             </div>
 
@@ -1254,6 +1707,287 @@ const SkillsPage: React.FC = () => {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            ) : leaderboardTab === 'badges' ? (
+              <div className="space-y-6 animate-fade-in">
+                {/* Badges Overview Stats Bar */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-4 bg-gradient-to-br from-indigo-50/80 to-blue-50/60 rounded-2xl border border-indigo-100 shadow-3xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-900">Total Badges</span>
+                      <AwardIcon className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-2xl font-black text-indigo-950">7</span>
+                      <span className="text-xs font-semibold text-indigo-700">/ 9 Total Available</span>
+                    </div>
+                    <div className="w-full bg-indigo-200/60 h-1.5 rounded-full mt-2 overflow-hidden">
+                      <div className="bg-indigo-600 h-full rounded-full" style={{ width: '78%' }}></div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-gradient-to-br from-purple-50/80 to-violet-50/60 rounded-2xl border border-purple-100 shadow-3xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-purple-900">Skill Badges</span>
+                      <SparklesIcon className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-2xl font-black text-purple-950">4 Earned</span>
+                      <span className="text-xs font-semibold text-purple-700">1 In Progress</span>
+                    </div>
+                    <span className="text-[11px] text-purple-700 block mt-1 font-medium">Domain & Technical Mastery</span>
+                  </div>
+
+                  <div className="p-4 bg-gradient-to-br from-emerald-50/80 to-teal-50/60 rounded-2xl border border-emerald-100 shadow-3xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-900">Role Readiness</span>
+                      <ShieldCheckIcon className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-2xl font-black text-emerald-950">3 Certified</span>
+                      <span className="text-xs font-semibold text-emerald-700">1 Candidate</span>
+                    </div>
+                    <span className="text-[11px] text-emerald-700 block mt-1 font-medium">Job Architecture Benchmark</span>
+                  </div>
+
+                  <div className="p-4 bg-gradient-to-br from-amber-50/80 to-orange-50/60 rounded-2xl border border-amber-100 shadow-3xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-900">Top Credential Tier</span>
+                      <StarIcon className="w-5 h-5 text-amber-600 fill-amber-400" />
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-2xl font-black text-amber-950">Platinum</span>
+                    </div>
+                    <span className="text-[11px] text-amber-700 block mt-1 font-medium">Top 5% Technical Tier</span>
+                  </div>
+                </div>
+
+                {/* Badges Filtering & Search Controls */}
+                <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-slate-50 rounded-2xl border border-gray-200">
+                  {/* Category Filter Pills */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBadgeCategoryFilter('all')}
+                      className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                        badgeCategoryFilter === 'all'
+                          ? 'bg-r-blue text-white shadow-2xs'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                      }`}
+                    >
+                      All Badges ({SKILL_BADGES_DATA.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBadgeCategoryFilter('skill')}
+                      className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                        badgeCategoryFilter === 'skill'
+                          ? 'bg-purple-700 text-white shadow-2xs'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                      }`}
+                    >
+                      Skill Badges ({SKILL_BADGES_DATA.filter(b => b.type === 'skill').length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBadgeCategoryFilter('role_readiness')}
+                      className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                        badgeCategoryFilter === 'role_readiness'
+                          ? 'bg-emerald-700 text-white shadow-2xs'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                      }`}
+                    >
+                      Role Readiness Badges ({SKILL_BADGES_DATA.filter(b => b.type === 'role_readiness').length})
+                    </button>
+                  </div>
+
+                  {/* Search Input */}
+                  <div className="relative w-full sm:w-72">
+                    <SearchIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search badges or skills..."
+                      value={badgeSearchQuery}
+                      onChange={(e) => setBadgeSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-8 py-2 bg-white text-xs font-semibold text-gray-900 rounded-xl border border-gray-300 focus:outline-none focus:border-r-blue focus:ring-1 focus:ring-r-blue placeholder-gray-400"
+                    />
+                    {badgeSearchQuery && (
+                      <button
+                        onClick={() => setBadgeSearchQuery('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <XIcon className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Badges Grid */}
+                {(() => {
+                  const filteredBadges = SKILL_BADGES_DATA.filter((badge) => {
+                    if (badgeCategoryFilter === 'skill' && badge.type !== 'skill') return false;
+                    if (badgeCategoryFilter === 'role_readiness' && badge.type !== 'role_readiness') return false;
+                    if (badgeSearchQuery.trim()) {
+                      const q = badgeSearchQuery.toLowerCase();
+                      const matchTitle = badge.title.toLowerCase().includes(q);
+                      const matchCategory = badge.category.toLowerCase().includes(q);
+                      const matchSkills = badge.skillsCovered.some(s => s.toLowerCase().includes(q));
+                      if (!matchTitle && !matchCategory && !matchSkills) return false;
+                    }
+                    return true;
+                  });
+
+                  if (filteredBadges.length === 0) {
+                    return (
+                      <div className="p-12 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+                        <AwardIcon className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                        <h4 className="text-base font-bold text-gray-900">No Badges Match Your Filter</h4>
+                        <p className="text-xs text-gray-500 mt-1">Try broadening your search query or selecting All Badges.</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {filteredBadges.map((badge) => {
+                        const isSkill = badge.type === 'skill';
+                        const isEarned = badge.status === 'Earned';
+                        const isPlatinum = badge.tier === 'Platinum';
+                        const isGold = badge.tier === 'Gold';
+
+                        return (
+                          <div
+                            key={badge.id}
+                            className={`rounded-2xl border p-5 flex flex-col justify-between transition-all hover:shadow-md relative overflow-hidden bg-white ${
+                              isEarned
+                                ? isSkill
+                                  ? 'border-purple-200/80 hover:border-purple-300'
+                                  : 'border-emerald-200/80 hover:border-emerald-300'
+                                : 'border-gray-200/80 bg-slate-50/50'
+                            }`}
+                          >
+                            {/* Top colored accent bar */}
+                            <div className={`absolute top-0 left-0 right-0 h-1.5 ${
+                              isSkill 
+                                ? 'bg-gradient-to-r from-purple-500 to-indigo-500' 
+                                : 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                            }`} />
+
+                            <div className="space-y-3 pt-1">
+                              {/* Type & Tier badges */}
+                              <div className="flex items-center justify-between gap-2">
+                                <span className={`px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full border ${
+                                  isSkill
+                                    ? 'bg-purple-50 text-purple-800 border-purple-200'
+                                    : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                }`}>
+                                  {isSkill ? 'Skill Badge' : 'Role Readiness'}
+                                </span>
+
+                                <span className={`px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full border ${
+                                  isPlatinum
+                                    ? 'bg-slate-900 text-slate-100 border-slate-700'
+                                    : isGold
+                                    ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                    : badge.tier === 'Silver'
+                                    ? 'bg-slate-100 text-slate-800 border-slate-300'
+                                    : 'bg-blue-50 text-blue-800 border-blue-200'
+                                }`}>
+                                  {badge.tier}
+                                </span>
+                              </div>
+
+                              {/* Badge Graphic & Title */}
+                              <div className="flex items-start gap-3">
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm border ${
+                                  isSkill
+                                    ? isEarned
+                                      ? 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white border-purple-400'
+                                      : 'bg-purple-100 text-purple-700 border-purple-200'
+                                    : isEarned
+                                      ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-emerald-400'
+                                      : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                                }`}>
+                                  {isSkill ? (
+                                    <SparklesIcon className="w-6 h-6" />
+                                  ) : (
+                                    <ShieldCheckIcon className="w-6 h-6" />
+                                  )}
+                                </div>
+                                <div className="space-y-0.5">
+                                  <h3 className="text-base font-extrabold text-gray-900 leading-snug">
+                                    {badge.title}
+                                  </h3>
+                                  <span className="text-xs font-semibold text-gray-500 block">
+                                    {badge.category}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Description */}
+                              <p className="text-xs text-gray-600 leading-relaxed">
+                                {badge.description}
+                              </p>
+
+                              {/* Score & Criteria Box */}
+                              <div className="p-2.5 bg-slate-50 rounded-xl border border-gray-200/80 flex items-center justify-between text-xs">
+                                <span className="font-bold text-gray-700">Criteria:</span>
+                                <span className={`font-extrabold ${isEarned ? 'text-emerald-700' : 'text-amber-700'}`}>
+                                  {badge.scoreOrCriteria}
+                                </span>
+                              </div>
+
+                              {/* Skills Covered Pills */}
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                                  Covered Skills
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {badge.skillsCovered.map((sk, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="px-2 py-0.5 bg-gray-100 text-gray-700 text-[10px] font-semibold rounded-md"
+                                    >
+                                      {sk}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Footer Status & Credential Action */}
+                            <div className="pt-4 mt-4 border-t border-gray-150 flex items-center justify-between gap-2">
+                              <div>
+                                {isEarned ? (
+                                  <div className="flex items-center gap-1.5 text-xs font-extrabold text-emerald-700">
+                                    <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
+                                    <span>Earned {badge.accreditedDate && `• ${badge.accreditedDate}`}</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700">
+                                    <ClockIcon className="w-4 h-4 text-amber-600" />
+                                    <span>In Progress</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {isEarned && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedBadgeForModal(badge)}
+                                  className="px-3 py-1.5 text-xs font-extrabold text-r-blue hover:text-white bg-blue-50 hover:bg-r-blue border border-blue-200 rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                                >
+                                  <EyeIcon className="w-3.5 h-3.5" />
+                                  <span>Credential</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             ) : (
               <div className="space-y-6 animate-fade-in">
@@ -1797,116 +2531,456 @@ const SkillsPage: React.FC = () => {
       {/* ========================================================= */}
       {/* SUB-TAB 4: MY TEAM                                       */}
       {/* ========================================================= */}
-      {activeSubTab === 'my-team' && (
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
-          
-          {/* Team Overview Metrics Bar */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs space-y-4">
-            <div>
-              <h2 className="text-2xl font-heading font-extrabold text-gray-900">
-                My Team Skill Intelligence Matrix
-              </h2>
-              <p className="text-xs text-gray-500 mt-1">
-                Direct Reports: <strong className="text-gray-900">5 Engineers</strong> • Team Average Readiness: <strong className="text-emerald-700">80%</strong>
-              </p>
+      {activeSubTab === 'my-team' && (() => {
+        const totalReportsCount = teamMembers.length;
+        const completedSurveysCount = teamMembers.filter(m => managerSurveys[m.id]?.status === 'Completed').length;
+        const inProgressSurveysCount = teamMembers.filter(m => managerSurveys[m.id]?.status === 'In progress').length;
+        const notStartedSurveysCount = teamMembers.filter(m => !managerSurveys[m.id] || managerSurveys[m.id]?.status === 'Not started').length;
+        const teamAvgReadiness = totalReportsCount > 0 
+          ? Math.round(teamMembers.reduce((acc, m) => acc + (m.readiness || 0), 0) / totalReportsCount) 
+          : 0;
+        const criticalGapsCount = teamMembers.filter(m => m.criticalGap && m.criticalGap !== 'None').length;
+
+        const filteredTeamMembers = teamMembers.filter(member => {
+          const status = managerSurveys[member.id]?.status || 'Not started';
+          if (teamSurveyFilter === 'All') return true;
+          return status === teamSurveyFilter;
+        });
+
+        return (
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+            
+            {/* Team Overview Metrics Bar */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-heading font-extrabold text-gray-900">
+                    My Team Skill Intelligence Matrix
+                  </h2>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Direct Reports: <strong className="text-gray-900">{totalReportsCount} Engineers</strong> • Team Average Readiness: <strong className="text-emerald-700">{teamAvgReadiness}%</strong> • Evaluations: <strong className="text-r-blue">{completedSurveysCount} of {totalReportsCount} Completed</strong>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-blue-50 text-r-blue border border-blue-200 text-xs font-bold">
+                    Manager View Active
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                <div className="p-4 bg-slate-50 rounded-xl border border-gray-200">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">Total Direct Reports</span>
+                  <span className="text-2xl font-extrabold text-gray-900 mt-1 block">{totalReportsCount} Direct Reports</span>
+                  <span className="text-[11px] text-gray-500 mt-0.5 block">Reporting to Sandeep Gupta</span>
+                </div>
+                <div className="p-4 bg-emerald-50/70 rounded-xl border border-emerald-200">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">Surveys Completed</span>
+                  <span className="text-2xl font-extrabold text-emerald-900 mt-1 block">{completedSurveysCount} Evaluated</span>
+                  <span className="text-[11px] text-emerald-700 mt-0.5 block">{inProgressSurveysCount} Drafts in Progress</span>
+                </div>
+                <div className="p-4 bg-amber-50/70 rounded-xl border border-amber-200">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 block">Pending Surveys</span>
+                  <span className="text-2xl font-extrabold text-amber-900 mt-1 block">{notStartedSurveysCount} Not Started</span>
+                  <span className="text-[11px] text-amber-700 mt-0.5 block">Requires Manager Rating</span>
+                </div>
+                <div className="p-4 bg-blue-50/70 rounded-xl border border-blue-200">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-r-blue block">Critical Gaps Alert</span>
+                  <span className="text-2xl font-extrabold text-r-blue mt-1 block">{criticalGapsCount} Identified</span>
+                  <span className="text-[11px] text-blue-700 mt-0.5 block">Across team competencies</span>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-              <div className="p-4 bg-slate-50 rounded-xl border border-gray-200">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">Total Team Members</span>
-                <span className="text-2xl font-extrabold text-gray-900 mt-1 block">5 Direct Reports</span>
-              </div>
-              <div className="p-4 bg-amber-50/70 rounded-xl border border-amber-200">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 block">Pending Evidence Approvals</span>
-                <span className="text-2xl font-extrabold text-amber-900 mt-1 block">2 Approvals Required</span>
-              </div>
-              <div className="p-4 bg-blue-50/70 rounded-xl border border-blue-200">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-r-blue block">Critical Gaps Alert</span>
-                <span className="text-2xl font-extrabold text-r-blue mt-1 block">2 Critical Gaps Identified</span>
-              </div>
-            </div>
-          </div>
+            {/* Team Matrix Table & Evaluation Hub */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-heading font-extrabold text-gray-900">
+                    Direct Reports Capability Status & Surveys
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Conduct and maintain manager role skill surveys for every engineer in your direct hierarchy.
+                  </p>
+                </div>
 
-          {/* Team Matrix Table */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-heading font-extrabold text-gray-900">
-                Direct Reports Capability Status
-              </h3>
-              <button 
-                onClick={() => alert('Exporting Team Skill Matrix Report...')}
-                className="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-lg border border-gray-300 transition-colors"
-              >
-                Export Matrix
-              </button>
-            </div>
+                {/* Filter Tabs by Manager Survey Status */}
+                <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setTeamSurveyFilter('All')}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      teamSurveyFilter === 'All' 
+                        ? 'bg-white text-slate-900 shadow-2xs' 
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    All ({totalReportsCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTeamSurveyFilter('Not started')}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      teamSurveyFilter === 'Not started' 
+                        ? 'bg-white text-slate-900 shadow-2xs' 
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Not Started ({notStartedSurveysCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTeamSurveyFilter('In progress')}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      teamSurveyFilter === 'In progress' 
+                        ? 'bg-white text-slate-900 shadow-2xs' 
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    In Progress ({inProgressSurveysCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTeamSurveyFilter('Completed')}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      teamSurveyFilter === 'Completed' 
+                        ? 'bg-white text-slate-900 shadow-2xs' 
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Completed ({completedSurveysCount})
+                  </button>
+                </div>
+              </div>
 
-            <div className="overflow-x-auto rounded-xl border border-gray-200">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-100/80 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    <th className="py-3 px-4">TEAM MEMBER</th>
-                    <th className="py-3 px-4">ROLE & GRADE</th>
-                    <th className="py-3 px-4 text-center">ROLE READINESS</th>
-                    <th className="py-3 px-4 text-center">CRITICAL SKILL GAP</th>
-                    <th className="py-3 px-4 text-center">PENDING REVIEWS</th>
-                    <th className="py-3 px-4 text-right">ACTION</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 text-xs bg-white">
-                  {TEAM_MEMBERS_DATA.map((member) => (
-                    <tr key={member.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-3">
-                          <img src={member.photo} alt="" className="w-9 h-9 rounded-full object-cover ring-1 ring-gray-300" />
-                          <div>
-                            <span className="font-bold text-sm text-gray-900 block">{member.name}</span>
-                            <span className="text-[11px] text-gray-500">{member.skillsCount} Mapped Skills</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-gray-700 font-medium">
-                        {member.role} <span className="text-gray-400 font-normal">({member.grade})</span>
-                      </td>
-                      <td className="py-3.5 px-4 text-center font-extrabold text-r-blue">
-                        <div className="inline-flex items-center gap-2">
-                          <span>{member.readiness}%</span>
-                          <div className="w-16 bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                            <div className="bg-r-blue h-full rounded-full" style={{ width: `${member.readiness}%` }} />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        {member.criticalGap === 'None' ? (
-                          <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 text-[11px] font-bold rounded">None</span>
-                        ) : (
-                          <span className="px-2.5 py-0.5 bg-rose-50 text-rose-800 text-[11px] font-bold rounded border border-rose-200">{member.criticalGap}</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        {member.pendingEvidence > 0 ? (
-                          <span className="px-2.5 py-0.5 bg-amber-100 text-amber-900 text-[11px] font-bold rounded border border-amber-200">{member.pendingEvidence} Pending</span>
-                        ) : (
-                          <span className="text-gray-400 font-medium">0</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <button
-                          onClick={() => alert(`Reviewing skill profile for ${member.name}...`)}
-                          className="px-3 py-1.5 bg-r-blue hover:bg-r-blue-dark text-white font-bold rounded-lg text-xs transition-colors"
-                        >
-                          Review Profile
-                        </button>
-                      </td>
+              <div className="overflow-x-auto rounded-xl border border-gray-200">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100/80 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                      <th className="py-3 px-4">DIRECT REPORTEE</th>
+                      <th className="py-3 px-4">ROLE & GRADE</th>
+                      <th className="py-3 px-4 text-center">MANAGER SURVEY STATUS</th>
+                      <th className="py-3 px-4 text-center">ROLE READINESS</th>
+                      <th className="py-3 px-4 text-center">CRITICAL SKILL GAP</th>
+                      <th className="py-3 px-4 text-right">ROW ACTION</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 text-xs bg-white">
+                    {filteredTeamMembers.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-slate-500 font-medium">
+                          No reportees match the selected survey status filter "{teamSurveyFilter}".
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredTeamMembers.map((member) => {
+                        const surveyRecord = managerSurveys[member.id] || {
+                          reporteeId: member.id,
+                          status: 'Not started',
+                          draftRatings: {},
+                          managerRatings: {}
+                        };
+                        const status: ManagerSurveyStatus = surveyRecord.status;
+                        const isExpanded = expandedTeamMemberId === member.id;
+                        const ratedSkillsCount = Object.keys(surveyRecord.draftRatings || {}).length;
 
-        </div>
-      )}
+                        return (
+                          <React.Fragment key={member.id}>
+                            <tr className="hover:bg-slate-50 transition-colors">
+                              {/* Direct Reportee */}
+                              <td className="py-3.5 px-4">
+                                <div className="flex items-center gap-3">
+                                  <img 
+                                    src={member.photo} 
+                                    alt={member.name} 
+                                    className="w-9 h-9 rounded-full object-cover ring-1 ring-gray-300 flex-shrink-0" 
+                                  />
+                                  <div>
+                                    <span className="font-bold text-sm text-gray-900 block">{member.name}</span>
+                                    <span className="text-[11px] text-gray-500">
+                                      {member.roleSkills.length > 0 
+                                        ? `${member.roleSkills.length} Mapped Skills` 
+                                        : '0 Mapped Skills'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Role & Grade */}
+                              <td className="py-3.5 px-4 text-gray-700 font-medium">
+                                <div>
+                                  <span className="font-bold text-gray-900">{member.role}</span>
+                                  <span className="text-gray-400 font-normal ml-1">({member.grade})</span>
+                                </div>
+                                <span className="text-[11px] text-gray-500 block">{member.department}</span>
+                              </td>
+
+                              {/* Manager Survey Status */}
+                              <td className="py-3.5 px-4 text-center">
+                                {status === 'Completed' ? (
+                                  <div className="inline-flex flex-col items-center">
+                                    <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-900 text-[11px] font-black rounded-full border border-emerald-300 flex items-center gap-1 shadow-3xs">
+                                      <CheckCircleIcon className="w-3 h-3 text-emerald-700" />
+                                      Completed
+                                    </span>
+                                    {surveyRecord.completedAt && (
+                                      <span className="text-[10px] text-emerald-800 font-medium mt-0.5">
+                                        {surveyRecord.completedAt}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : status === 'In progress' ? (
+                                  <div className="inline-flex flex-col items-center">
+                                    <span className="px-2.5 py-0.5 bg-amber-100 text-amber-900 text-[11px] font-black rounded-full border border-amber-300 flex items-center gap-1 shadow-3xs">
+                                      <EditIcon className="w-3 h-3 text-amber-700" />
+                                      In Progress
+                                    </span>
+                                    <span className="text-[10px] text-amber-800 font-bold mt-0.5">
+                                      {ratedSkillsCount}/{member.roleSkills.length} rated
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div className="inline-flex flex-col items-center">
+                                    <span className="px-2.5 py-0.5 bg-slate-100 text-slate-700 text-[11px] font-bold rounded-full border border-slate-300 flex items-center gap-1">
+                                      <ClockIcon className="w-3 h-3 text-slate-500" />
+                                      Not started
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 font-medium mt-0.5">
+                                      Survey Pending
+                                    </span>
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Role Readiness */}
+                              <td className="py-3.5 px-4 text-center font-extrabold text-r-blue">
+                                <div className="inline-flex flex-col items-center gap-1">
+                                  <div className="inline-flex items-center gap-2">
+                                    <span className={`font-black ${
+                                      member.readiness >= 85 
+                                        ? 'text-emerald-700' 
+                                        : member.readiness >= 70 
+                                        ? 'text-r-blue' 
+                                        : 'text-amber-700'
+                                    }`}>
+                                      {member.readiness}%
+                                    </span>
+                                    <div className="w-16 bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                                      <div 
+                                        className={`h-full rounded-full ${
+                                          member.readiness >= 85 
+                                            ? 'bg-emerald-600' 
+                                            : member.readiness >= 70 
+                                            ? 'bg-r-blue' 
+                                            : 'bg-amber-500'
+                                        }`} 
+                                        style={{ width: `${member.readiness}%` }} 
+                                      />
+                                    </div>
+                                  </div>
+                                  <span className="text-[10px] text-gray-500 font-semibold">
+                                    {status === 'Completed' ? 'Manager Assessed' : 'Baseline / Self'}
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Critical Skill Gap */}
+                              <td className="py-3.5 px-4 text-center">
+                                {member.criticalGap === 'None' ? (
+                                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 text-[11px] font-bold rounded-md border border-emerald-200">
+                                    None ✓
+                                  </span>
+                                ) : (
+                                  <span className="px-2.5 py-0.5 bg-rose-50 text-rose-800 text-[11px] font-bold rounded-md border border-rose-200">
+                                    {member.criticalGap}
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Action Buttons */}
+                              <td className="py-3.5 px-4 text-right">
+                                <div className="inline-flex items-center gap-2">
+                                  {status === 'Completed' ? (
+                                    <button
+                                      type="button"
+                                      id={`btn-manage-survey-${member.id}`}
+                                      onClick={() => handleOpenManagerSurvey(member)}
+                                      className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 font-bold rounded-lg text-xs border border-slate-300 transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
+                                      title="Update or review manager evaluation"
+                                    >
+                                      <EditIcon className="w-3.5 h-3.5 text-r-blue" />
+                                      <span>Update Survey</span>
+                                    </button>
+                                  ) : status === 'In progress' ? (
+                                    <button
+                                      type="button"
+                                      id={`btn-manage-survey-${member.id}`}
+                                      onClick={() => handleOpenManagerSurvey(member)}
+                                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-xs transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
+                                      title="Resume partially completed draft survey"
+                                    >
+                                      <SparklesIcon className="w-3.5 h-3.5 text-amber-200" />
+                                      <span>Resume Survey</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      id={`btn-manage-survey-${member.id}`}
+                                      onClick={() => handleOpenManagerSurvey(member)}
+                                      className="px-3 py-1.5 bg-r-blue hover:bg-r-blue-dark text-white font-bold rounded-lg text-xs transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
+                                      title="Open role competency evaluation survey"
+                                    >
+                                      <AwardIcon className="w-3.5 h-3.5" />
+                                      <span>Conduct Survey</span>
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedTeamMemberId(isExpanded ? null : member.id)}
+                                    className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                                    title={isExpanded ? 'Collapse role skills' : 'Expand role skills breakdown'}
+                                  >
+                                    <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180 text-r-blue' : ''}`} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+
+                            {/* Expandable Breakdown Drawer */}
+                            {isExpanded && (
+                              <tr className="bg-slate-50/80">
+                                <td colSpan={6} className="p-4 sm:p-5 border-y border-slate-200">
+                                  <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <AwardIcon className="w-4 h-4 text-r-blue" />
+                                        <span className="font-heading font-extrabold text-xs text-slate-900">
+                                          Role Competency Matrix for {member.name} ({member.roleSkills.length} Mapped Skills)
+                                        </span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleOpenManagerSurvey(member)}
+                                        className="text-r-blue hover:underline text-xs font-bold"
+                                      >
+                                        Open Survey Form →
+                                      </button>
+                                    </div>
+
+                                    {member.roleSkills.length === 0 ? (
+                                      <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
+                                        <AlertCircleIcon className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                                        <span>
+                                          No role-mapped competencies are configured for this profile ({member.role}, {member.grade}). Click "Conduct Survey" to view empty state actions or map competencies in Skill Admin.
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                                        <table className="w-full text-left text-xs">
+                                          <thead>
+                                            <tr className="bg-slate-100/70 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                              <th className="py-2.5 px-3">Role Competency</th>
+                                              <th className="py-2.5 px-3">Category</th>
+                                              <th className="py-2.5 px-3 text-center">Required Target</th>
+                                              <th className="py-2.5 px-3 text-center">Employee Self-Rating</th>
+                                              <th className="py-2.5 px-3 text-center">Manager Evaluation</th>
+                                              <th className="py-2.5 px-3 text-center">Status / Gap</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody className="divide-y divide-slate-100">
+                                            {member.roleSkills.map((sk) => {
+                                              const mRating = surveyRecord.managerRatings[sk.id] !== undefined 
+                                                ? surveyRecord.managerRatings[sk.id] 
+                                                : sk.managerRating;
+                                              const draftRating = surveyRecord.draftRatings[sk.id];
+                                              const target = sk.targetLevel || 3;
+                                              const evaluatedRating = mRating !== undefined ? mRating : draftRating;
+                                              const hasEvaluated = evaluatedRating !== undefined;
+                                              const isGap = hasEvaluated && evaluatedRating < target;
+
+                                              return (
+                                                <tr key={sk.id} className="hover:bg-slate-50/60">
+                                                  <td className="py-2.5 px-3">
+                                                    <span className="font-bold text-slate-800 block">{sk.name}</span>
+                                                    <span className="text-[10px] text-slate-500 font-normal">{sk.description}</span>
+                                                  </td>
+                                                  <td className="py-2.5 px-3 text-slate-600">
+                                                    <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-semibold">
+                                                      {sk.category}
+                                                    </span>
+                                                  </td>
+                                                  <td className="py-2.5 px-3 text-center">
+                                                    <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200 text-xs font-black">
+                                                      L{sk.targetLevel}
+                                                    </span>
+                                                  </td>
+                                                  <td className="py-2.5 px-3 text-center">
+                                                    {sk.selfRating !== undefined ? (
+                                                      <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-900 border border-blue-200 text-xs font-black">
+                                                        L{sk.selfRating}
+                                                      </span>
+                                                    ) : (
+                                                      <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-semibold">
+                                                        Not submitted
+                                                      </span>
+                                                    )}
+                                                  </td>
+                                                  <td className="py-2.5 px-3 text-center">
+                                                    {mRating !== undefined ? (
+                                                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-900 border border-emerald-300 text-xs font-black">
+                                                        L{mRating} (Submitted)
+                                                      </span>
+                                                    ) : draftRating !== undefined ? (
+                                                      <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-300 text-xs font-bold">
+                                                        L{draftRating} (Draft)
+                                                      </span>
+                                                    ) : (
+                                                      <span className="text-slate-400 text-[11px] italic">
+                                                        Pending
+                                                      </span>
+                                                    )}
+                                                  </td>
+                                                  <td className="py-2.5 px-3 text-center">
+                                                    {hasEvaluated ? (
+                                                      isGap ? (
+                                                        <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200 text-[10px] font-black">
+                                                          -{target - evaluatedRating} Lvl Gap
+                                                        </span>
+                                                      ) : (
+                                                        <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-black">
+                                                          Target Met ✓
+                                                        </span>
+                                                      )
+                                                    ) : (
+                                                      <span className="text-slate-400 text-[10px]">
+                                                        Unassessed
+                                                      </span>
+                                                    )}
+                                                  </td>
+                                                </tr>
+                                              );
+                                            })}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        );
+      })()}
 
       {/* ========================================================= */}
       {/* MULTI-EVIDENCE VIEWER MODAL                                */}
@@ -2409,6 +3483,177 @@ const SkillsPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Credential Verification Modal for Badges */}
+      {selectedBadgeForModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-gray-150 animate-scale-up">
+            {/* Certificate Header Accent */}
+            <div className={`p-6 text-white text-center relative ${
+              selectedBadgeForModal.type === 'skill'
+                ? 'bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700'
+                : 'bg-gradient-to-r from-teal-700 via-emerald-700 to-slate-800'
+            }`}>
+              <button
+                type="button"
+                onClick={() => setSelectedBadgeForModal(null)}
+                className="absolute top-4 right-4 text-white/80 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <XIcon className="w-5 h-5" />
+              </button>
+
+              <div className="w-16 h-16 mx-auto bg-white/15 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20 mb-3">
+                {selectedBadgeForModal.type === 'skill' ? (
+                  <SparklesIcon className="w-8 h-8 text-amber-300" />
+                ) : (
+                  <ShieldCheckIcon className="w-8 h-8 text-amber-300" />
+                )}
+              </div>
+
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/80 block">
+                Official Digital Credential
+              </span>
+              <h3 className="text-xl font-black mt-1 leading-tight">
+                {selectedBadgeForModal.title}
+              </h3>
+              <p className="text-xs text-white/80 mt-1 font-medium">
+                {selectedBadgeForModal.issuer}
+              </p>
+            </div>
+
+            {/* Certificate Body */}
+            <div className="p-6 space-y-4">
+              <div className="p-3.5 bg-slate-50 rounded-2xl border border-gray-200 text-center space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Awarded To</span>
+                <span className="text-lg font-black text-gray-900 block">Sandeep Gupta</span>
+                <span className="text-xs text-gray-500 font-medium">Senior Engineer • Platform Tech • Jio</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Credential ID</span>
+                  <span className="font-mono font-bold text-slate-800 break-all text-[11px] mt-0.5 block">
+                    {selectedBadgeForModal.credentialId}
+                  </span>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Accredited Date</span>
+                  <span className="font-bold text-slate-800 mt-0.5 block">
+                    {selectedBadgeForModal.accreditedDate || 'Certified'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3.5 bg-blue-50/60 rounded-xl border border-blue-100 flex items-center justify-between text-xs">
+                <span className="font-bold text-blue-900">Performance Criteria:</span>
+                <span className="font-black text-r-blue">{selectedBadgeForModal.scoreOrCriteria}</span>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Verified Skills Covered</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedBadgeForModal.skillsCovered.map((sk, idx) => (
+                    <span key={idx} className="px-2.5 py-1 bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200">
+                      ✓ {sk}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-gray-150 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(selectedBadgeForModal.credentialId);
+                    alert(`Copied Credential ID: ${selectedBadgeForModal.credentialId}`);
+                  }}
+                  className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-all cursor-pointer text-center"
+                >
+                  Copy Credential ID
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedBadgeForModal(null)}
+                  className="flex-1 py-2.5 px-4 bg-r-blue hover:bg-r-blue-dark text-white font-bold text-xs rounded-xl transition-all cursor-pointer text-center"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Epic A: Role-Mapped Skill Self-Survey Modal */}
+      <RoleSkillSelfSurveyModal
+        isOpen={isSurveyModalOpen}
+        onClose={() => setIsSurveyModalOpen(false)}
+        roleSkills={roleSkills}
+        initialRatings={
+          surveyState.draftRatings && Object.keys(surveyState.draftRatings).length > 0
+            ? surveyState.draftRatings
+            : roleSkills.reduce((acc, s) => {
+                if (s.selfRating !== undefined) acc[s.id] = s.selfRating;
+                return acc;
+              }, {} as Record<string, number>)
+        }
+        isResubmitting={surveyState.completed}
+        onSaveDraft={handleSaveSurveyDraft}
+        onSubmitSurvey={handleSubmitSurvey}
+      />
+
+      {/* Epic A: Floating Survey Notification Toast */}
+      {surveyToastMessage && (
+        <div 
+          id="survey-toast-message"
+          className="fixed bottom-6 right-6 z-50 bg-slate-950 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 border border-slate-800 animate-fade-in text-xs font-bold"
+        >
+          <SparklesIcon className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <span>{surveyToastMessage}</span>
+        </div>
+      )}
+
+      {/* Epic B: Manager Role Skill Survey Modal */}
+      <ManagerRoleSkillSurveyModal
+        isOpen={isManagerModalOpen}
+        onClose={() => {
+          setIsManagerModalOpen(false);
+          setEvaluatingMember(null);
+        }}
+        reportee={evaluatingMember}
+        isDirectReport={evaluatingMember ? teamMembers.some(m => m.id === evaluatingMember.id) : false}
+        initialRatings={
+          evaluatingMember
+            ? (managerSurveys[evaluatingMember.id]?.draftRatings && Object.keys(managerSurveys[evaluatingMember.id].draftRatings).length > 0
+                ? managerSurveys[evaluatingMember.id].draftRatings
+                : managerSurveys[evaluatingMember.id]?.managerRatings || {})
+            : {}
+        }
+        isResubmitting={evaluatingMember ? managerSurveys[evaluatingMember.id]?.status === 'Completed' : false}
+        onSaveDraft={handleSaveManagerSurveyDraft}
+        onSubmitSurvey={handleSubmitManagerSurvey}
+      />
+
+      {/* Epic B & C: Manager Survey Notification Toast */}
+      {managerSuccessToast && (
+        <div 
+          id="manager-survey-toast-message"
+          className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-slate-900 to-blue-950 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-blue-500/30 animate-fade-in text-xs font-bold max-w-md"
+        >
+          <SparklesIcon className="w-5 h-5 text-amber-300 flex-shrink-0" />
+          <div className="flex-1">
+            <span className="block font-black text-white text-[13px]">Manager Survey Updated</span>
+            <span className="text-slate-300 font-normal leading-relaxed">{managerSuccessToast}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setManagerSuccessToast(null)}
+            className="text-slate-400 hover:text-white p-1"
+          >
+            <XIcon className="w-4 h-4" />
+          </button>
         </div>
       )}
 

@@ -48,6 +48,7 @@ export interface AssessmentSection {
   estimatedTime: string;
   status: 'completed' | 'in_progress' | 'available' | 'locked';
   assessments: AssessmentTileItem[];
+  score?: number;
 }
 
 export interface YouTubeCourseVideo {
