@@ -7,6 +7,8 @@ import TopicButton from '../components/TopicButton';
 import { ChevronLeftIcon, ChevronRightIcon, StarIcon, AwardIcon, MessageSquareIcon, Edit2Icon, SearchIcon } from '../components/Icons';
 import SkillsSelectionModal from '../components/SkillsSelectionModal';
 import AspiredRoleModal from '../components/AspiredRoleModal';
+import { Film, Play, Sparkles, Heart, Eye } from 'lucide-react';
+import { shortsService, ShortItem } from '../services/shortsService';
 
 const homeCarouselItems: CarouselItem[] = [
   {
@@ -274,6 +276,102 @@ const HomePage: React.FC = () => {
 
       {/* Recommended & Categories */}
       <div className="space-y-4">
+        {/* Learning Shorts Spotlight Shelf */}
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="bg-gradient-to-r from-slate-900 via-[#001f5c] to-slate-900 text-white rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-bold text-rose-400 uppercase tracking-wider mb-1">
+                  <Film className="w-4 h-4" />
+                  <span>Byte-Sized Learning</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-heading font-black tracking-tight flex items-center gap-2">
+                  <span>Trending Learning Shorts</span>
+                  <span className="text-xs bg-rose-500/80 text-white font-bold px-2 py-0.5 rounded-full">New</span>
+                </h2>
+                <p className="text-xs text-gray-300 mt-0.5">
+                  60-second architecture takeaways, leadership tips, and container security patterns.
+                </p>
+              </div>
+
+              <Link
+                to="/shorts"
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all self-end sm:self-center backdrop-blur-xs"
+              >
+                <span>Open Full Feed</span>
+                <Play className="w-3.5 h-3.5 fill-white" />
+              </Link>
+            </div>
+
+            {/* Shorts Cards Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+              {shortsService.getApprovedShorts().slice(0, 5).map((short: ShortItem) => (
+                <Link
+                  key={short.id}
+                  to={`/shorts?short=${short.id}`}
+                  className="group relative aspect-[9/16] rounded-2xl overflow-hidden bg-slate-950 border border-white/10 shadow-lg hover:shadow-2xl transition-all hover:scale-[1.03]"
+                >
+                  {short.mediaType === 'video' ? (
+                    <video
+                      src={short.mediaUrls[0]}
+                      className="w-full h-full object-cover"
+                      muted
+                      preload="metadata"
+                    />
+                  ) : (
+                    <img
+                      src={short.mediaUrls[0]}
+                      alt={short.title}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent group-hover:from-black/95 transition-colors" />
+
+                  {/* Play icon overlay on hover */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-10 h-10 rounded-full bg-[#002B7F] text-white flex items-center justify-center shadow-lg">
+                      <Play className="w-5 h-5 fill-white ml-0.5" />
+                    </div>
+                  </div>
+
+                  {/* Top Badge */}
+                  <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/60 backdrop-blur-xs px-1.5 py-0.5 rounded text-[9px] font-bold text-white uppercase">
+                    {short.mediaType}
+                  </div>
+
+                  {/* Bottom details */}
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <img
+                        src={short.author.avatar}
+                        alt={short.author.name}
+                        className="w-4 h-4 rounded-full border border-white/40"
+                      />
+                      <span className="text-[10px] text-gray-300 truncate font-semibold">
+                        {short.author.name}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-bold text-white line-clamp-2 leading-tight">
+                      {short.title}
+                    </p>
+                    <div className="flex items-center justify-between text-[10px] text-gray-300 font-mono pt-0.5">
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3 h-3 text-blue-400" />
+                        {short.viewsCount}
+                      </span>
+                      <span className="flex items-center gap-1 text-rose-300">
+                        <Heart className="w-3 h-3 fill-rose-300" />
+                        {short.likesCount}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <CourseRow title="Top picks for you" courses={topPicksCourses} />
         
         {/* a. For Your Aspired Role */}

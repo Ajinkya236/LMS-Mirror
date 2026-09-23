@@ -231,25 +231,27 @@ export const PublicFormPage: React.FC = () => {
   let isNotYetOpen = false;
   let isExpired = false;
 
-  // 1. Start Date / Time Validation
-  if (form.settings?.startDate) {
+  // 1. Start Date / Time Validation (Schedule Opening)
+  const isStartDateEnabled = form.settings?.hasStartDate ?? Boolean(form.settings?.startDate);
+  if (isStartDateEnabled && form.settings?.startDate) {
     const startStr = form.settings.startTime
       ? `${form.settings.startDate}T${form.settings.startTime}`
       : `${form.settings.startDate}T00:00:00`;
     const startObj = new Date(startStr);
-    if (now < startObj) {
+    if (!isNaN(startObj.getTime()) && now < startObj) {
       isNotYetOpen = true;
     }
   }
 
-  // 2. End Date / Time Validation
-  if (form.settings?.endDate || form.endDate) {
+  // 2. End Date / Time Validation (Schedule Closing)
+  const isEndDateEnabled = form.settings?.hasEndDate ?? Boolean(form.settings?.endDate || form.endDate);
+  if (isEndDateEnabled && (form.settings?.endDate || form.endDate)) {
     const endRaw = form.settings?.endDate || form.endDate;
     const endStr = form.settings?.endTime
       ? `${endRaw}T${form.settings.endTime}`
       : `${endRaw}T23:59:59`;
     const endObj = new Date(endStr);
-    if (now > endObj) {
+    if (!isNaN(endObj.getTime()) && now > endObj) {
       isExpired = true;
     }
   }

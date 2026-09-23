@@ -110,10 +110,14 @@ export interface FormQuestion {
 
 export interface FormSettings {
   acceptResponses: boolean; // Accept Responses toggle
+  hasStartDate?: boolean; // Enable/Disable Start Date schedule flag
   startDate?: string | null; // "YYYY-MM-DD"
   startTime?: string | null; // "HH:mm"
+  hasEndDate?: boolean; // Enable/Disable End Date schedule flag
   endDate?: string | null; // "YYYY-MM-DD" or null
   endTime?: string | null; // "HH:mm"
+  enableStartDate?: boolean; // Convenience alias
+  enableEndDate?: boolean; // Convenience alias
   oneResponsePerRespondent?: boolean; // One response per respondent enforcement
   maxSubmissions?: number | null; // Maximum allowed submissions across all learners
   showProgressIndicator?: boolean; // Progress indicator visibility
@@ -227,8 +231,8 @@ export interface LMSForm {
   createdDate: string; // "YYYY-MM-DD"
   endDate: string | null; // "YYYY-MM-DD" or null
   token: string; // e.g. "nfb_8f93a1c2"
-  targetAudience: string;
-  category: string;
+  targetAudience?: string;
+  category?: string;
   creatorName: string;
   creatorAvatar?: string;
   sections?: FormSection[]; // Form Sections

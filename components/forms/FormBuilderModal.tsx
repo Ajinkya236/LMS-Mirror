@@ -1,5 +1,5 @@
 // components/forms/FormBuilderModal.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   LMSForm,
   FormType,
@@ -40,7 +40,14 @@ import {
   BarChart2,
   Lock,
   GitBranch,
-  ArrowRight
+  ArrowRight,
+  Table,
+  Sliders,
+  CheckSquare,
+  ThumbsUp,
+  AlignLeft,
+  Hash,
+  Search
 } from 'lucide-react';
 import { QuestionEditor } from './QuestionEditor';
 import { SectionManager } from './SectionManager';
@@ -60,34 +67,34 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
 }) => {
   const isEditing = Boolean(formToEdit);
 
-  // Active Tab
-  const [activeTab, setActiveTab] = useState<'info' | 'questions' | 'settings' | 'preview'>('info');
+  // 3-Stage Workflow: Stage 1 = 'settings' -> Stage 2 = 'questions' -> Stage 3 = 'preview'
+  const [activeTab, setActiveTab] = useState<'settings' | 'questions' | 'preview'>('settings');
 
-  // Form Info
+  // Stage 1: Form Purpose & Basics
   const [formType, setFormType] = useState<FormType>('Survey');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Training Evaluation');
-  const [targetAudience, setTargetAudience] = useState('All Organization');
 
-  // Sections
-  const [sections, setSections] = useState<FormSection[]>([]);
-  const [selectedSectionFilter, setSelectedSectionFilter] = useState<string>('all');
-
-  // Questions
-  const [questions, setQuestions] = useState<FormQuestion[]>([]);
-
-  // Settings State
+  // Stage 1: Response Acceptance & Scheduling (Requirements 3 & 4)
   const [acceptResponses, setAcceptResponses] = useState(true);
+  const [closedMessage, setClosedMessage] = useState('This form is currently not accepting responses.');
+
+  const [hasStartDate, setHasStartDate] = useState(false);
   const [startDate, setStartDate] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('09:00');
+
+  const [hasEndDate, setHasEndDate] = useState(false);
   const [endDate, setEndDate] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('23:59');
+
+  // Respondent Constraints & Experience
   const [oneResponsePerRespondent, setOneResponsePerRespondent] = useState(false);
   const [showProgressIndicator, setShowProgressIndicator] = useState(true);
   const [allowAnonymous, setAllowAnonymous] = useState(true);
   const [requireLogin, setRequireLogin] = useState(false);
   const [shuffleQuestions, setShuffleQuestions] = useState(false);
+
+  // Quiz Specific
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | ''>('');
   const [passPercentage, setPassPercentage] = useState<number>(75);
   const [showScoreImmediately, setShowScoreImmediately] = useState(true);
@@ -96,11 +103,15 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
   const [thankYouMessage, setThankYouMessage] = useState(
     'Thank you for submitting your responses. Your insights are greatly appreciated.'
   );
-  const [closedMessage, setClosedMessage] = useState(
-    'This form is currently not accepting responses.'
-  );
 
-  // Preview interactive state
+  // Stage 2: Sections & Questions
+  const [sections, setSections] = useState<FormSection[]>([]);
+  const [selectedSectionFilter, setSelectedSectionFilter] = useState<string>('all');
+  const [questions, setQuestions] = useState<FormQuestion[]>([]);
+  const [questionSearchQuery, setQuestionSearchQuery] = useState('');
+  const [allCollapsed, setAllCollapsed] = useState(false);
+
+  // Preview State
   const [previewSectionIndex, setPreviewSectionIndex] = useState(0);
   const [previewAnswers, setPreviewAnswers] = useState<Record<string, any>>({});
   const [previewSubmitted, setPreviewSubmitted] = useState(false);
@@ -108,13 +119,18 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
   // Errors
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
+  const getTodayDateString = () => new Date().toISOString().split('T')[0];
+  const getFutureDateString = (daysAhead: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + daysAhead);
+    return d.toISOString().split('T')[0];
+  };
+
   useEffect(() => {
     if (formToEdit) {
       setFormType(formToEdit.type);
       setTitle(formToEdit.title);
       setDescription(formToEdit.description);
-      setCategory(formToEdit.category || 'General');
-      setTargetAudience(formToEdit.targetAudience || 'All Organization');
 
       // Sections
       const initialSections = formToEdit.sections && formToEdit.sections.length > 0
@@ -124,10 +140,20 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
 
       // Settings
       setAcceptResponses(formToEdit.settings?.acceptResponses ?? true);
+
+      // Start Schedule
+      const hasStart = formToEdit.settings?.hasStartDate ?? Boolean(formToEdit.settings?.startDate);
+      setHasStartDate(hasStart);
       setStartDate(formToEdit.settings?.startDate || '');
       setStartTime(formToEdit.settings?.startTime || '09:00');
-      setEndDate(formToEdit.endDate || formToEdit.settings?.endDate || '');
+
+      // End Schedule
+      const rawEnd = formToEdit.endDate || formToEdit.settings?.endDate || '';
+      const hasEnd = formToEdit.settings?.hasEndDate ?? Boolean(rawEnd);
+      setHasEndDate(hasEnd);
+      setEndDate(rawEnd);
       setEndTime(formToEdit.settings?.endTime || '23:59');
+
       setOneResponsePerRespondent(formToEdit.settings?.oneResponsePerRespondent ?? false);
       setShowProgressIndicator(formToEdit.settings?.showProgressIndicator ?? true);
       setAllowAnonymous(formToEdit.settings?.allowAnonymous ?? true);
@@ -155,23 +181,23 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
         : getDefaultQuestions(formToEdit.type, initialSections[0].id);
       setQuestions(qs);
     } else {
-      // New form defaults
+      // Default reset for new form
       const defaultSec: FormSection = {
         id: `sec-${Date.now()}-1`,
         title: 'Section 1: General Assessment',
-        description: 'Core feedback questionnaire',
+        description: 'Core questionnaire section',
         order: 0
       };
       setFormType('Survey');
       setTitle('');
       setDescription('');
-      setCategory('Training Evaluation');
-      setTargetAudience('All Organization');
       setSections([defaultSec]);
       setAcceptResponses(true);
-      setStartDate('');
+      setHasStartDate(false);
+      setStartDate(getTodayDateString());
       setStartTime('09:00');
-      setEndDate('');
+      setHasEndDate(false);
+      setEndDate(getFutureDateString(14));
       setEndTime('23:59');
       setOneResponsePerRespondent(false);
       setShowProgressIndicator(true);
@@ -183,21 +209,15 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
       setShowScoreImmediately(true);
       setAllowRetakeAfterFailure(true);
       setMaxRetakeAttempts(3);
-      setThankYouMessage(
-        'Thank you for submitting your responses. Your insights are greatly appreciated.'
-      );
+      setThankYouMessage('Thank you for submitting your responses. Your insights are greatly appreciated.');
       setClosedMessage('This form is currently not accepting responses.');
       setQuestions(getDefaultQuestions('Survey', defaultSec.id));
     }
-    setActiveTab('info');
-    setSelectedSectionFilter('all');
+    setActiveTab('settings');
     setErrors({});
-    setPreviewSubmitted(false);
-    setPreviewAnswers({});
   }, [formToEdit, isOpen]);
 
-  if (!isOpen) return null;
-
+  // Default question template
   function getDefaultQuestions(type: FormType, defaultSectionId: string): FormQuestion[] {
     if (type === 'Quiz') {
       return [
@@ -291,29 +311,173 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
     }
   }
 
-  // Question manipulation
-  const handleAddQuestion = (targetSectionId?: string) => {
-    const secId = targetSectionId || (sections[0]?.id ?? 'sec-1');
-    const newQ: FormQuestion = {
-      id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-      sectionId: secId,
-      title: 'New Question',
-      subtitle: '',
-      type: formType === 'Quiz' ? 'choice' : 'rating',
-      choiceDisplay: 'radio',
-      required: true,
-      points: formType === 'Quiz' ? 10 : undefined,
-      ratingLevels: 5,
-      ratingIcon: 'star',
-      options: formType === 'Quiz' ? [
-        { id: `opt-${Date.now()}-1`, text: 'Option 1' },
-        { id: `opt-${Date.now()}-2`, text: 'Option 2' },
-        { id: `opt-${Date.now()}-3`, text: 'Option 3' }
-      ] : undefined,
-      correctOptionId: formType === 'Quiz' ? `opt-${Date.now()}-1` : undefined
-    };
+  // Quick Preset Add Question Handlers (Requirement 5)
+  const handleAddPresetQuestion = (presetType: QuestionType, targetSectionId?: string) => {
+    const secId = targetSectionId || (selectedSectionFilter !== 'all' ? selectedSectionFilter : (sections[0]?.id ?? 'sec-1'));
+    let newQ: FormQuestion;
+
+    switch (presetType) {
+      case 'rating':
+        newQ = {
+          id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          sectionId: secId,
+          title: 'How would you rate your overall experience?',
+          subtitle: 'Please select a rating from 1 to 5.',
+          type: 'rating',
+          required: true,
+          ratingLevels: 5,
+          ratingIcon: 'star',
+          ratingLabels: { min: 'Poor', max: 'Outstanding' }
+        };
+        break;
+
+      case 'likert':
+        newQ = {
+          id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          sectionId: secId,
+          title: 'Please rate your level of agreement with the following statements:',
+          subtitle: 'Matrix evaluation across key operational areas.',
+          type: 'likert',
+          required: true,
+          likertStatements: [
+            'The training content was clear and relevant',
+            'Sufficient practical examples were provided',
+            'I feel confident applying these skills in my role'
+          ],
+          likertOptions: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree']
+        };
+        break;
+
+      case 'nps':
+        newQ = {
+          id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          sectionId: secId,
+          title: 'How likely are you to recommend this program to a colleague or peer?',
+          subtitle: 'Standard Net Promoter Score (0 = Not at all likely, 10 = Extremely likely)',
+          type: 'nps',
+          required: true
+        };
+        break;
+
+      case 'multiple_choice':
+        newQ = {
+          id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          sectionId: secId,
+          title: 'Which of the following topics would you like to explore further?',
+          subtitle: 'Select all that apply.',
+          type: 'choice',
+          choiceDisplay: 'checkbox',
+          multipleAnswers: true,
+          required: true,
+          options: [
+            { id: `opt-${Date.now()}-1`, text: 'Hands-on Architecture Labs' },
+            { id: `opt-${Date.now()}-2`, text: '1-on-1 Expert Mentorship' },
+            { id: `opt-${Date.now()}-3`, text: 'Certification Exam Prep' }
+          ],
+          allowOther: true,
+          otherOptionText: 'Other Topic'
+        };
+        break;
+
+      case 'single_choice':
+      case 'choice':
+        newQ = {
+          id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          sectionId: secId,
+          title: 'Which option best describes your current experience level?',
+          subtitle: 'Select one option from the list.',
+          type: 'choice',
+          choiceDisplay: 'radio',
+          required: true,
+          points: formType === 'Quiz' ? 10 : undefined,
+          options: [
+            { id: `opt-${Date.now()}-1`, text: 'Beginner / Exploring' },
+            { id: `opt-${Date.now()}-2`, text: 'Intermediate / Practitioner' },
+            { id: `opt-${Date.now()}-3`, text: 'Advanced / Expert' }
+          ],
+          correctOptionId: formType === 'Quiz' ? `opt-${Date.now()}-1` : undefined
+        };
+        break;
+
+      case 'long_text':
+        newQ = {
+          id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          sectionId: secId,
+          title: 'What additional feedback, suggestions, or insights would you like to share?',
+          subtitle: 'Open paragraph response.',
+          type: 'long_text',
+          required: false
+        };
+        break;
+
+      case 'short_text':
+      case 'text':
+        newQ = {
+          id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          sectionId: secId,
+          title: 'Please provide a short summary or keyword response:',
+          subtitle: 'Single line text answer.',
+          type: 'short_text',
+          required: true
+        };
+        break;
+
+      case 'number':
+        newQ = {
+          id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          sectionId: secId,
+          title: 'How many hours did you dedicate to this course per week?',
+          subtitle: 'Enter a numeric value.',
+          type: 'number',
+          required: true,
+          numberValidation: {
+            min: 0,
+            max: 100,
+            step: 1,
+            unit: 'hours',
+            placeholder: 'e.g. 5'
+          }
+        };
+        break;
+
+      case 'yes_no':
+        newQ = {
+          id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          sectionId: secId,
+          title: 'Did this module meet your initial learning expectations?',
+          subtitle: 'Select Yes or No.',
+          type: 'yes_no',
+          required: true,
+          points: formType === 'Quiz' ? 10 : undefined,
+          options: [
+            { id: 'y1', text: 'Yes / True' },
+            { id: 'n1', text: 'No / False' }
+          ],
+          correctOptionId: formType === 'Quiz' ? 'y1' : undefined
+        };
+        break;
+
+      default:
+        newQ = {
+          id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          sectionId: secId,
+          title: 'New Question',
+          subtitle: '',
+          type: 'choice',
+          choiceDisplay: 'radio',
+          required: true,
+          options: [
+            { id: `opt-${Date.now()}-1`, text: 'Option 1' },
+            { id: `opt-${Date.now()}-2`, text: 'Option 2' }
+          ]
+        };
+    }
 
     setQuestions(prev => [...prev, newQ]);
+  };
+
+  const handleAddQuestion = (targetSectionId?: string) => {
+    handleAddPresetQuestion(formType === 'Quiz' ? 'single_choice' : 'rating', targetSectionId);
   };
 
   const handleUpdateQuestion = (index: number, updated: FormQuestion) => {
@@ -330,7 +494,12 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
       ...original,
       id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       title: `${original.title} (Copy)`,
-      options: original.options ? original.options.map(o => ({ ...o, id: `opt-${Date.now()}-${Math.random().toString(36).substr(2, 4)}` })) : undefined
+      options: original.options
+        ? original.options.map(o => ({
+            ...o,
+            id: `opt-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`
+          }))
+        : undefined
     };
     setQuestions(prev => {
       const next = [...prev];
@@ -360,7 +529,6 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
     });
   };
 
-  // Section deletion sync: when a section is removed, assign its questions to the first remaining section
   const handleUpdateSections = (newSections: FormSection[]) => {
     setSections(newSections);
     if (newSections.length > 0) {
@@ -380,6 +548,22 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
       newErrors.title = 'Form Title is required.';
     }
 
+    if (hasStartDate && !startDate) {
+      newErrors.startDate = 'Please select a valid Start Date.';
+    }
+
+    if (hasEndDate && !endDate) {
+      newErrors.endDate = 'Please select a valid End Date.';
+    }
+
+    if (hasStartDate && hasEndDate && startDate && endDate) {
+      const startFull = new Date(`${startDate}T${startTime || '00:00'}`);
+      const endFull = new Date(`${endDate}T${endTime || '23:59'}`);
+      if (endFull <= startFull) {
+        newErrors.endDate = 'End Date & Time must be after Start Date & Time.';
+      }
+    }
+
     if (questions.length === 0) {
       newErrors.questions = 'Please add at least one question.';
     }
@@ -388,7 +572,10 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
       if (!q.title.trim()) {
         newErrors[`q_${idx}`] = `Question ${idx + 1} must have a title.`;
       }
-      if ((q.type === 'choice' || q.type === 'single_choice' || q.type === 'multiple_choice') && (!q.options || q.options.length < 2)) {
+      if (
+        (q.type === 'choice' || q.type === 'single_choice' || q.type === 'multiple_choice') &&
+        (!q.options || q.options.length < 2)
+      ) {
         newErrors[`q_${idx}_options`] = `Question ${idx + 1} must have at least 2 choice options.`;
       }
       if (formType === 'Quiz') {
@@ -404,9 +591,8 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
 
   const handleSave = (publish: boolean) => {
     if (!validateForm()) {
-      // Find first tab with error
-      if (errors.title) {
-        setActiveTab('info');
+      if (errors.title || errors.startDate || errors.endDate) {
+        setActiveTab('settings');
       } else {
         setActiveTab('questions');
       }
@@ -417,16 +603,20 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
       title: title.trim(),
       description: description.trim(),
       type: formType,
-      category,
-      targetAudience,
-      endDate: endDate || null,
+      category: 'General',
+      targetAudience: 'All Organization',
+      endDate: hasEndDate && endDate ? endDate : null,
       sections,
       settings: {
         acceptResponses,
-        startDate: startDate || null,
-        startTime: startTime || null,
-        endDate: endDate || null,
-        endTime: endTime || null,
+        hasStartDate,
+        startDate: hasStartDate && startDate ? startDate : null,
+        startTime: hasStartDate && startTime ? startTime : null,
+        hasEndDate,
+        endDate: hasEndDate && endDate ? endDate : null,
+        endTime: hasEndDate && endTime ? endTime : null,
+        enableStartDate: hasStartDate,
+        enableEndDate: hasEndDate,
         oneResponsePerRespondent,
         showProgressIndicator,
         allowAnonymous,
@@ -444,159 +634,128 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
       status: publish ? 'Published' : (formToEdit?.status || 'Draft'),
     };
 
-    let savedForm: LMSForm | undefined;
+    let saved: LMSForm | undefined;
     if (isEditing && formToEdit) {
-      savedForm = updateForm(formToEdit.id, payload);
+      saved = updateForm(formToEdit.id, payload);
     } else {
-      savedForm = createNewForm(payload);
+      saved = createNewForm(payload);
     }
 
-    if (savedForm) {
-      onFormSaved(savedForm, publish);
+    if (saved) {
+      onFormSaved(saved, publish);
       onClose();
     }
   };
 
-  // Filtered questions for the Questions tab
-  const displayedQuestions = selectedSectionFilter === 'all'
-    ? questions
-    : questions.filter(q => q.sectionId === selectedSectionFilter);
+  const displayedQuestions = useMemo(() => {
+    let list = questions;
+    if (selectedSectionFilter !== 'all') {
+      list = list.filter(q => q.sectionId === selectedSectionFilter);
+    }
+    if (questionSearchQuery.trim()) {
+      const qLower = questionSearchQuery.toLowerCase();
+      list = list.filter(
+        q =>
+          q.title.toLowerCase().includes(qLower) ||
+          (q.subtitle && q.subtitle.toLowerCase().includes(qLower)) ||
+          (q.options && q.options.some(o => o.text.toLowerCase().includes(qLower)))
+      );
+    }
+    return list;
+  }, [questions, selectedSectionFilter, questionSearchQuery]);
 
-  // Total calculated points for Quiz
   const totalQuizPoints = questions.reduce((acc, q) => acc + (q.points || 0), 0);
+  const requiredQuestionsCount = questions.filter(q => q.required).length;
+
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-5xl w-full h-[92vh] flex flex-col overflow-hidden animate-scale-up">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+      <div className="bg-slate-50 border border-slate-200 rounded-3xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden">
+        {/* Modal Header */}
+        <div className="bg-white px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
-            <span className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
-              <Sparkles className="w-5 h-5" />
-            </span>
+            <div className="p-2.5 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+              <FileText className="w-5 h-5" />
+            </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">
-                  Enterprise LMS Form Builder
-                </span>
-                {formToEdit && (
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-[10px] font-mono font-bold text-slate-300 border border-slate-700">
-                    {formToEdit.fid}
-                  </span>
-                )}
-                {/* Responses accepted badge */}
+                <h2 className="text-lg font-bold text-slate-900">
+                  {isEditing ? `Edit Form: ${title || 'Untitled'}` : 'Create New LMS Form'}
+                </h2>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
                     acceptResponses
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-rose-50 text-rose-700 border-rose-200'
                   }`}
                 >
-                  {acceptResponses ? '● Accepting Responses' : '○ Responses Paused'}
+                  {acceptResponses ? '● Accepting' : '○ Closed'}
                 </span>
               </div>
-              <h2 className="text-lg font-bold font-heading text-white">
-                {isEditing ? `Edit Form: ${title || 'Untitled'}` : 'Create New LMS Form'}
-              </h2>
+              <p className="text-xs text-slate-500">
+                Setup details, scheduling rules, questions, and scoring.
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => handleSave(false)}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-all shadow-xs"
-            >
-              <Save className="w-3.5 h-3.5" />
-              <span>Save Draft</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSave(true)}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5 transition-all shadow-md hover:shadow-indigo-500/20"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span>{isEditing && formToEdit?.status === 'Published' ? 'Update & Keep Live' : 'Publish Form'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition-colors ml-2"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="bg-slate-50 border-b border-slate-200 px-6 flex items-center justify-between">
+        {/* Modal Stage Bar (Stage 1 is Setup & Settings!) */}
+        <div className="bg-white border-b border-slate-200 px-6 flex items-center justify-between overflow-x-auto shrink-0">
           <div className="flex items-center gap-1">
             {[
-              { id: 'info', label: '1. Form Info', icon: FileText },
-              { id: 'questions', label: `2. Sections & Questions (${questions.length})`, icon: ListOrdered },
-              { id: 'settings', label: '3. Settings & Scheduling', icon: Settings },
-              { id: 'preview', label: '4. Live Respondent Preview', icon: Eye },
-            ].map(({ id, label, icon: IconComp }) => (
+              { id: 'settings', label: '1. Setup & Settings', icon: Settings },
+              { id: 'questions', label: `2. Questions & Sections (${questions.length})`, icon: ListOrdered },
+              { id: 'preview', label: '3. Live Preview & Test', icon: Eye },
+            ].map(({ id, label, icon: IconC }) => (
               <button
                 key={id}
                 type="button"
                 onClick={() => setActiveTab(id as any)}
-                className={`py-3 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition-all ${
+                className={`py-3 px-4 text-xs font-bold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap ${
                   activeTab === id
-                    ? 'border-indigo-600 text-indigo-600 bg-white shadow-xs'
-                    : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/60'
+                    ? 'border-indigo-600 text-indigo-600 bg-slate-50/70 rounded-t-xl'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
-                <IconComp className="w-4 h-4" />
+                <IconC className="w-4 h-4" />
                 <span>{label}</span>
               </button>
             ))}
           </div>
 
-          {/* Quiz summary pill in tabs bar */}
           {formType === 'Quiz' && (
-            <div className="flex items-center gap-2 text-xs font-bold text-amber-900 bg-amber-50 px-3 py-1 rounded-xl border border-amber-200">
+            <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-amber-900 bg-amber-50 px-3 py-1 rounded-xl border border-amber-200">
               <Award className="w-3.5 h-3.5 text-amber-600" />
-              <span>Total Points: {totalQuizPoints}</span>
-              <span>•</span>
-              <span>Pass: {passPercentage}%</span>
+              <span>Points: {totalQuizPoints}</span>
             </div>
           )}
         </div>
 
-        {/* Modal Body */}
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-100/50">
-          {/* TAB 1: FORM INFO */}
-          {activeTab === 'info' && (
-            <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
-              {/* Form Type Selection Cards */}
+        {/* Modal Scrollable Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+          {/* ================= STAGE 1: SETUP & SETTINGS ================= */}
+          {activeTab === 'settings' && (
+            <div className="max-w-3xl mx-auto space-y-6">
+              {/* Form Purpose */}
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                  Select Form Purpose & Type <span className="text-rose-500">*</span>
+                  Select Form Purpose & Archetype <span className="text-rose-500">*</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
-                    {
-                      type: 'Survey' as FormType,
-                      title: 'Organizational Survey',
-                      desc: 'Culture pulse, leadership feedback, and wide cohort sentiment analysis.',
-                      icon: Star,
-                      color: 'border-indigo-300 bg-indigo-50/40 text-indigo-900'
-                    },
-                    {
-                      type: 'Feedback' as FormType,
-                      title: 'Session / Module Feedback',
-                      desc: 'Post-training evaluations, instructor ratings, and qualitative comments.',
-                      icon: FileText,
-                      color: 'border-blue-300 bg-blue-50/40 text-blue-900'
-                    },
-                    {
-                      type: 'Quiz' as FormType,
-                      title: 'Knowledge Check / Quiz',
-                      desc: 'Scored technical assessment with passing scores, retake logic, and certificates.',
-                      icon: Award,
-                      color: 'border-amber-300 bg-amber-50/40 text-amber-900'
-                    }
+                    { type: 'Survey' as FormType, title: 'Organizational Survey', desc: 'Culture pulse & sentiment.', icon: Star },
+                    { type: 'Feedback' as FormType, title: 'Training Feedback', desc: 'Module reviews & ratings.', icon: FileText },
+                    { type: 'Quiz' as FormType, title: 'Scored Quiz', desc: 'Knowledge benchmark with scoring.', icon: Award }
                   ].map((card) => {
                     const isSelected = formType === card.type;
                     const IconC = card.icon;
@@ -605,30 +764,25 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
                         key={card.type}
                         type="button"
                         onClick={() => setFormType(card.type)}
-                        className={`p-4 rounded-2xl border-2 text-left transition-all relative ${
+                        className={`p-3.5 rounded-xl border-2 text-left transition-all relative ${
                           isSelected
-                            ? `${card.color} border-indigo-600 ring-2 ring-indigo-100 shadow-sm`
-                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                            ? 'border-indigo-600 bg-indigo-50/40 text-indigo-950'
+                            : 'border-slate-200 bg-white hover:bg-slate-50'
                         }`}
                       >
-                        {isSelected && (
-                          <span className="absolute top-3 right-3 p-1 rounded-full bg-indigo-600 text-white">
-                            <Check className="w-3 h-3" />
-                          </span>
-                        )}
-                        <div className="p-2 rounded-xl bg-white/80 w-fit mb-2 shadow-xs">
-                          <IconC className="w-5 h-5 text-indigo-600" />
+                        <div className="p-1.5 rounded-lg bg-white/80 w-fit mb-1.5 shadow-xs">
+                          <IconC className="w-4 h-4 text-indigo-600" />
                         </div>
-                        <h4 className="text-sm font-bold text-slate-900">{card.title}</h4>
-                        <p className="text-xs text-slate-500 mt-1 leading-relaxed">{card.desc}</p>
+                        <h4 className="text-xs font-bold text-slate-900">{card.title}</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">{card.desc}</p>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Title & Description */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+              {/* Title & Description (No category or targetAudience) */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
                 <div>
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
                     Form Title <span className="text-rose-500">*</span>
@@ -637,8 +791,8 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. 5G Radio Access Network (RAN) Knowledge Check"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 rounded-xl text-sm font-bold text-slate-900 focus:outline-none transition-all"
+                    placeholder="e.g. 5G Architecture Diagnostics & Readiness"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-500"
                   />
                   {errors.title && (
                     <p className="text-xs text-rose-500 font-bold mt-1 flex items-center gap-1">
@@ -653,66 +807,263 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
                     Description & Overview
                   </label>
                   <textarea
-                    rows={3}
+                    rows={2}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Provide context on why this form is distributed, completion expectations, and how results will be applied..."
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 rounded-xl text-xs font-medium text-slate-800 focus:outline-none transition-all"
+                    placeholder="Context, instructions, and intended outcomes..."
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
+              </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Accept Responses Toggle */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
-                      Category
-                    </label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
-                    >
-                      <option value="Training Evaluation">Training Evaluation</option>
-                      <option value="Technical Certification">Technical Certification</option>
-                      <option value="Organizational Pulse">Organizational Pulse</option>
-                      <option value="Mentorship & Coaching">Mentorship & Coaching</option>
-                      <option value="Security & DevOps">Security & DevOps</option>
-                      <option value="Product Feedback">Product Feedback</option>
-                      <option value="General">General</option>
-                    </select>
+                    <h3 className="text-xs font-bold text-slate-900">Accept Responses</h3>
+                    <p className="text-[11px] text-slate-500">Allow respondents to access and submit.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={acceptResponses}
+                      onChange={(e) => setAcceptResponses(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                  </label>
+                </div>
+
+                {!acceptResponses && (
+                  <input
+                    type="text"
+                    value={closedMessage}
+                    onChange={(e) => setClosedMessage(e.target.value)}
+                    placeholder="Closed form notice message..."
+                    className="w-full px-3 py-1.5 bg-rose-50 border border-rose-200 rounded-lg text-xs font-semibold text-rose-950"
+                  />
+                )}
+              </div>
+
+              {/* Automated Scheduling (Start Date & End Date toggles and pickers) */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-indigo-600" />
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-900">Automated Scheduling & Timeframe</h3>
+                    <p className="text-[11px] text-slate-500">Toggle automated opening and expiration times.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Start Date Toggle & Pickers */}
+                  <div className={`p-3.5 rounded-xl border ${hasStartDate ? 'bg-blue-50/40 border-blue-200' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <span className="text-xs font-bold text-slate-900 block">Automate Opening (Start Date & Time)</span>
+                        <span className="text-[11px] text-slate-500">Form opens automatically on this schedule.</span>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={hasStartDate}
+                          onChange={(e) => {
+                            const val = e.target.checked;
+                            setHasStartDate(val);
+                            if (val && !startDate) setStartDate(getTodayDateString());
+                          }}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                      </label>
+                    </div>
+
+                    {hasStartDate && (
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-blue-100">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-700 block mb-1">Start Date</label>
+                          <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-700 block mb-1">Start Time</label>
+                          <input
+                            type="time"
+                            value={startTime}
+                            onChange={(e) => setStartTime(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
-                      Target Audience
-                    </label>
-                    <input
-                      type="text"
-                      value={targetAudience}
-                      onChange={(e) => setTargetAudience(e.target.value)}
-                      placeholder="e.g. All Organization, RAN Engineering Track"
-                      className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-indigo-500"
-                    />
+                  {/* End Date Toggle & Pickers */}
+                  <div className={`p-3.5 rounded-xl border ${hasEndDate ? 'bg-amber-50/40 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <span className="text-xs font-bold text-slate-900 block">Automate Closing (End Date & Expiration Time)</span>
+                        <span className="text-[11px] text-slate-500">Form closes automatically on this schedule.</span>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={hasEndDate}
+                          onChange={(e) => {
+                            const val = e.target.checked;
+                            setHasEndDate(val);
+                            if (val && !endDate) setEndDate(getFutureDateString(14));
+                          }}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+                      </label>
+                    </div>
+
+                    {hasEndDate && (
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-amber-100">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-700 block mb-1">End Date</label>
+                          <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-700 block mb-1">End Time</label>
+                          <input
+                            type="time"
+                            value={endTime}
+                            onChange={(e) => setEndTime(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Action next */}
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('questions')}
-                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
-                >
-                  <span>Proceed to Sections & Questions</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+              {/* Respondent Experience */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                <h3 className="text-xs font-bold text-slate-900">Submission Rules & Controls</h3>
+                <div className="space-y-2 text-xs">
+                  <label className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl cursor-pointer">
+                    <span className="font-semibold text-slate-800">One Response per Respondent</span>
+                    <input
+                      type="checkbox"
+                      checked={oneResponsePerRespondent}
+                      onChange={(e) => setOneResponsePerRespondent(e.target.checked)}
+                      className="rounded text-indigo-600"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl cursor-pointer">
+                    <span className="font-semibold text-slate-800">Show Progress Bar</span>
+                    <input
+                      type="checkbox"
+                      checked={showProgressIndicator}
+                      onChange={(e) => setShowProgressIndicator(e.target.checked)}
+                      className="rounded text-indigo-600"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl cursor-pointer">
+                    <span className="font-semibold text-slate-800">Allow Anonymous Submissions</span>
+                    <input
+                      type="checkbox"
+                      checked={allowAnonymous}
+                      onChange={(e) => setAllowAnonymous(e.target.checked)}
+                      className="rounded text-indigo-600"
+                    />
+                  </label>
+                </div>
               </div>
+
+              {/* Quiz Rules if Quiz */}
+              {formType === 'Quiz' && (
+                <div className="bg-amber-50/50 p-5 rounded-2xl border border-amber-200 shadow-xs space-y-3">
+                  <h3 className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                    <Award className="w-4 h-4 text-amber-600" />
+                    <span>Quiz Scoring & Retake Benchmarks</span>
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">Passing Score (%)</label>
+                      <input
+                        type="number"
+                        value={passPercentage}
+                        onChange={(e) => setPassPercentage(Number(e.target.value))}
+                        min={1}
+                        max={100}
+                        className="w-full px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">Time Limit (Mins)</label>
+                      <input
+                        type="number"
+                        value={timeLimitMinutes}
+                        onChange={(e) => setTimeLimitMinutes(e.target.value === '' ? '' : Number(e.target.value))}
+                        placeholder="Untimed"
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg font-bold"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* TAB 2: SECTIONS & QUESTIONS */}
+          {/* ================= STAGE 2: QUESTIONS & SECTIONS ================= */}
           {activeTab === 'questions' && (
-            <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+            <div className="max-w-4xl mx-auto space-y-5">
+              {/* Quick Presets Toolbar */}
+              <div className="bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-slate-50 border border-blue-200 rounded-2xl p-4 shadow-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                    <Sparkles className="w-4 h-4 text-indigo-600" />
+                    <span>Quick Insert Question Templates</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAllCollapsed(!allCollapsed)}
+                    className="text-xs text-slate-500 hover:text-slate-800 font-bold"
+                  >
+                    {allCollapsed ? 'Expand All' : 'Collapse All'}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2">
+                  {[
+                    { type: 'rating' as QuestionType, label: 'Rating', icon: Star },
+                    { type: 'likert' as QuestionType, label: 'Likert', icon: Table },
+                    { type: 'single_choice' as QuestionType, label: 'Single', icon: Sliders },
+                    { type: 'multiple_choice' as QuestionType, label: 'Multi', icon: CheckSquare },
+                    { type: 'nps' as QuestionType, label: 'NPS', icon: ThumbsUp },
+                    { type: 'long_text' as QuestionType, label: 'Feedback', icon: AlignLeft },
+                    { type: 'number' as QuestionType, label: 'Number', icon: Hash },
+                    { type: 'yes_no' as QuestionType, label: 'Yes/No', icon: CheckCircle2 },
+                  ].map(({ type, label, icon: IconC }) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => handleAddPresetQuestion(type)}
+                      className="p-2 bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-1 hover:border-indigo-400 hover:bg-indigo-50/50 transition-all text-slate-700"
+                    >
+                      <IconC className="w-3.5 h-3.5 text-indigo-600" />
+                      <span className="text-[10px] font-bold">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Section Manager */}
               <SectionManager
                 sections={sections}
@@ -722,41 +1073,31 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
                 onAddQuestionToSection={(secId) => handleAddQuestion(secId)}
               />
 
-              {/* Filter and Add Question Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-600">Filter Section View:</span>
-                  <select
-                    value={selectedSectionFilter}
-                    onChange={(e) => setSelectedSectionFilter(e.target.value)}
-                    className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="all">All Sections ({questions.length} Questions)</option>
-                    {sections.map((sec, idx) => {
-                      const count = questions.filter(q => q.sectionId === sec.id).length;
-                      return (
-                        <option key={sec.id} value={sec.id}>
-                          Section {idx + 1}: {sec.title} ({count})
-                        </option>
-                      );
-                    })}
-                  </select>
+              {/* Questions List Filter */}
+              <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200">
+                <div className="relative flex-1">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    value={questionSearchQuery}
+                    onChange={(e) => setQuestionSearchQuery(e.target.value)}
+                    placeholder="Search questions..."
+                    className="w-full pl-8 pr-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none"
+                  />
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleAddQuestion(selectedSectionFilter !== 'all' ? selectedSectionFilter : undefined)}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Add Question</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleAddQuestion(selectedSectionFilter !== 'all' ? selectedSectionFilter : undefined)}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Question</span>
+                </button>
               </div>
 
-              {/* Questions List */}
-              <div className="space-y-4">
+              {/* Questions Render */}
+              <div className="space-y-3">
                 {displayedQuestions.map((q) => {
                   const absoluteIndex = questions.findIndex(item => item.id === q.id);
                   return (
@@ -768,6 +1109,7 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
                       formType={formType}
                       sections={sections}
                       allQuestions={questions}
+                      isForceCollapsed={allCollapsed}
                       onUpdate={(updated) => handleUpdateQuestion(absoluteIndex, updated)}
                       onDuplicate={() => handleDuplicateQuestion(absoluteIndex)}
                       onDelete={() => handleDeleteQuestion(absoluteIndex)}
@@ -776,532 +1118,80 @@ export const FormBuilderModal: React.FC<FormBuilderModalProps> = ({
                     />
                   );
                 })}
-
-                {displayedQuestions.length === 0 && (
-                  <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-300">
-                    <p className="text-sm font-bold text-slate-700">No questions in this section yet</p>
-                    <button
-                      type="button"
-                      onClick={() => handleAddQuestion(selectedSectionFilter !== 'all' ? selectedSectionFilter : undefined)}
-                      className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold"
-                    >
-                      + Add First Question Here
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           )}
 
-          {/* TAB 3: SETTINGS & SCHEDULING */}
-          {activeTab === 'settings' && (
-            <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
-              {/* 1. Accept Responses Toggle */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                      <ToggleRight className="w-4 h-4 text-indigo-600" />
-                      <span>Accept Responses</span>
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Toggle whether learners can submit new responses or view a closed status notice.
-                    </p>
-                  </div>
-
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={acceptResponses}
-                      onChange={(e) => setAcceptResponses(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                  </label>
-                </div>
-
-                {!acceptResponses && (
-                  <div className="pt-2">
-                    <label className="text-xs font-bold text-rose-700 block mb-1">
-                      Custom Closed Notice (Shown to Respondents when closed)
-                    </label>
-                    <input
-                      type="text"
-                      value={closedMessage}
-                      onChange={(e) => setClosedMessage(e.target.value)}
-                      placeholder="e.g. This evaluation window has concluded. Please contact your administrator."
-                      className="w-full px-3.5 py-2 bg-rose-50/40 border border-rose-200 rounded-xl text-xs font-semibold text-rose-950 focus:outline-none"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* 2. Start/End Date and Time */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-indigo-600" />
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Active Timeframe & Scheduling
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Start Date & Time */}
-                  <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                    <span className="text-xs font-bold text-slate-700">Start Date & Time</span>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="col-span-2">
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">Date</label>
-                        <input
-                          type="date"
-                          value={startDate}
-                          onChange={(e) => setStartDate(e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">Time</label>
-                        <input
-                          type="time"
-                          value={startTime}
-                          onChange={(e) => setStartTime(e.target.value)}
-                          className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* End Date & Time */}
-                  <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                    <span className="text-xs font-bold text-slate-700">End Date & Time</span>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="col-span-2">
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">Date</label>
-                        <input
-                          type="date"
-                          value={endDate}
-                          onChange={(e) => setEndDate(e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-400 block mb-0.5">Time</label>
-                        <input
-                          type="time"
-                          value={endTime}
-                          onChange={(e) => setEndTime(e.target.value)}
-                          className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 3. Submission Constraints & Progress Bar */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                <h3 className="text-sm font-bold text-slate-900">
-                  Respondent Constraints & Experience
-                </h3>
-
-                <div className="space-y-3">
-                  <label className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">
-                        One Response per Respondent
-                      </span>
-                      <span className="text-[11px] text-slate-500">
-                        Restricts multiple submissions from the same respondent account or session.
-                      </span>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={oneResponsePerRespondent}
-                      onChange={(e) => setOneResponsePerRespondent(e.target.checked)}
-                      className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
-                    />
-                  </label>
-
-                  <label className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">
-                        Show Progress Indicator
-                      </span>
-                      <span className="text-[11px] text-slate-500">
-                        Displays dynamic progress percentage and section step dots to the respondent.
-                      </span>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={showProgressIndicator}
-                      onChange={(e) => setShowProgressIndicator(e.target.checked)}
-                      className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
-                    />
-                  </label>
-
-                  <label className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">
-                        Allow Anonymous Submissions
-                      </span>
-                      <span className="text-[11px] text-slate-500">
-                        Does not mandate verified employee login or email capture.
-                      </span>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={allowAnonymous}
-                      onChange={(e) => setAllowAnonymous(e.target.checked)}
-                      className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
-                    />
-                  </label>
-
-                  <label className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer">
-                    <div>
-                      <span className="text-xs font-bold text-slate-800 block">
-                        Shuffle Questions
-                      </span>
-                      <span className="text-[11px] text-slate-500">
-                        Randomizes question order for each respondent session.
-                      </span>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={shuffleQuestions}
-                      onChange={(e) => setShuffleQuestions(e.target.checked)}
-                      className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              {/* 4. Quiz Specific Settings (Passing Score, Retake Logic, Show Score) */}
-              {formType === 'Quiz' && (
-                <div className="bg-gradient-to-br from-amber-50/80 via-white to-amber-50/40 p-5 rounded-2xl border border-amber-200 shadow-xs space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Award className="w-5 h-5 text-amber-600" />
-                    <div>
-                      <h3 className="text-sm font-bold text-amber-950">
-                        Quiz Certification & Retake Rules
-                      </h3>
-                      <p className="text-[11px] text-amber-700">
-                        Configure pass benchmarks, immediate result disclosures, and remediation retakes.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                    {/* Passing Score */}
-                    <div className="p-3 bg-white rounded-xl border border-amber-200 space-y-1">
-                      <label className="text-xs font-bold text-slate-800 block">
-                        Passing Score Benchmark (%)
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          value={passPercentage}
-                          onChange={(e) => setPassPercentage(Number(e.target.value))}
-                          min={1}
-                          max={100}
-                          className="w-24 px-3 py-1.5 bg-amber-50/40 border border-amber-300 rounded-lg text-sm font-bold text-amber-950"
-                        />
-                        <span className="text-xs font-bold text-slate-500">% required to pass</span>
-                      </div>
-                    </div>
-
-                    {/* Time limit */}
-                    <div className="p-3 bg-white rounded-xl border border-amber-200 space-y-1">
-                      <label className="text-xs font-bold text-slate-800 block">
-                        Time Limit (Minutes)
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          value={timeLimitMinutes}
-                          onChange={(e) => setTimeLimitMinutes(e.target.value === '' ? '' : Number(e.target.value))}
-                          placeholder="No Limit"
-                          min={1}
-                          max={180}
-                          className="w-24 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-bold text-slate-900"
-                        />
-                        <span className="text-xs text-slate-500">Leave blank for untimed</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Show Score & Retake Toggles */}
-                  <div className="space-y-2.5 pt-1">
-                    <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-amber-200 cursor-pointer">
-                      <div>
-                        <span className="text-xs font-bold text-slate-900 block">
-                          Show Score & Answers Immediately
-                        </span>
-                        <span className="text-[11px] text-slate-500">
-                          Discloses final percentage score, point breakdown, and feedback explanations upon submission.
-                        </span>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={showScoreImmediately}
-                        onChange={(e) => setShowScoreImmediately(e.target.checked)}
-                        className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
-                      />
-                    </label>
-
-                    <label className="flex items-center justify-between p-3 bg-white rounded-xl border border-amber-200 cursor-pointer">
-                      <div>
-                        <span className="text-xs font-bold text-slate-900 block">
-                          Allow Retake after Failure
-                        </span>
-                        <span className="text-[11px] text-slate-500">
-                          If respondent fails below {passPercentage}%, enable the "Retake Assessment" remediation button.
-                        </span>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={allowRetakeAfterFailure}
-                        onChange={(e) => setAllowRetakeAfterFailure(e.target.checked)}
-                        className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
-                      />
-                    </label>
-
-                    {allowRetakeAfterFailure && (
-                      <div className="p-3 bg-white rounded-xl border border-amber-200 flex items-center justify-between text-xs">
-                        <span className="font-bold text-slate-800">Max Allowed Retake Attempts:</span>
-                        <input
-                          type="number"
-                          value={maxRetakeAttempts}
-                          onChange={(e) => setMaxRetakeAttempts(Math.max(1, Number(e.target.value)))}
-                          min={1}
-                          max={10}
-                          className="w-20 px-2.5 py-1 bg-amber-50 border border-amber-300 rounded-lg font-bold text-amber-950 text-right"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Thank You Message */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                  Post-Submission Thank You Message
-                </label>
-                <textarea
-                  rows={2}
-                  value={thankYouMessage}
-                  onChange={(e) => setThankYouMessage(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: LIVE INTERACTIVE PREVIEW */}
+          {/* ================= STAGE 3: LIVE PREVIEW & TEST ================= */}
           {activeTab === 'preview' && (
-            <div className="max-w-2xl mx-auto space-y-5 animate-fade-in">
-              <div className="bg-indigo-900 text-white p-4 rounded-2xl flex items-center justify-between shadow-xs">
+            <div className="max-w-2xl mx-auto space-y-4">
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-lg space-y-4">
                 <div className="flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-indigo-300" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-indigo-200">
-                    Live Respondent Experience Simulator
+                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-indigo-600 text-[10px] font-bold border border-blue-200">
+                    {formType}
                   </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPreviewAnswers({});
-                    setPreviewSubmitted(false);
-                  }}
-                  className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold flex items-center gap-1"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  <span>Reset Test</span>
-                </button>
-              </div>
-
-              {/* Respondent Card */}
-              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-bold border border-indigo-200 uppercase tracking-wider">
-                      {formType}
-                    </span>
-                    <span className="text-xs text-slate-400 font-semibold">{category}</span>
-                  </div>
-                  <h1 className="text-xl font-bold font-heading text-slate-900">{title || 'Untitled Form'}</h1>
-                  {description && <p className="text-xs text-slate-600 mt-2 leading-relaxed">{description}</p>}
+                  {hasStartDate && startDate && (
+                    <span className="text-[11px] text-slate-500 font-semibold">Starts: {startDate} {startTime}</span>
+                  )}
+                  {hasEndDate && endDate && (
+                    <span className="text-[11px] text-amber-700 font-semibold">Closes: {endDate} {endTime}</span>
+                  )}
                 </div>
 
-                {/* Progress bar preview */}
-                {showProgressIndicator && (
-                  <div className="space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                      <span>Section {previewSectionIndex + 1} of {sections.length || 1}</span>
-                      <span>Progress: {Math.round(((previewSectionIndex + 1) / (sections.length || 1)) * 100)}%</span>
-                    </div>
-                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-indigo-600 rounded-full transition-all duration-300"
-                        style={{ width: `${((previewSectionIndex + 1) / (sections.length || 1)) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
+                <h3 className="text-lg font-bold text-slate-900">{title || 'Untitled Form'}</h3>
+                {description && <p className="text-xs text-slate-600">{description}</p>}
 
-                {/* Questions Preview for active section */}
-                {!previewSubmitted ? (
-                  <div className="space-y-6">
-                    {questions
-                      .filter(q => !sections[previewSectionIndex] || q.sectionId === sections[previewSectionIndex].id)
-                      .map((q, idx) => (
-                        <div key={q.id} className="space-y-2 p-4 bg-slate-50/70 rounded-2xl border border-slate-200">
-                          <div className="flex items-start gap-2">
-                            <span className="text-xs font-bold text-indigo-600 mt-0.5">{idx + 1}.</span>
-                            <div>
-                              <h4 className="text-xs font-bold text-slate-900">
-                                {q.title} {q.required && <span className="text-rose-500">*</span>}
-                              </h4>
-                              {q.subtitle && <p className="text-[11px] text-slate-500 mt-0.5">{q.subtitle}</p>}
-                            </div>
-                          </div>
-
-                          {/* Choice render */}
-                          {(q.type === 'choice' || q.type === 'single_choice' || q.type === 'multiple_choice') && (
-                            <div className="space-y-2 pt-2">
-                              {q.choiceDisplay === 'dropdown' ? (
-                                <select
-                                  value={previewAnswers[q.id] || ''}
-                                  onChange={(e) => setPreviewAnswers({ ...previewAnswers, [q.id]: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800"
-                                >
-                                  <option value="">Select an option...</option>
-                                  {(q.options || []).map(opt => (
-                                    <option key={opt.id} value={opt.id}>{opt.text}</option>
-                                  ))}
-                                </select>
-                              ) : (
-                                (q.options || []).map(opt => (
-                                  <label
-                                    key={opt.id}
-                                    className={`flex items-center gap-3 p-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                                      previewAnswers[q.id] === opt.id
-                                        ? 'bg-indigo-50 border-indigo-400 text-indigo-900'
-                                        : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300'
-                                    }`}
-                                  >
-                                    <input
-                                      type={q.multipleAnswers ? 'checkbox' : 'radio'}
-                                      name={`preview-q-${q.id}`}
-                                      checked={
-                                        q.multipleAnswers
-                                          ? (previewAnswers[q.id] || []).includes(opt.id)
-                                          : previewAnswers[q.id] === opt.id
-                                      }
-                                      onChange={() => setPreviewAnswers({ ...previewAnswers, [q.id]: opt.id })}
-                                      className="text-indigo-600"
-                                    />
-                                    <span>{opt.text}</span>
-                                  </label>
-                                ))
-                              )}
-                            </div>
-                          )}
-
-                          {/* Rating render */}
-                          {q.type === 'rating' && (
-                            <div className="flex items-center gap-2 pt-2">
-                              {Array.from({ length: q.ratingLevels || 5 }).map((_, rIdx) => {
-                                const val = rIdx + 1;
-                                const isSelected = previewAnswers[q.id] >= val;
-                                return (
-                                  <button
-                                    key={val}
-                                    type="button"
-                                    onClick={() => setPreviewAnswers({ ...previewAnswers, [q.id]: val })}
-                                    className={`p-2 rounded-xl transition-all ${
-                                      isSelected
-                                        ? 'bg-amber-400 text-white shadow-xs'
-                                        : 'bg-white text-slate-400 border border-slate-200 hover:bg-amber-50'
-                                    }`}
-                                  >
-                                    <Star className="w-5 h-5 fill-current" />
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {/* Number render */}
-                          {q.type === 'number' && (
-                            <div className="pt-2">
-                              <input
-                                type="number"
-                                value={previewAnswers[q.id] || ''}
-                                onChange={(e) => setPreviewAnswers({ ...previewAnswers, [q.id]: e.target.value })}
-                                placeholder={q.numberValidation?.placeholder || 'Enter number...'}
-                                className="w-48 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-
-                    <div className="pt-4 flex items-center justify-between">
-                      {previewSectionIndex > 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => setPreviewSectionIndex(prev => prev - 1)}
-                          className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold"
-                        >
-                          Previous Section
-                        </button>
-                      ) : <div />}
-
-                      {previewSectionIndex < sections.length - 1 ? (
-                        <button
-                          type="button"
-                          onClick={() => setPreviewSectionIndex(prev => prev + 1)}
-                          className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"
-                        >
-                          <span>Next Section</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setPreviewSubmitted(true)}
-                          className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md"
-                        >
-                          <Check className="w-4 h-4" />
-                          <span>Submit Responses</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 space-y-4 animate-fade-in">
-                    <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
-                      <CheckCircle2 className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-900">Submission Recorded</h3>
-                    <p className="text-xs text-slate-600 max-w-md mx-auto">{thankYouMessage}</p>
-                    {formType === 'Quiz' && showScoreImmediately && (
-                      <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 max-w-sm mx-auto space-y-2">
-                        <div className="text-xs font-bold text-amber-900">Calculated Test Result</div>
-                        <div className="text-2xl font-bold text-amber-600">85% PASS</div>
-                        <p className="text-[11px] text-amber-800">
-                          Passing benchmark was {passPercentage}%. Verified into Skills Passport.
+                {/* Questions Preview */}
+                <div className="space-y-4 pt-2 border-t border-slate-100">
+                  {questions
+                    .filter(q => q.sectionId === (sections[previewSectionIndex]?.id || sections[0]?.id))
+                    .map((q, idx) => (
+                      <div key={q.id} className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                        <p className="text-xs font-bold text-slate-900">
+                          {idx + 1}. {q.title} {q.required && <span className="text-rose-500">*</span>}
                         </p>
+                        {q.subtitle && <p className="text-[11px] text-slate-500">{q.subtitle}</p>}
                       </div>
-                    )}
-                  </div>
-                )}
+                    ))}
+                </div>
               </div>
             </div>
           )}
+
+        </div>
+
+        {/* Modal Footer */}
+        <div className="bg-white px-6 py-4 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors"
+          >
+            Cancel
+          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleSave(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-slate-300"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Save Draft</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSave(true)}
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-colors"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{isEditing && formToEdit?.status === 'Published' ? 'Update Live Form' : 'Publish Form'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+export default FormBuilderModal;

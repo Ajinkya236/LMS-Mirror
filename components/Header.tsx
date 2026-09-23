@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation, Link } from 'react-router-dom';
 import { SearchIcon, BellIcon, HelpCircleIcon, AppLogoIcon, XIcon, UserIcon, LogOutIcon, CalendarIcon } from './Icons';
-import { FileText, Shield, Award } from 'lucide-react';
+import { FileText, Shield, Award, QrCode, BookOpen, ShieldCheck, Sliders, Film, Tag } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -85,11 +85,22 @@ const Header: React.FC = () => {
 
           {/* Navigation Links */}
           {!isSearchOpen && (
-            <nav className="hidden md:flex md:space-x-4 absolute left-1/2 transform -translate-x-1/2">
+            <nav className="hidden md:flex md:space-x-2 lg:space-x-3 absolute left-1/2 transform -translate-x-1/2">
               <NavLink to="/" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Home</NavLink>
               <NavLink to="/skills" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Skills</NavLink>
+              <NavLink to="/shorts" className={({ isActive }) => `${navLinkClasses} flex items-center gap-1.5 ${isActive ? activeNavLinkClasses : ''}`}>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                </span>
+                <span>Shorts</span>
+              </NavLink>
               <NavLink to="/discover" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Discover</NavLink>
               <NavLink to="/mylearning" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>My Learning</NavLink>
+              <NavLink to="/mark-attendance" className={({ isActive }) => `${navLinkClasses} flex items-center gap-1.5 ${isActive ? activeNavLinkClasses : ''}`}>
+                <QrCode className="w-4 h-4 text-cyan-300" />
+                <span>Live Attendance</span>
+              </NavLink>
               <NavLink to="/quicklinks" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Quick Links</NavLink>
               <NavLink to="/mentor" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Mentoring</NavLink>
             </nav>
@@ -142,8 +153,20 @@ const Header: React.FC = () => {
                 onClick={() => navigate('/events')}
                 className="p-2 rounded-full text-r-gray-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-r-blue"
                 aria-label="Open calendar"
+                title="Event Calendar"
               >
                 <CalendarIcon className="h-6 w-6" />
+              </button>
+            )}
+
+            {!isSearchOpen && (
+              <button 
+                onClick={() => navigate('/mark-attendance?tab=join')}
+                className="p-2 rounded-full text-cyan-300 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-r-blue transition-transform active:scale-95"
+                aria-label="Mark Attendance"
+                title="Mark Live Attendance (QR / PIN)"
+              >
+                <QrCode className="h-6 w-6" />
               </button>
             )}
 
@@ -209,6 +232,63 @@ const Header: React.FC = () => {
 
                   {/* Navigation Links */}
                   <div className="py-2">
+                    <Link
+                      to="/shorts/moderation"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="w-full flex items-center justify-between px-6 py-3 hover:bg-emerald-50/70 text-gray-700 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 rounded-full bg-emerald-100 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                          <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-bold text-gray-900 text-sm">Shorts Content Management</div>
+                          <div className="text-[11px] text-gray-500">Moderation dashboard & audit</div>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Approver
+                      </span>
+                    </Link>
+
+                    <Link
+                      to="/shorts/tags"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="w-full flex items-center justify-between px-6 py-3 hover:bg-purple-50/70 text-gray-700 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 rounded-full bg-purple-100 text-purple-700 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                          <Tag className="w-5 h-5" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-bold text-gray-900 text-sm">Shorts Tag Management</div>
+                          <div className="text-[11px] text-gray-500">Bulk CSV upload & taxonomy</div>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-purple-50 text-purple-700 border border-purple-200">
+                        Admin
+                      </span>
+                    </Link>
+
+                    <Link
+                      to="/shorts/settings"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="w-full flex items-center justify-between px-6 py-3 hover:bg-blue-50/70 text-gray-700 transition-colors group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 rounded-full bg-blue-100 text-r-blue group-hover:bg-r-blue group-hover:text-white transition-colors">
+                          <Sliders className="w-5 h-5" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-bold text-gray-900 text-sm">Shorts Settings</div>
+                          <div className="text-[11px] text-gray-500">System thresholds & limits</div>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-blue-50 text-r-blue border border-blue-200">
+                        Config
+                      </span>
+                    </Link>
+
                     <Link
                       to="/form/native-feedback-assignment"
                       onClick={() => setIsProfileDropdownOpen(false)}

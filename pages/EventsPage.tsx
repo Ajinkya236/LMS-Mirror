@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronLeftIcon, ChevronRightIcon, FilterIcon, ChevronDownIcon } from '../components/Icons';
+import { QrCode, ArrowRight } from 'lucide-react';
 
 const EventCard: React.FC<{
   time: string;
@@ -60,6 +62,7 @@ const EventCard: React.FC<{
 );
 
 const EventsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [activeView, setActiveView] = useState<'my' | 'all'>('my');
 
   const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -74,7 +77,27 @@ const EventsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside className="w-[380px] bg-white border-r border-gray-200 p-8 flex flex-col gap-10 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto shadow-inner">
+      <aside className="w-[380px] bg-white border-r border-gray-200 p-8 flex flex-col gap-8 sticky top-16 h-[calc(100vh-64px)] overflow-y-auto shadow-inner">
+        {/* Quick Attendance Card */}
+        <div className="bg-gradient-to-br from-indigo-900 to-blue-800 text-white rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-3 mb-2.5">
+            <div className="p-2 bg-white/10 backdrop-blur rounded-xl">
+              <QrCode className="w-5 h-5 text-cyan-300" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-white">Live Session Attendance</h3>
+              <p className="text-[11px] text-blue-200">Scan QR or enter 6-digit PIN</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/mark-attendance?tab=join')}
+            className="w-full mt-2 py-2.5 px-4 bg-white text-indigo-900 font-bold text-xs rounded-xl shadow hover:bg-blue-50 transition-all flex items-center justify-center gap-2 group"
+          >
+            <span>Mark Attendance</span>
+            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+          </button>
+        </div>
+
         {/* Toggle Switch */}
         <div className="bg-r-blue/10 p-1.5 rounded-full flex">
           <button 

@@ -42,6 +42,15 @@ import AdminFormsPage from './pages/AdminFormsPage';
 import { CreateFormPage } from './pages/CreateFormPage';
 import PublicFormPage from './pages/PublicFormPage';
 import LearnerFeedbackPage from './pages/LearnerFeedbackPage';
+import MyLearningPage from './pages/MyLearningPage';
+import ShortsPage from './pages/ShortsPage';
+import ShortsSearchPage from './pages/ShortsSearchPage';
+import CreatorProfilePage from './pages/CreatorProfilePage';
+import ShortsModerationPage from './pages/ShortsModerationPage';
+import ShortsSettingsPage from './pages/ShortsSettingsPage';
+import CreateShortPage from './pages/CreateShortPage';
+import ShortsTagManagementPage from './pages/ShortsTagManagementPage';
+import ShortsModerationPreviewPage from './pages/ShortsModerationPreviewPage';
 
 function App() {
   return (
@@ -51,6 +60,15 @@ function App() {
         <main className="flex-grow pt-16 pb-16 md:pb-0">
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/shorts" element={<ShortsPage />} />
+            <Route path="/shorts/create" element={<CreateShortPage />} />
+            <Route path="/shorts/search" element={<ShortsSearchPage />} />
+            <Route path="/shorts/creator/:creatorId" element={<CreatorProfilePage />} />
+            <Route path="/shorts/moderation" element={<ShortsModerationPage />} />
+            <Route path="/shorts/moderation/preview/:shortId" element={<ShortsModerationPreviewPage />} />
+            <Route path="/shorts/tags" element={<ShortsTagManagementPage />} />
+            <Route path="/shorts/settings" element={<ShortsSettingsPage />} />
+            <Route path="/learning-shorts" element={<ShortsPage />} />
             <Route path="/skills" element={<SkillsPage />} />
             <Route path="/skills/self-survey" element={<RoleSkillSelfSurveyPage />} />
             <Route path="/skills/survey" element={<RoleSkillSelfSurveyPage />} />
@@ -59,6 +77,8 @@ function App() {
             <Route path="/skills/add-additional-skill" element={<AddAdditionalSkillPage />} />
             <Route path="/skills/edit-additional-skill/:skillId" element={<AddAdditionalSkillPage isEdit={true} />} />
             <Route path="/discover" element={<DiscoverPage />} />
+            <Route path="/mylearning" element={<MyLearningPage />} />
+            <Route path="/my-learning" element={<MyLearningPage />} />
             <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/category/:categoryId" element={<CategoryDetailsPage />} />
             <Route path="/course/:courseId" element={<CoursePlayerPage />} />
