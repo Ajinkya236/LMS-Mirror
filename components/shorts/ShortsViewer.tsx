@@ -73,6 +73,28 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
   const [sharingShort, setSharingShort] = useState<ShortItem | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
 
+  // Track total unique reels viewed during this Shorts session (plus icon shows for first 4 reels only)
+  const [viewedReelsCount, setViewedReelsCount] = useState<number>(() => {
+    try {
+      const saved = sessionStorage.getItem('jio_shorts_viewed_reel_count');
+      return saved ? parseInt(saved, 10) : 1;
+    } catch {
+      return 1;
+    }
+  });
+  const viewedIndicesRef = useRef<Set<number>>(new Set([0]));
+
+  useEffect(() => {
+    viewedIndicesRef.current.add(currentIndex);
+    const count = viewedIndicesRef.current.size;
+    setViewedReelsCount(count);
+    try {
+      sessionStorage.setItem('jio_shorts_viewed_reel_count', String(count));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [currentIndex]);
+
   // Floating Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -387,7 +409,7 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
 
   return (
     <div
-      className="fixed inset-0 top-16 bottom-16 md:bottom-0 bg-slate-950 flex items-center justify-center select-none overflow-hidden"
+      className="fixed inset-0 top-0 md:top-16 bottom-16 md:bottom-0 bg-slate-950 flex items-center justify-center select-none overflow-hidden"
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -402,44 +424,28 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
         className="relative w-full h-full max-w-[430px] md:rounded-3xl overflow-hidden bg-black shadow-2xl border border-white/10 flex flex-col justify-between"
       >
         {/* --- 1. Top Bar Overlay --- */}
-        <div className="absolute top-0 inset-x-0 z-40 p-3.5 pt-3 bg-gradient-to-b from-black/85 via-black/40 to-transparent flex items-center justify-between pointer-events-auto">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md transition-colors"
-              title="Back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-white tracking-wide flex items-center gap-1.5">
-                <Film className="w-4 h-4 text-blue-400" />
-                <span>Learning Shorts</span>
-              </span>
-              <span className="text-[10px] font-bold bg-white/20 text-gray-200 px-2 py-0.5 rounded-full font-mono">
-                {currentIndex + 1}/{feedShorts.length}
-              </span>
-            </div>
-          </div>
-
-          {/* Top Right Controls: Search & Simple Plus Sign Only */}
-          <div className="flex items-center gap-2">
-            {/* Search */}
-            <button
-              onClick={() => navigate('/shorts/search')}
-              className="p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md transition-all active:scale-95"
-              title="Search Learning Shorts"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-
-            {/* Create Icon: ONLY a simple plus sign icon */}
+        <div className="absolute top-0 inset-x-0 z-40 p-3.5 pt-3 bg-gradient-to-b from-black/80 via-black/30 to-transparent flex items-center justify-between pointer-events-auto">
+          {/* Top-Left: Plus Icon (Always shown on every reel) */}
+          <div>
             <button
               onClick={() => navigate('/shorts/create')}
-              className="p-2.5 rounded-full bg-[#002B7F] hover:bg-blue-600 text-white backdrop-blur-md transition-all active:scale-95 shadow-lg border border-blue-400/40"
-              title="Create Short"
+              className="p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md transition-all active:scale-95 shadow-lg border border-white/20 flex items-center justify-center group"
+              title="Create Learning Short"
+              aria-label="Create Learning Short"
             >
-              <Plus className="w-5 h-5 stroke-[2.5]" />
+              <Plus className="w-5 h-5 stroke-[2.5] text-white group-hover:scale-110 transition-transform" />
+            </button>
+          </div>
+
+          {/* Top-Right: Search Button */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/shorts/search')}
+              className="p-2.5 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md transition-all active:scale-95 border border-white/10"
+              title="Search Learning Shorts"
+              aria-label="Search Learning Shorts"
+            >
+              <Search className="w-5 h-5" />
             </button>
           </div>
         </div>

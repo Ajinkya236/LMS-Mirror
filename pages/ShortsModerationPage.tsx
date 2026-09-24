@@ -5,7 +5,6 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Eye,
   ArrowLeft,
   Search,
   X,
@@ -13,8 +12,7 @@ import {
   Layers,
   Film,
   Tag,
-  Plus,
-  Check,
+  Eye,
   AlertCircle
 } from 'lucide-react';
 import { ShortItem, shortsService } from '../services/shortsService';
@@ -25,9 +23,8 @@ export const ShortsModerationPage: React.FC = () => {
   const [allShorts, setAllShorts] = useState<ShortItem[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedShort, setSelectedShort] = useState<ShortItem | null>(null);
-  const [rejectingShortId, setRejectingShortId] = useState<string | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [revokingShortId, setRevokingShortId] = useState<string | null>(null);
+  const [revokeReason, setRevokeReason] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -70,49 +67,17 @@ export const ShortsModerationPage: React.FC = () => {
     });
   }, [allShorts, activeTab, searchQuery]);
 
-  const handleApproveShort = (shortId: string) => {
-    const success = shortsService.approveShort(shortId);
-    if (success) {
-      showToast('✅ Short approved and published to employee feed!');
-      if (selectedShort?.id === shortId) {
-        setSelectedShort(null);
-      }
-    }
+  const handleOpenRevoke = (shortId: string) => {
+    setRevokingShortId(shortId);
+    setRevokeReason('Approval revoked for content review.');
   };
 
-  const handleOpenReject = (shortId: string) => {
-    setRejectingShortId(shortId);
-    setRejectionReason('Content does not meet enterprise technical accuracy or presentation standards.');
-  };
-
-  const handleConfirmReject = () => {
-    if (!rejectingShortId) return;
-    const success = shortsService.rejectShort(rejectingShortId, rejectionReason);
-    if (success) {
-      showToast('❌ Short marked as Rejected with feedback.');
-      setRejectingShortId(null);
-      if (selectedShort?.id === rejectingShortId) {
-        setSelectedShort(null);
-      }
-    }
-  };
-
-  const handleApproveTag = (shortId: string, tag: string) => {
-    shortsService.approveTagForShort(shortId, tag);
-    showToast(`🏷️ Tag "${tag}" approved & added to enterprise topics!`);
+  const handleConfirmRevoke = () => {
+    if (!revokingShortId) return;
+    shortsService.rejectShort(revokingShortId, revokeReason);
+    showToast('⚠️ Approval revoked. Short moved to Rejected queue.');
+    setRevokingShortId(null);
     loadShorts();
-    if (selectedShort && selectedShort.id === shortId) {
-      setSelectedShort(shortsService.getShortById(shortId) || null);
-    }
-  };
-
-  const handleRejectTag = (shortId: string, tag: string) => {
-    shortsService.rejectTagForShort(shortId, tag);
-    showToast(`🗑️ Tag "${tag}" removed from submission.`);
-    loadShorts();
-    if (selectedShort && selectedShort.id === shortId) {
-      setSelectedShort(shortsService.getShortById(shortId) || null);
-    }
   };
 
   return (
@@ -150,13 +115,13 @@ export const ShortsModerationPage: React.FC = () => {
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold transition-colors border border-gray-200 flex items-center gap-1.5"
             >
               <Tag className="w-4 h-4 text-[#002B7F]" />
-              <span>Manage Enterprise Tags</span>
+              <span>Enterprise Tags</span>
             </button>
             <button
               onClick={() => navigate('/shorts/settings')}
               className="px-4 py-2 bg-[#002B7F] hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-colors shadow-sm"
             >
-              Engine Settings
+              Settings
             </button>
           </div>
         </div>
@@ -209,7 +174,7 @@ export const ShortsModerationPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Single Search Bar */}
+          {/* Search Bar */}
           <div className="relative w-full md:w-80">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -247,7 +212,7 @@ export const ShortsModerationPage: React.FC = () => {
           <div className="grid grid-cols-1 gap-4">
             {filteredShorts.map(short => {
               const predefinedList = shortsService.getPredefinedTags();
-              const customShortTags = short.tags.filter(t => !predefinedList.includes(t));
+              const hasCustomTags = short.tags.some(t => !predefinedList.includes(t));
 
               return (
                 <div
@@ -292,6 +257,12 @@ export const ShortsModerationPage: React.FC = () => {
                         >
                           {short.status}
                         </span>
+
+                        {hasCustomTags && short.status === 'pending' && (
+                          <span className="text-[10px] font-bold bg-purple-100 text-purple-900 px-2 py-0.5 rounded-full border border-purple-200">
+                            Custom Tag Review Needed
+                          </span>
+                        )}
                       </div>
 
                       <p className="text-xs text-gray-600 line-clamp-2">
@@ -312,7 +283,7 @@ export const ShortsModerationPage: React.FC = () => {
                         <span>{new Date(short.createdAt).toLocaleDateString()}</span>
                       </div>
 
-                      {/* Tags & Tag Moderation Actions */}
+                      {/* Tags */}
                       <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
                         {short.tags.map(tag => {
                           const isPredefined = predefinedList.includes(tag);
@@ -326,22 +297,9 @@ export const ShortsModerationPage: React.FC = () => {
                               }`}
                             >
                               <span>{tag}</span>
-                              {!isPredefined && short.status === 'pending' && (
-                                <span className="flex items-center gap-1 ml-1 border-l border-purple-200 pl-1">
-                                  <button
-                                    onClick={() => handleApproveTag(short.id, tag)}
-                                    className="text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white px-1.5 py-0.2 rounded font-sans font-bold"
-                                    title="Approve & add to enterprise tags"
-                                  >
-                                    Approve Tag
-                                  </button>
-                                  <button
-                                    onClick={() => handleRejectTag(short.id, tag)}
-                                    className="text-[10px] bg-red-600 hover:bg-red-700 text-white px-1.5 py-0.2 rounded font-sans font-bold"
-                                    title="Remove invalid tag"
-                                  >
-                                    Remove
-                                  </button>
+                              {!isPredefined && (
+                                <span className="text-[9px] text-purple-600 uppercase font-sans font-extrabold">
+                                  (new)
                                 </span>
                               )}
                             </span>
@@ -357,47 +315,24 @@ export const ShortsModerationPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Right: Actions (Approve / Reject) - No Delete Button */}
+                  {/* Right: Actions Column
+                      - Pending: ONLY Audit & Preview button (Approve/Reject happen on subsequent page)
+                      - Approved: Audit & Preview + Revoke Approval
+                      - Rejected: Audit & Preview
+                  */}
                   <div className="flex sm:flex-col items-center gap-2 w-full sm:w-auto flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
                     <button
                       onClick={() => navigate(`/shorts/moderation/preview/${short.id}`)}
-                      className="flex-1 sm:flex-none px-4 py-2 bg-gray-100 hover:bg-[#002B7F] hover:text-white text-gray-800 rounded-xl text-xs font-bold transition-colors"
+                      className="w-full sm:w-auto px-5 py-2.5 bg-[#002B7F] hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-1.5"
                     >
-                      Audit & Preview
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Audit & Preview</span>
                     </button>
-
-                    {short.status === 'pending' && (
-                      <>
-                        <button
-                          onClick={() => handleApproveShort(short.id)}
-                          className="flex-1 sm:flex-none px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-1"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Approve</span>
-                        </button>
-                        <button
-                          onClick={() => handleOpenReject(short.id)}
-                          className="flex-1 sm:flex-none px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-1"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                          <span>Reject</span>
-                        </button>
-                      </>
-                    )}
-
-                    {short.status === 'rejected' && (
-                      <button
-                        onClick={() => handleApproveShort(short.id)}
-                        className="flex-1 sm:flex-none px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold"
-                      >
-                        Re-Approve
-                      </button>
-                    )}
 
                     {short.status === 'approved' && (
                       <button
-                        onClick={() => handleOpenReject(short.id)}
-                        className="flex-1 sm:flex-none px-4 py-2 bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-xl text-xs font-bold border border-gray-200"
+                        onClick={() => handleOpenRevoke(short.id)}
+                        className="w-full sm:w-auto px-4 py-2 bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-xl text-xs font-bold border border-gray-200 transition-colors"
                       >
                         Revoke Approval
                       </button>
@@ -410,147 +345,41 @@ export const ShortsModerationPage: React.FC = () => {
         )}
       </div>
 
-      {/* Preview Modal */}
-      {selectedShort && (
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-xs z-[99999] flex items-center justify-center p-4 animate-fade-in"
-          onClick={() => setSelectedShort(null)}
-        >
-          <div
-            className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 border border-gray-200 space-y-5 animate-scale-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                <Eye className="w-4 h-4 text-[#002B7F]" />
-                <span>Short Details & Audit Preview</span>
-              </h3>
-              <button
-                onClick={() => setSelectedShort(null)}
-                className="p-1 rounded-full text-gray-400 hover:text-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Media Player */}
-            <div className="relative aspect-[9/16] max-w-[260px] mx-auto rounded-2xl overflow-hidden bg-black shadow-lg">
-              {selectedShort.mediaType === 'video' ? (
-                <video src={selectedShort.mediaUrls[0]} controls autoPlay className="w-full h-full object-cover" />
-              ) : (
-                <img src={selectedShort.mediaUrls[0]} alt={selectedShort.title} className="w-full h-full object-cover" />
-              )}
-            </div>
-
-            {/* Metadata */}
-            <div className="space-y-3 text-left">
-              <div>
-                <h4 className="text-base font-bold text-gray-900">{selectedShort.title}</h4>
-                <p className="text-xs text-gray-600 mt-1">{selectedShort.description}</p>
-              </div>
-
-              <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200 flex items-center gap-3">
-                <img src={selectedShort.author.avatar} alt={selectedShort.author.name} className="w-10 h-10 rounded-full object-cover" />
-                <div>
-                  <div className="text-xs font-bold text-gray-900">{selectedShort.author.name}</div>
-                  <div className="text-[11px] text-gray-500">{selectedShort.author.role} • {selectedShort.author.department}</div>
-                </div>
-              </div>
-
-              {/* Tags with Approval */}
-              <div className="space-y-1.5">
-                <span className="text-xs font-bold text-gray-700 block">Submitted Learning Tags:</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedShort.tags.map(tag => {
-                    const isPredefined = shortsService.getPredefinedTags().includes(tag);
-                    return (
-                      <span
-                        key={tag}
-                        className={`text-xs px-2.5 py-1 rounded-lg font-mono flex items-center gap-1.5 ${
-                          isPredefined ? 'bg-blue-50 text-[#002B7F] border border-blue-200' : 'bg-purple-100 text-purple-900 border border-purple-300 font-bold'
-                        }`}
-                      >
-                        <span>{tag}</span>
-                        {!isPredefined && (
-                          <button
-                            onClick={() => handleApproveTag(selectedShort.id, tag)}
-                            className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.2 rounded font-bold hover:bg-emerald-700"
-                          >
-                            Approve Tag
-                          </button>
-                        )}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-              <button
-                onClick={() => setSelectedShort(null)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold"
-              >
-                Close Preview
-              </button>
-
-              {selectedShort.status === 'pending' && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleOpenReject(selectedShort.id)}
-                    className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-xs"
-                  >
-                    Reject Short
-                  </button>
-                  <button
-                    onClick={() => handleApproveShort(selectedShort.id)}
-                    className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs"
-                  >
-                    Approve Short
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reject Reason Dialog */}
-      {rejectingShortId && (
+      {/* Revoke Reason Dialog */}
+      {revokingShortId && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[99999] flex items-center justify-center p-4 animate-fade-in"
-          onClick={() => setRejectingShortId(null)}
+          onClick={() => setRevokingShortId(null)}
         >
           <div
             className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-gray-200 space-y-4 animate-scale-up"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <XCircle className="w-5 h-5 text-red-600" />
-              <span>Reject Submission with Reason</span>
+              <AlertCircle className="w-5 h-5 text-amber-600" />
+              <span>Revoke Approval</span>
             </h3>
             <p className="text-xs text-gray-600">
-              Provide feedback for the creator so they can adjust and resubmit.
+              State the reason for revoking approval. The Short will be unpublished and returned to Rejected state.
             </p>
             <textarea
               rows={3}
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
+              value={revokeReason}
+              onChange={(e) => setRevokeReason(e.target.value)}
               className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-red-500"
             />
             <div className="flex justify-end gap-2 pt-2">
               <button
-                onClick={() => setRejectingShortId(null)}
+                onClick={() => setRevokingShortId(null)}
                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold"
               >
                 Cancel
               </button>
               <button
-                onClick={handleConfirmReject}
+                onClick={handleConfirmRevoke}
                 className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-xs"
               >
-                Confirm Rejection
+                Revoke Approval
               </button>
             </div>
           </div>

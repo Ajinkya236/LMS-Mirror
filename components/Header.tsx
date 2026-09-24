@@ -70,8 +70,10 @@ const Header: React.FC = () => {
     }
   };
 
+  const isShortsView = location.pathname === '/shorts' || location.pathname === '/learning-shorts' || location.pathname === '/shorts/create';
+
   return (
-    <header className="bg-nav-blue fixed top-0 left-0 right-0 z-50 shadow-md h-16">
+    <header className={`${isShortsView ? 'hidden md:block' : ''} bg-nav-blue fixed top-0 left-0 right-0 z-50 shadow-md h-16`}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 relative">
           

@@ -269,57 +269,51 @@ export const CreatorProfilePage: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-3 gap-1 sm:gap-1.5 bg-gray-100 p-1 sm:p-1.5 rounded-2xl border border-gray-200 overflow-hidden shadow-xs">
                   {creatorShorts.map(short => (
                     <div
                       key={short.id}
                       onClick={() => handlePlayShort(short.id)}
-                      className="group relative aspect-[9/16] rounded-2xl overflow-hidden bg-gray-900 cursor-pointer shadow-md hover:shadow-xl transition-all hover:scale-[1.02] border border-gray-200"
+                      className="group relative aspect-[4/5] bg-gray-950 overflow-hidden cursor-pointer rounded-lg transition-transform active:scale-[0.98]"
                     >
                       {/* Thumbnail Media */}
                       {short.mediaType === 'video' ? (
                         <video
                           src={short.mediaUrls[0]}
-                          className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
                         <img
                           src={short.mediaUrls[0]}
                           alt={short.title}
-                          className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       )}
 
                       {/* Format Badge (Top Right) */}
-                      <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
+                      <div className="absolute top-1.5 right-1.5 z-10 drop-shadow-md">
                         {short.mediaType === 'video' ? (
-                          <>
-                            <Film className="w-3 h-3 text-blue-400" />
-                            <span>Video</span>
-                          </>
+                          <Film className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white drop-shadow" />
                         ) : (
-                          <>
-                            <Layers className="w-3 h-3 text-emerald-400" />
-                            <span>{short.mediaUrls.length} Slides</span>
-                          </>
+                          <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white drop-shadow" />
                         )}
                       </div>
 
-                      {/* Hover Center Play Button */}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-12 h-12 rounded-full bg-white text-[#002B7F] flex items-center justify-center shadow-2xl transform scale-75 group-hover:scale-100 transition-transform">
-                          <Play className="w-6 h-6 fill-[#002B7F] ml-0.5" />
+                      {/* Dark Vignette Overlay on Hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity flex flex-col justify-end p-1.5 sm:p-2.5 text-white">
+                        <h4 className="text-[10px] sm:text-xs font-bold leading-tight line-clamp-2 drop-shadow mb-1">
+                          {short.title}
+                        </h4>
+                        <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-gray-300 drop-shadow">
+                          <span className="font-mono text-blue-300 truncate max-w-[70px]">{short.tags[0]}</span>
+                          <span className="text-rose-300 font-semibold">{short.likesCount} ❤️</span>
                         </div>
                       </div>
 
-                      {/* Title & Tags Bottom Overlay */}
-                      <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent text-white space-y-1">
-                        <h4 className="text-xs font-bold leading-tight line-clamp-2 drop-shadow">
-                          {short.title}
-                        </h4>
-                        <div className="flex items-center justify-between text-[10px] text-gray-300">
-                          <span className="font-mono text-blue-300">{short.tags[0]}</span>
-                          <span>{short.likesCount} ❤️</span>
+                      {/* Center Play Icon on Hover */}
+                      <div className="absolute inset-0 items-center justify-center bg-black/20 hidden group-hover:flex transition-opacity">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/90 text-[#002B7F] flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                          <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-[#002B7F] ml-0.5" />
                         </div>
                       </div>
                     </div>
