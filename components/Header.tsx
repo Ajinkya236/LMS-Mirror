@@ -244,50 +244,12 @@ const Header: React.FC = () => {
                           <ShieldCheck className="w-5 h-5" />
                         </div>
                         <div className="text-left">
-                          <div className="font-bold text-gray-900 text-sm">Shorts Content Management</div>
+                          <div className="font-bold text-gray-900 text-sm">Shorts Management</div>
                           <div className="text-[11px] text-gray-500">Moderation dashboard & audit</div>
                         </div>
                       </div>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
                         Approver
-                      </span>
-                    </Link>
-
-                    <Link
-                      to="/shorts/tags"
-                      onClick={() => setIsProfileDropdownOpen(false)}
-                      className="w-full flex items-center justify-between px-6 py-3 hover:bg-purple-50/70 text-gray-700 transition-colors group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 rounded-full bg-purple-100 text-purple-700 group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                          <Tag className="w-5 h-5" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-bold text-gray-900 text-sm">Shorts Tag Management</div>
-                          <div className="text-[11px] text-gray-500">Bulk CSV upload & taxonomy</div>
-                        </div>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-purple-50 text-purple-700 border border-purple-200">
-                        Admin
-                      </span>
-                    </Link>
-
-                    <Link
-                      to="/shorts/settings"
-                      onClick={() => setIsProfileDropdownOpen(false)}
-                      className="w-full flex items-center justify-between px-6 py-3 hover:bg-blue-50/70 text-gray-700 transition-colors group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 rounded-full bg-blue-100 text-r-blue group-hover:bg-r-blue group-hover:text-white transition-colors">
-                          <Sliders className="w-5 h-5" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-bold text-gray-900 text-sm">Shorts Settings</div>
-                          <div className="text-[11px] text-gray-500">System thresholds & limits</div>
-                        </div>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-blue-50 text-r-blue border border-blue-200">
-                        Config
                       </span>
                     </Link>
 

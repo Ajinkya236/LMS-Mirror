@@ -726,7 +726,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                     </label>
                     <input
                       type="number"
-                      value={question.numberValidation?.min ?? 0}
+                      value={question.numberValidation?.min !== undefined && !Number.isNaN(question.numberValidation.min) ? question.numberValidation.min : 0}
                       onChange={(e) =>
                         onUpdate({
                           ...question,
@@ -746,7 +746,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                     </label>
                     <input
                       type="number"
-                      value={question.numberValidation?.max ?? 100}
+                      value={question.numberValidation?.max !== undefined && !Number.isNaN(question.numberValidation.max) ? question.numberValidation.max : 100}
                       onChange={(e) =>
                         onUpdate({
                           ...question,
@@ -766,7 +766,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                     </label>
                     <input
                       type="number"
-                      value={question.numberValidation?.step ?? 1}
+                      value={question.numberValidation?.step !== undefined && !Number.isNaN(question.numberValidation.step) ? question.numberValidation.step : 1}
                       onChange={(e) =>
                         onUpdate({
                           ...question,
@@ -1125,7 +1125,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                   <span className="font-bold text-slate-700">Points:</span>
                   <input
                     type="number"
-                    value={question.points ?? 10}
+                    value={question.points !== undefined && !Number.isNaN(question.points) ? question.points : 10}
                     onChange={(e) =>
                       onUpdate({ ...question, points: Math.max(0, parseInt(e.target.value, 10) || 0) })
                     }

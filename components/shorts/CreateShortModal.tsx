@@ -51,7 +51,7 @@ export const CreateShortModal: React.FC<CreateShortModalProps> = ({
   const [audioTitle, setAudioTitle] = useState<string>('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedPredefinedTags, setSelectedPredefinedTags] = useState<string[]>(['#CloudArchitecture']);
+  const [selectedPredefinedTags, setSelectedPredefinedTags] = useState<string[]>(['CloudArchitecture']);
   const [customTagInput, setCustomTagInput] = useState('');
   const [userTags, setUserTags] = useState<string[]>([]);
   const [tagError, setTagError] = useState<string | null>(null);
@@ -82,7 +82,7 @@ export const CreateShortModal: React.FC<CreateShortModalProps> = ({
       setAudioTitle('');
       setTitle('');
       setDescription('');
-      setSelectedPredefinedTags(['#CloudArchitecture']);
+      setSelectedPredefinedTags(['CloudArchitecture']);
       setUserTags([]);
       setFileError(null);
       setTagError(null);
@@ -294,31 +294,43 @@ export const CreateShortModal: React.FC<CreateShortModalProps> = ({
     setMediaType(photos.length > 1 ? 'carousel' : 'photo');
   };
 
-  // Predefined Tag Toggle
+  // Predefined Tag Toggle (Max 10 total topics)
   const togglePredefinedTag = (tag: string) => {
-    setSelectedPredefinedTags(prev =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
+    setTagError(null);
+    setSelectedPredefinedTags(prev => {
+      if (prev.includes(tag)) {
+        return prev.filter(t => t !== tag);
+      }
+      if (prev.length + userTags.length >= 10) {
+        setTagError('⚠️ Maximum 10 topics allowed per reel.');
+        return prev;
+      }
+      return [...prev, tag];
+    });
   };
 
-  // Add Custom Tag
+  // Add Custom Tag (Max 10 total topics, NO hashtags)
   const handleAddCustomTag = () => {
     if (!customTagInput.trim()) return;
-    const clean = customTagInput.trim();
-    const formatted = clean.startsWith('#') ? clean : `#${clean}`;
+    const clean = customTagInput.replace(/^#/, '').trim();
 
-    const validation = shortsService.validateTag(formatted);
+    if (selectedPredefinedTags.length + userTags.length >= 10) {
+      setTagError('⚠️ Maximum 10 topics allowed per reel.');
+      return;
+    }
+
+    const validation = shortsService.validateTag(clean);
     if (!validation.isValid) {
       setTagError(validation.error || 'Invalid tag');
       return;
     }
 
-    if (userTags.includes(formatted) || selectedPredefinedTags.includes(formatted)) {
+    if (userTags.includes(clean) || selectedPredefinedTags.includes(clean)) {
       setTagError('Tag already added');
       return;
     }
 
-    setUserTags(prev => [...prev, formatted]);
+    setUserTags(prev => [...prev, clean]);
     setCustomTagInput('');
     setTagError(null);
   };
@@ -337,6 +349,11 @@ export const CreateShortModal: React.FC<CreateShortModalProps> = ({
     const allTags = Array.from(new Set([...selectedPredefinedTags, ...userTags]));
     if (allTags.length === 0) {
       onToast('⚠️ Please select or add at least one learning tag');
+      return;
+    }
+
+    if (allTags.length > 10) {
+      onToast('⚠️ Maximum 10 topics allowed per reel');
       return;
     }
 
@@ -851,9 +868,9 @@ export const CreateShortModal: React.FC<CreateShortModalProps> = ({
                   <input
                     type="text"
                     value={customTagInput}
-                    onChange={(e) => setCustomTagInput(e.target.value)}
+                    onChange={(e) => setCustomTagInput(e.target.value.replace(/^#/, ''))}
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCustomTag())}
-                    placeholder="e.g. #KafkaStreaming"
+                    placeholder="e.g. KafkaStreaming or NextJS"
                     className="flex-1 px-3 py-2 bg-white/5 border border-white/15 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 font-mono"
                   />
                   <button

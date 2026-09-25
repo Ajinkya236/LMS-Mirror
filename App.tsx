@@ -54,12 +54,28 @@ import ShortsModerationPreviewPage from './pages/ShortsModerationPreviewPage';
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
-  const isShortsView = location.pathname === '/shorts' || location.pathname === '/learning-shorts' || location.pathname === '/shorts/create';
+  const isSearchPage = location.pathname.startsWith('/shorts/search');
+  const isCreateShortPage = location.pathname === '/shorts/create';
+  const isProfilePage = location.pathname.startsWith('/shorts/creator');
+  const isShortsView = location.pathname === '/shorts' || location.pathname === '/learning-shorts' || isCreateShortPage || isSearchPage || isProfilePage;
 
   return (
     <div className="bg-r-gray-50 min-h-screen font-sans text-r-gray-800 flex flex-col">
-      <Header />
-      <main className={`flex-grow ${isShortsView ? 'pt-0 md:pt-16 pb-16 md:pb-0' : 'pt-16 pb-16 md:pb-0'}`}>
+      {/* Top Nav: ALWAYS visible on web view (md:block). On mobile, hidden for immersive shorts views (search, profile, create) */}
+      {isSearchPage || isProfilePage || isCreateShortPage ? (
+        <div className="hidden md:block">
+          <Header />
+        </div>
+      ) : (
+        <Header />
+      )}
+      <main className={`flex-grow ${
+        isCreateShortPage ? 'pt-0 md:pt-16 pb-0' :
+        isSearchPage ? 'pt-0 md:pt-16 pb-16 md:pb-0' :
+        isProfilePage ? 'pt-0 md:pt-16 pb-16 md:pb-0' :
+        isShortsView ? 'pt-0 md:pt-16 pb-16 md:pb-0' :
+        'pt-16 pb-16 md:pb-0'
+      }`}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/shorts" element={<ShortsPage />} />

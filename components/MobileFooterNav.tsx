@@ -1,9 +1,16 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { HomeIcon, BookOpenIcon, UserIcon } from './Icons';
 import { Film, Compass } from 'lucide-react';
 
 const MobileFooterNav: React.FC = () => {
+    const location = useLocation();
+
+    // Hide footer navigation on the full-screen camera create short page
+    if (location.pathname === '/shorts/create') {
+        return null;
+    }
+
     const navItems = [
         { label: 'Home', path: '/', icon: <HomeIcon className="w-5 h-5" /> },
         { label: 'Discover', path: '/discover', icon: <Compass className="w-5 h-5" /> },

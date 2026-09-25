@@ -1665,7 +1665,7 @@ export const PublicFormPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
-                            value={answer ?? ''}
+                            value={answer !== undefined && !Number.isNaN(Number(answer)) ? answer : ''}
                             min={q.numberValidation?.min}
                             max={q.numberValidation?.max}
                             step={
