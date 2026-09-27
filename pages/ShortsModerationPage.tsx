@@ -14,51 +14,53 @@ import {
   Tag,
   Eye,
   AlertCircle,
-  Sliders,
-  RotateCcw,
   Flag,
   AlertTriangle,
   Plus,
   Trash2,
   Check,
-  Video,
-  Music,
-  Save
+  User,
+  ExternalLink
 } from 'lucide-react';
 import {
   ShortItem,
   ShortReport,
-  shortsService,
-  ShortsRecommendationConfig
+  shortsService
 } from '../services/shortsService';
 
 interface ShortsModerationPageProps {
-  defaultSection?: 'content' | 'tags' | 'settings';
+  defaultSection?: 'content' | 'reported' | 'tags';
 }
 
 export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defaultSection }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Top level portal tabs: Content Management, Enterprise Tags, Settings
-  const initialSection = defaultSection || (searchParams.get('tab') as 'content' | 'tags' | 'settings') || 'content';
-  const [portalSection, setPortalSection] = useState<'content' | 'tags' | 'settings'>(initialSection);
+  // 3 Portal Submenus: Content Management, Reported Content, Enterprise Tags
+  const initialSection = defaultSection || (searchParams.get('tab') as 'content' | 'reported' | 'tags') || 'content';
+  const [portalSection, setPortalSection] = useState<'content' | 'reported' | 'tags'>(initialSection);
 
   // Content Management Sub-state
   const [allShorts, setAllShorts] = useState<ShortItem[]>([]);
   const [reports, setReports] = useState<ShortReport[]>([]);
-  const [activeTab, setActiveTab] = useState<'pending' | 'reported' | 'approved' | 'rejected'>('pending');
+  const [contentTab, setContentTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Reported Content Sub-state (Pending, Approved, Rejected columns/tabs)
+  const [reportedTab, setReportedTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [reportedSearchQuery, setReportedSearchQuery] = useState('');
+  const [showRevokeModalForShort, setShowRevokeModalForShort] = useState<ShortItem | null>(null);
+  const [revokeReasonInput, setRevokeReasonInput] = useState('');
+
   // Enterprise Tags Sub-state
-  const [enterpriseTags, setEnterpriseTags] = useState<string[]>([]);
+  const [adminTags, setAdminTags] = useState<string[]>([]);
+  const [userTags, setUserTags] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [tagFilter, setTagFilter] = useState<'all' | 'admin' | 'user'>('all');
   const [tagSearchQuery, setTagSearchQuery] = useState('');
   const [newTagInput, setNewTagInput] = useState('');
   const [tagAddError, setTagAddError] = useState<string | null>(null);
   const [tagToDelete, setTagToDelete] = useState<string | null>(null);
-
-  // Settings Sub-state
-  const [config, setConfig] = useState<ShortsRecommendationConfig>(() => shortsService.getConfig());
 
   // Toast feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -71,7 +73,9 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
   const loadShortsAndTags = () => {
     setAllShorts(shortsService.getAllShorts());
     setReports(shortsService.getReports());
-    setEnterpriseTags(shortsService.getPredefinedTags());
+    setAdminTags(shortsService.getAdminTags());
+    setUserTags(shortsService.getUserTags());
+    setAllTags(shortsService.getAllTags());
   };
 
   useEffect(() => {
@@ -86,13 +90,13 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
   }, []);
 
   useEffect(() => {
-    const tabParam = searchParams.get('tab') as 'content' | 'tags' | 'settings' | null;
-    if (tabParam && ['content', 'tags', 'settings'].includes(tabParam)) {
+    const tabParam = searchParams.get('tab') as 'content' | 'reported' | 'tags' | null;
+    if (tabParam && ['content', 'reported', 'tags'].includes(tabParam)) {
       setPortalSection(tabParam);
     }
   }, [searchParams]);
 
-  const handleSwitchPortalSection = (section: 'content' | 'tags' | 'settings') => {
+  const handleSwitchPortalSection = (section: 'content' | 'reported' | 'tags') => {
     setPortalSection(section);
     setSearchParams(section === 'content' ? {} : { tab: section });
   };
@@ -105,38 +109,31 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
     }
   };
 
-  // Reported Shorts mapping
-  const reportedShortsData = useMemo(() => {
-    return shortsService.getReportedShorts();
-  }, [allShorts, reports]);
-
+  // Counts for Content Management (Pending, Approved, Rejected)
   const counts = useMemo(() => {
     return {
       pending: allShorts.filter(s => s.status === 'pending').length,
-      reported: reportedShortsData.filter(r => r.reports.some(rep => rep.status === 'pending')).length,
       approved: allShorts.filter(s => s.status === 'approved').length,
       rejected: allShorts.filter(s => s.status === 'rejected').length
     };
-  }, [allShorts, reportedShortsData]);
+  }, [allShorts]);
 
-  const filteredShorts = useMemo(() => {
-    if (activeTab === 'reported') {
-      return reportedShortsData
-        .filter(item => item.reports.some(rep => rep.status === 'pending'))
-        .map(item => item.short)
-        .filter(short => {
-          if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase();
-            const titleMatch = short.title.toLowerCase().includes(q);
-            const authorMatch = short.author.name.toLowerCase().includes(q);
-            return titleMatch || authorMatch;
-          }
-          return true;
-        });
-    }
+  // Counts for Reported Content (Pending, Approved, Rejected)
+  const reportedCounts = useMemo(() => {
+    const pendingCount = reports.filter(r => r.status === 'pending').length;
+    const approvedCount = reports.filter(r => r.status === 'dismissed').length;
+    const rejectedCount = reports.filter(r => r.status === 'revoked').length;
+    return {
+      pending: pendingCount,
+      approved: approvedCount,
+      rejected: rejectedCount
+    };
+  }, [reports]);
 
+  // Filtered shorts for Content Management
+  const filteredContentShorts = useMemo(() => {
     return allShorts.filter(short => {
-      if (short.status !== activeTab) {
+      if (short.status !== contentTab) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -147,7 +144,53 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
       }
       return true;
     });
-  }, [allShorts, reportedShortsData, activeTab, searchQuery]);
+  }, [allShorts, contentTab, searchQuery]);
+
+  // Filtered grouped items for Reported Content
+  const filteredReportedItems = useMemo(() => {
+    const targetStatus = reportedTab === 'pending' ? 'pending' : reportedTab === 'approved' ? 'dismissed' : 'revoked';
+    const targetReports = reports.filter(r => r.status === targetStatus);
+
+    const groups = new Map<string, { short: ShortItem; reports: ShortReport[] }>();
+    targetReports.forEach(rep => {
+      const s = allShorts.find(item => item.id === rep.shortId);
+      if (s) {
+        if (!groups.has(s.id)) {
+          groups.set(s.id, { short: s, reports: [] });
+        }
+        groups.get(s.id)!.reports.push(rep);
+      }
+    });
+
+    return Array.from(groups.values()).filter(item => {
+      if (reportedSearchQuery.trim()) {
+        const q = reportedSearchQuery.toLowerCase();
+        const titleMatch = item.short.title.toLowerCase().includes(q);
+        const authorMatch = item.short.author.name.toLowerCase().includes(q);
+        const reasonMatch = item.reports.some(r => r.reason.toLowerCase().includes(q));
+        return titleMatch || authorMatch || reasonMatch;
+      }
+      return true;
+    });
+  }, [reports, allShorts, reportedTab, reportedSearchQuery]);
+
+  // Filtered Enterprise Tags
+  const filteredEnterpriseTags = useMemo(() => {
+    let sourceList: string[] = [];
+    if (tagFilter === 'all') {
+      sourceList = allTags;
+    } else if (tagFilter === 'admin') {
+      sourceList = adminTags;
+    } else {
+      sourceList = userTags;
+    }
+
+    if (tagSearchQuery.trim()) {
+      const q = tagSearchQuery.toLowerCase().trim();
+      return sourceList.filter(t => t.toLowerCase().includes(q));
+    }
+    return sourceList;
+  }, [tagFilter, allTags, adminTags, userTags, tagSearchQuery]);
 
   // Tag Management Handlers
   const handleAddTag = (e: React.FormEvent) => {
@@ -163,8 +206,8 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
     const res = shortsService.addPredefinedTag(clean);
     if (res.success) {
       setNewTagInput('');
-      setEnterpriseTags(shortsService.getPredefinedTags());
-      showToast(`✅ Enterprise tag "${clean}" added!`);
+      loadShortsAndTags();
+      showToast(`✅ Admin-created enterprise tag "${clean}" added!`);
     } else {
       setTagAddError(res.error || 'Failed to add tag');
     }
@@ -172,39 +215,40 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
 
   const handleConfirmDeleteTag = () => {
     if (!tagToDelete) return;
-    shortsService.removePredefinedTag(tagToDelete);
+    shortsService.deleteTagFromPlatform(tagToDelete);
     showToast(`🗑️ Deleted tag "${tagToDelete}"`);
     setTagToDelete(null);
-    setEnterpriseTags(shortsService.getPredefinedTags());
+    loadShortsAndTags();
   };
 
-  const filteredEnterpriseTags = useMemo(() => {
-    return enterpriseTags.filter(t =>
-      t.toLowerCase().includes(tagSearchQuery.toLowerCase().trim())
-    );
-  }, [enterpriseTags, tagSearchQuery]);
-
-  // Settings Handlers
-  const handleSaveSettings = () => {
-    shortsService.updateConfig(config);
-    showToast('🚀 Shorts settings saved successfully!');
+  // Reported Content Actions:
+  // When approved / dismissed: Creator is NOT notified
+  const handleDismissReports = (shortId: string) => {
+    shortsService.dismissReportsForShort(shortId);
+    showToast('✅ Report dismissed. Content verified and preserved.');
+    loadShortsAndTags();
   };
 
-  const handleResetSettings = () => {
-    const def = shortsService.resetConfigToDefaults();
-    setConfig(def);
-    showToast('🔄 Settings reset to enterprise defaults');
+  // When revoked: Creator IS notified with the reason
+  const handleConfirmRevoke = () => {
+    if (!showRevokeModalForShort) return;
+    const reason = revokeReasonInput.trim() || 'Content revoked following community violation review.';
+    shortsService.revokeShortWithReason(showRevokeModalForShort.id, reason);
+    showToast('⚠️ Content revoked. Uploader has been notified of the revocation reason.');
+    setShowRevokeModalForShort(null);
+    setRevokeReasonInput('');
+    loadShortsAndTags();
   };
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-24 pt-4">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        {/* Top Navigation & Header Card: Strictly Preserved Across All Sub-tabs */}
+        {/* Top Header Card */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button
               onClick={handleHeaderBack}
-              className="p-2.5 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+              className="p-2.5 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors cursor-pointer"
               title={portalSection !== 'content' ? "Back to Content Management" : "Back to Shorts"}
             >
               <ArrowLeft className="w-5 h-5" />
@@ -213,20 +257,20 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-6 h-6 text-emerald-600" />
                 <h1 className="text-xl font-bold text-gray-900">
-                  Shorts Content Management
+                  Shorts Approver Portal
                 </h1>
                 <span className="text-[10px] uppercase font-extrabold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  Approver Portal
+                  Manager View
                 </span>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Audit employee-submitted micro-learning videos, photo decks, manage violations, and moderate custom learning tags
+                Audit employee-submitted reels, manage community violation reports, and organize enterprise tags
               </p>
             </div>
           </div>
         </div>
 
-        {/* 3 Sub-menus: Content Management, Enterprise Tags, Settings (Rendered Once, No Duplicate) */}
+        {/* 3 Sub-menus: Content Management, Reported Content, Enterprise Tags */}
         <div className="bg-white rounded-2xl p-1.5 border border-gray-200 shadow-xs mb-6 flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => handleSwitchPortalSection('content')}
@@ -238,6 +282,26 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
           >
             <ShieldCheck className="w-4 h-4" />
             <span>Content Management</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/20 text-white font-mono">
+              {counts.pending}
+            </span>
+          </button>
+
+          <button
+            onClick={() => handleSwitchPortalSection('reported')}
+            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              portalSection === 'reported'
+                ? 'bg-[#002B7F] text-white shadow-xs'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <Flag className="w-4 h-4 text-rose-500" />
+            <span>Reported Content</span>
+            {reportedCounts.pending > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-500 text-white font-mono font-bold">
+                {reportedCounts.pending}
+              </span>
+            )}
           </button>
 
           <button
@@ -250,58 +314,37 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
           >
             <Tag className="w-4 h-4" />
             <span>Enterprise Tags</span>
-          </button>
-
-          <button
-            onClick={() => handleSwitchPortalSection('settings')}
-            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              portalSection === 'settings'
-                ? 'bg-[#002B7F] text-white shadow-xs'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            <Sliders className="w-4 h-4" />
-            <span>Settings</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-gray-200 text-gray-700 font-mono">
+              {allTags.length}
+            </span>
           </button>
         </div>
 
         {/* ========================================================================= */}
-        {/* VIEW 1: CONTENT MANAGEMENT (Pending Review, Reported, Approved, Rejected) */}
+        {/* SUBMENU 1: CONTENT MANAGEMENT (Pending, Approved, Rejected) */}
         {/* ========================================================================= */}
         {portalSection === 'content' && (
           <div className="space-y-6">
-            {/* Search & Filter Bar with Tabs */}
+            {/* Filter Bar with Tabs & Search */}
             <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
-              {/* Tabs: Pending, Reported Content, Approved, Rejected */}
+              {/* 3 Tabs: Pending Review, Approved, Rejected */}
               <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto bg-gray-100 p-1 rounded-xl">
                 <button
-                  onClick={() => setActiveTab('pending')}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    activeTab === 'pending'
+                  onClick={() => setContentTab('pending')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    contentTab === 'pending'
                       ? 'bg-white text-amber-800 shadow-xs'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   <Clock className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Pending Review ({counts.pending})</span>
+                  <span>Pending ({counts.pending})</span>
                 </button>
 
                 <button
-                  onClick={() => setActiveTab('reported')}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    activeTab === 'reported'
-                      ? 'bg-white text-rose-800 shadow-xs'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Flag className="w-3.5 h-3.5 text-rose-600" />
-                  <span>Reported Content ({counts.reported})</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('approved')}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    activeTab === 'approved'
+                  onClick={() => setContentTab('approved')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    contentTab === 'approved'
                       ? 'bg-white text-emerald-800 shadow-xs'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
@@ -311,9 +354,9 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
                 </button>
 
                 <button
-                  onClick={() => setActiveTab('rejected')}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    activeTab === 'rejected'
+                  onClick={() => setContentTab('rejected')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    contentTab === 'rejected'
                       ? 'bg-white text-red-800 shadow-xs'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
@@ -344,103 +387,191 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
               </div>
             </div>
 
-            {/* Submissions List: Simplified Tiles across all queues (ONLY thumbnail, title, uploader, upload date, view icon) */}
-            {filteredShorts.length === 0 ? (
+            {/* Submissions List */}
+            {filteredContentShorts.length === 0 ? (
               <div className="bg-white rounded-3xl p-12 text-center border border-gray-200 shadow-xs space-y-3">
                 <ShieldCheck className="w-12 h-12 text-gray-400 mx-auto" />
                 <h3 className="text-base font-bold text-gray-900">
-                  No {activeTab} submissions found
+                  No {contentTab} submissions found
                 </h3>
                 <p className="text-xs text-gray-500 max-w-sm mx-auto">
-                  {activeTab === 'pending'
+                  {contentTab === 'pending'
                     ? 'All employee submissions have been audited. Great job!'
-                    : activeTab === 'reported'
-                    ? 'No content violation reports are currently open.'
-                    : `There are currently no shorts in the ${activeTab} queue.`}
+                    : `There are currently no shorts in the ${contentTab} queue.`}
                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3.5">
-                {filteredShorts.map(short => {
-                  const shortReports = shortsService.getReportsForShort(short.id).filter(r => r.status === 'pending');
-
-                  return (
-                    <div
-                      key={short.id}
-                      className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-xs hover:border-gray-300 transition-all flex items-center justify-between gap-4"
-                    >
-                      {/* Left: Thumbnail & Simplified Details */}
-                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                        {/* Reel Thumbnail */}
-                        <div
-                          onClick={() => navigate(`/shorts/moderation/preview/${short.id}`)}
-                          className="relative w-16 h-20 sm:w-20 sm:h-24 rounded-xl overflow-hidden bg-black flex-shrink-0 cursor-pointer shadow-xs group"
-                        >
-                          {short.mediaType === 'video' ? (
-                            <video src={short.mediaUrls[0]} className="w-full h-full object-cover" />
-                          ) : (
-                            <img src={short.mediaUrls[0]} alt={short.title} className="w-full h-full object-cover" />
-                          )}
-                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Play className="w-5 h-5 text-white fill-white" />
-                          </div>
-                          <span className="absolute bottom-1 right-1 bg-black/70 text-[8px] text-white px-1 rounded font-bold uppercase">
-                            {short.mediaType}
+                {filteredContentShorts.map(short => (
+                  <div
+                    key={short.id}
+                    className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-xs hover:border-gray-300 transition-all flex items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      <div className="space-y-1 min-w-0 flex-1 text-left">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3
+                            className="text-xs sm:text-sm font-bold text-gray-900 hover:text-[#002B7F] cursor-pointer truncate"
+                            onClick={() => navigate(`/shorts/moderation/preview/${short.id}`)}
+                          >
+                            {short.title}
+                          </h3>
+                          <span
+                            className={`text-[9px] sm:text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full shrink-0 ${
+                              short.status === 'pending'
+                                ? 'bg-amber-100 text-amber-800'
+                                : short.status === 'approved'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {short.status}
                           </span>
                         </div>
 
-                        {/* Text Information: Title, Status, Uploader, Date & Report Reason */}
-                        <div className="space-y-1 min-w-0 flex-1 text-left">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3
-                              className="text-xs sm:text-sm font-bold text-gray-900 hover:text-[#002B7F] cursor-pointer truncate"
-                              onClick={() => navigate(`/shorts/moderation/preview/${short.id}`)}
-                            >
-                              {short.title}
-                            </h3>
-                            <span
-                              className={`text-[9px] sm:text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full shrink-0 ${
-                                short.status === 'pending'
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : short.status === 'approved'
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}
-                            >
-                              {short.status}
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 truncate">
+                          <span className="font-semibold text-gray-800 truncate">{short.author.name}</span>
+                          <span>•</span>
+                          <span className="text-[11px] text-gray-500 shrink-0">{new Date(short.createdAt).toLocaleDateString()}</span>
+                        </div>
+
+                        {short.status === 'rejected' && short.rejectionReason && (
+                          <div className="pt-0.5">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md">
+                              <XCircle className="w-3 h-3 text-red-600" />
+                              <span>Reason: {short.rejectionReason}</span>
                             </span>
                           </div>
-
-                          {/* Uploader & Upload Date */}
-                          <div className="flex items-center gap-1.5 text-xs text-gray-500 truncate">
-                            <span className="font-semibold text-gray-800 truncate">{short.author.name}</span>
-                            <span>•</span>
-                            <span className="text-[11px] text-gray-500 shrink-0">{new Date(short.createdAt).toLocaleDateString()}</span>
-                          </div>
-
-                          {/* In Reported Content: Show only Report Reason label, NOT the additional body text */}
-                          {shortReports.length > 0 && (
-                            <div className="pt-0.5">
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-md">
-                                <AlertTriangle className="w-3 h-3 text-red-600" />
-                                <span>Report Reason: {shortReports[0].reason}</span>
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </div>
+                    </div>
 
-                      {/* Right: STRICTLY ONLY THE VIEW ICON BUTTON */}
-                      <div className="flex items-center flex-shrink-0">
-                        <button
+                    <div className="flex items-center flex-shrink-0">
+                      <button
+                        onClick={() => navigate(`/shorts/moderation/preview/${short.id}`)}
+                        className="p-2.5 sm:p-3 bg-[#002B7F] hover:bg-blue-800 text-white rounded-xl shadow-xs transition-all active:scale-95 flex items-center justify-center cursor-pointer"
+                        title="Audit Short"
+                        aria-label="Audit Short"
+                      >
+                        <Eye className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* SUBMENU 2: REPORTED CONTENT (Pending, Approved, Rejected Columns/Tabs) */}
+        {/* ========================================================================= */}
+        {portalSection === 'reported' && (
+          <div className="space-y-6">
+            {/* Reported Submenu Navigation: Pending, Approved (Dismissed/Preserved), Rejected (Revoked) */}
+            <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto bg-gray-100 p-1 rounded-xl">
+                <button
+                  onClick={() => setReportedTab('pending')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    reportedTab === 'pending'
+                      ? 'bg-white text-rose-800 shadow-xs'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Pending ({reportedCounts.pending})</span>
+                </button>
+
+                <button
+                  onClick={() => setReportedTab('approved')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    reportedTab === 'approved'
+                      ? 'bg-white text-emerald-800 shadow-xs'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Approved / Dismissed ({reportedCounts.approved})</span>
+                </button>
+
+                <button
+                  onClick={() => setReportedTab('rejected')}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    reportedTab === 'rejected'
+                      ? 'bg-white text-red-800 shadow-xs'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <XCircle className="w-3.5 h-3.5 text-red-600" />
+                  <span>Rejected / Revoked ({reportedCounts.rejected})</span>
+                </button>
+              </div>
+
+              {/* Search in reported items */}
+              <div className="relative w-full md:w-72">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={reportedSearchQuery}
+                  onChange={(e) => setReportedSearchQuery(e.target.value)}
+                  placeholder="Search report reason, title..."
+                  className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-[#002B7F]"
+                />
+                {reportedSearchQuery && (
+                  <button
+                    onClick={() => setReportedSearchQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* List of Reported Items */}
+            {filteredReportedItems.length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-gray-200 shadow-xs space-y-3">
+                <Flag className="w-12 h-12 text-gray-400 mx-auto" />
+                <h3 className="text-base font-bold text-gray-900">
+                  No {reportedTab} reports found
+                </h3>
+                <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                  {reportedTab === 'pending'
+                    ? 'No open violation reports pending manager review.'
+                    : reportedTab === 'approved'
+                    ? 'No reports have been dismissed/approved to stay.'
+                    : 'No content items have been revoked.'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredReportedItems.map(({ short, reports: itemReports }) => {
+                  const violationType = Array.from(new Set(itemReports.map(r => r.reason))).join(', ');
+                  return (
+                    <div
+                      key={short.id}
+                      className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-xs hover:border-gray-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left"
+                    >
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <h3
                           onClick={() => navigate(`/shorts/moderation/preview/${short.id}`)}
-                          className="p-2.5 sm:p-3 bg-[#002B7F] hover:bg-blue-800 text-white rounded-xl shadow-xs transition-all active:scale-95 flex items-center justify-center cursor-pointer"
-                          title="View and Review Content"
-                          aria-label="View and Review Content"
+                          className="text-sm font-bold text-gray-900 hover:text-[#002B7F] cursor-pointer truncate"
                         >
-                          <Eye className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" />
-                        </button>
+                          {short.title}
+                        </h3>
+                        <p className="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg inline-block">
+                          Violation: {violationType || 'Reported Content'}
+                        </p>
                       </div>
+
+                      <button
+                        onClick={() => navigate(`/shorts/moderation/preview/${short.id}`)}
+                        className="px-4 py-2 bg-[#002B7F] hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>Audit Reel</span>
+                      </button>
                     </div>
                   );
                 })}
@@ -450,16 +581,20 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
         )}
 
         {/* ========================================================================= */}
-        {/* VIEW 2: ENTERPRISE TAGS (In-place below sub-menu, NO hashtags) */}
+        {/* SUBMENU 3: ENTERPRISE TAGS (Two Sections with 3-Way Toggle Filter) */}
         {/* ========================================================================= */}
         {portalSection === 'tags' && (
           <div className="space-y-6">
-            {/* Add Enterprise Learning Tag Card (NO hashtag prefix, NO CSV bulk) */}
-            <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4">
-              <h2 className="text-sm font-bold text-gray-900">Add Enterprise Learning Tag</h2>
-              <p className="text-xs text-gray-500">
-                Create new standardized topics for employee reels. Tags are entered without hashtags.
-              </p>
+            {/* SECTION 1: CREATE & FILTER ENTERPRISE TAGS */}
+            <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-5 text-left">
+              <div>
+                <h2 className="text-sm font-bold text-gray-900">Add Enterprise Learning Tag</h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Create new standardized topics for employee reels. Tags are entered without hashtags.
+                </p>
+              </div>
+
+              {/* Form */}
               <form onSubmit={handleAddTag} className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                   <Tag className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -467,7 +602,7 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
                     type="text"
                     value={newTagInput}
                     onChange={(e) => setNewTagInput(e.target.value.replace(/^#/, ''))}
-                    placeholder="e.g. SystemDesign or DeepLearning"
+                    placeholder="e.g. DistributedSystems or Microservices"
                     className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 focus:border-[#002B7F] rounded-2xl text-xs text-gray-900 focus:outline-none font-mono"
                   />
                 </div>
@@ -476,7 +611,7 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
                   className="px-6 py-2.5 bg-[#002B7F] hover:bg-blue-800 text-white rounded-2xl text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add Tag</span>
+                  <span>Add Admin Tag</span>
                 </button>
               </form>
 
@@ -486,18 +621,45 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
                   <span>{tagAddError}</span>
                 </p>
               )}
-            </div>
 
-            {/* Current Active Tags List */}
-            <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
-                <div>
-                  <h2 className="text-sm font-bold text-gray-900">
-                    Active Enterprise Tags ({enterpriseTags.length})
-                  </h2>
-                  <p className="text-xs text-gray-500">
-                    Standard tags selectable by creators when publishing learning shorts
-                  </p>
+              {/* 3-Way Toggle Filter: All Tags, Admin-Created, User-Created */}
+              <div className="pt-2 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setTagFilter('all')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      tagFilter === 'all'
+                        ? 'bg-white text-[#002B7F] shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    All Tags ({allTags.length})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTagFilter('admin')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      tagFilter === 'admin'
+                        ? 'bg-white text-[#002B7F] shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Admin-Created ({adminTags.length})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTagFilter('user')}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      tagFilter === 'user'
+                        ? 'bg-white text-[#002B7F] shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    User-Created ({userTags.length})
+                  </button>
                 </div>
 
                 <div className="relative w-full sm:w-60">
@@ -506,148 +668,157 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
                     type="text"
                     value={tagSearchQuery}
                     onChange={(e) => setTagSearchQuery(e.target.value)}
-                    placeholder="Filter enterprise tags..."
+                    placeholder="Search in selected tags..."
                     className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none"
                   />
                 </div>
               </div>
+            </div>
+
+            {/* SECTION 2: TAG TAXONOMY (Filtered results strictly for that toggle) */}
+            <div className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4 text-left">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <div>
+                  <h2 className="text-sm font-bold text-gray-900">
+                    {tagFilter === 'all'
+                      ? `All Platform Tags (${filteredEnterpriseTags.length})`
+                      : tagFilter === 'admin'
+                      ? `Admin-Created Enterprise Tags (${filteredEnterpriseTags.length})`
+                      : `User-Created Custom Tags (${filteredEnterpriseTags.length})`}
+                  </h2>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {tagFilter === 'all'
+                      ? 'Displaying all standardized enterprise and user-contributed tags'
+                      : tagFilter === 'admin'
+                      ? 'Standard platform tags curated directly by content administrators'
+                      : 'Tags created organically by employees when publishing learning reels'}
+                  </p>
+                </div>
+
+                <span className="text-[10px] uppercase font-bold text-gray-400 font-mono">
+                  Showing {filteredEnterpriseTags.length} tags
+                </span>
+              </div>
 
               {filteredEnterpriseTags.length === 0 ? (
-                <p className="text-xs text-gray-500 py-6 text-center">No matching tags found</p>
+                <div className="py-10 text-center space-y-2">
+                  <Tag className="w-8 h-8 text-gray-400 mx-auto" />
+                  <p className="text-xs font-semibold text-gray-600">
+                    No matching {tagFilter !== 'all' ? `${tagFilter}-created` : ''} tags found
+                  </p>
+                </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                  {filteredEnterpriseTags.map(tag => (
-                    <div
-                      key={tag}
-                      className="p-3 bg-gray-50 border border-gray-200 rounded-2xl flex items-center justify-between gap-2 group hover:border-gray-300 transition-colors"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Tag className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                        <span className="text-xs font-mono font-bold text-gray-800 truncate">
-                          {tag.replace(/^#/, '')}
-                        </span>
-                      </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {filteredEnterpriseTags.map(tag => {
+                    const isAdmin = shortsService.isTagAdminCreated(tag);
+                    const usageCount = allShorts.filter(s =>
+                      s.tags && s.tags.some(t => t.toLowerCase() === tag.toLowerCase())
+                    ).length;
 
-                      <button
-                        onClick={() => setTagToDelete(tag)}
-                        className="p-1 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
-                        title={`Delete tag ${tag}`}
+                    return (
+                      <div
+                        key={tag}
+                        className="p-3.5 bg-gray-50/80 border border-gray-200 rounded-2xl flex items-center justify-between gap-2 group hover:border-gray-300 transition-colors"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <Tag className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                            <span className="text-xs font-mono font-bold text-gray-900 truncate">
+                              {tag.replace(/^#/, '')}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                isAdmin
+                                  ? 'bg-blue-100 text-[#002B7F] border border-blue-200'
+                                  : 'bg-amber-100 text-amber-900 border border-amber-200'
+                              }`}
+                            >
+                              {isAdmin ? 'Admin' : 'User'}
+                            </span>
+                            <span className="text-[10px] text-gray-500 font-mono">
+                              {usageCount} {usageCount === 1 ? 'reel' : 'reels'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => setTagToDelete(tag)}
+                          className="p-1.5 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                          title={`Delete tag ${tag}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
           </div>
         )}
+      </div>
 
-        {/* ========================================================================= */}
-        {/* VIEW 3: SETTINGS (In-place below sub-menu) */}
-        {/* ========================================================================= */}
-        {portalSection === 'settings' && (
-          <div className="space-y-6">
-            {/* Section 1: Consumption & View Count Threshold */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm space-y-4">
-              <div className="border-b border-gray-100 pb-3 flex items-center justify-between">
-                <div>
-                  <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-[#002B7F]" />
-                    <span>Consumption & Analytics View Threshold</span>
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    A Short view is counted only when watched continuously for this duration.
-                  </p>
-                </div>
-              </div>
-
-              <div className="max-w-xs space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 block">
-                  View Count Threshold (Seconds)
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={config.viewThresholdSeconds}
-                    onChange={(e) => setConfig({ ...config, viewThresholdSeconds: Number(e.target.value) || 3 })}
-                    className="w-28 px-3.5 py-2 bg-gray-50 border border-gray-300 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:border-[#002B7F]"
-                  />
-                  <span className="text-xs text-gray-500 font-medium">seconds watched</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Section 2: Upload Limits */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm space-y-4">
-              <div className="border-b border-gray-100 pb-3">
-                <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                  <Video className="w-4 h-4 text-[#002B7F]" />
-                  <span>Media & Creation Constraints</span>
-                </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Maximum file constraints for video, audio, and photo decks uploaded by learners.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 block">
-                    Max Video File Size (MB)
-                  </label>
-                  <input
-                    type="number"
-                    min={10}
-                    max={500}
-                    value={config.maxVideoSizeBytes / (1024 * 1024)}
-                    onChange={(e) => setConfig({
-                      ...config,
-                      maxVideoSizeBytes: (Number(e.target.value) || 100) * 1024 * 1024
-                    })}
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-300 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:border-[#002B7F]"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 block">
-                    Max Photos in Carousel Post
-                  </label>
-                  <input
-                    type="number"
-                    min={2}
-                    max={20}
-                    value={config.maxCarouselPhotos}
-                    onChange={(e) => setConfig({ ...config, maxCarouselPhotos: Number(e.target.value) || 10 })}
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-300 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:border-[#002B7F]"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Save & Reset Actions */}
-            <div className="flex items-center justify-end gap-3 pt-2">
+      {/* Revoke Modal Dialog */}
+      {showRevokeModalForShort && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[99999] flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowRevokeModalForShort(null)}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-gray-200 space-y-4 animate-scale-up text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+                <span>Revoke Content & Notify Creator</span>
+              </h3>
               <button
-                type="button"
-                onClick={handleResetSettings}
-                className="px-5 py-2.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                onClick={() => setShowRevokeModalForShort(null)}
+                className="text-gray-400 hover:text-gray-600"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Defaults</span>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Revoking will unpublish <strong className="text-gray-900">"{showRevokeModalForShort.title}"</strong>. The employee will receive a notification with the revocation reason.
+            </p>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-gray-700">
+                Reason for Revocation <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                rows={3}
+                value={revokeReasonInput}
+                onChange={(e) => setRevokeReasonInput(e.target.value)}
+                placeholder="Specify the policy violation or reason why this content is being revoked..."
+                className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-red-600 leading-relaxed"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setShowRevokeModalForShort(null)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer"
+              >
+                Cancel
               </button>
               <button
-                type="button"
-                onClick={handleSaveSettings}
-                className="px-6 py-2.5 bg-[#002B7F] hover:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                onClick={handleConfirmRevoke}
+                disabled={!revokeReasonInput.trim()}
+                className="px-5 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer transition-colors"
               >
-                <Save className="w-3.5 h-3.5" />
-                <span>Save Settings</span>
+                Confirm Revoke & Notify
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Tag Deletion Confirmation Modal */}
       {tagToDelete && (
@@ -663,7 +834,7 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
               <Trash2 className="w-6 h-6" />
             </div>
             <div className="text-center space-y-1">
-              <h3 className="text-base font-bold text-gray-900">Delete Enterprise Tag?</h3>
+              <h3 className="text-base font-bold text-gray-900">Delete Tag?</h3>
               <p className="text-xs text-gray-500">
                 Are you sure you want to delete tag <strong className="text-gray-900 font-mono">"{tagToDelete}"</strong>?
               </p>
@@ -671,13 +842,13 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
             <div className="flex gap-2">
               <button
                 onClick={() => setTagToDelete(null)}
-                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold"
+                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmDeleteTag}
-                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-xs"
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
               >
                 Delete Tag
               </button>
@@ -686,7 +857,7 @@ export const ShortsModerationPage: React.FC<ShortsModerationPageProps> = ({ defa
         </div>
       )}
 
-      {/* Floating Toast */}
+      {/* Floating Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs sm:text-sm font-bold py-2.5 px-5 rounded-full shadow-2xl z-[99999] animate-fade-in-up border border-gray-700">
           {toastMessage}

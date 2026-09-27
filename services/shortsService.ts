@@ -31,6 +31,7 @@ export interface ShortItem {
   id: string;
   title: string;
   description: string;
+  caption?: string; // Short caption text (up to 500 characters)
   mediaType: ShortMediaType;
   mediaUrls: string[]; // 1 video URL, 1 photo URL, or up to 20 photo URLs
   thumbnailUrl?: string; // Auto-generated video thumbnail or custom uploaded image
@@ -86,6 +87,47 @@ const STORAGE_USER_SAVED_KEY = 'jio_learning_shorts_saved_v1';
 const STORAGE_USER_FOLLOWS_KEY = 'jio_learning_shorts_follows_v1';
 const STORAGE_USER_HISTORY_KEY = 'jio_learning_shorts_history_v1';
 const STORAGE_REPORTS_KEY = 'jio_learning_shorts_reports_v1';
+const STORAGE_CREATORS_KEY = 'jio_learning_shorts_creators_v1';
+const STORAGE_DRAFTS_KEY = 'jio_learning_shorts_drafts_v1';
+const STORAGE_NOTIFICATIONS_KEY = 'jio_learning_shorts_notifications_v1';
+const STORAGE_COLLECTIONS_KEY = 'jio_learning_shorts_collections_v1';
+
+export interface ShortCollection {
+  id: string;
+  name: string;
+  description?: string;
+  isPrivate: boolean;
+  isDefault?: boolean;
+  shortIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShortNotification {
+  id: string;
+  type: 'follow' | 'like' | 'approved' | 'submitted' | 'rejected';
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  reelId?: string;
+  reelTitle?: string;
+  actorName?: string;
+  actorAvatar?: string;
+}
+
+export interface ShortDraft {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  mediaType: ShortMediaType;
+  mediaUrls: string[];
+  title?: string;
+  description?: string;
+  tags?: string[];
+  durationSeconds?: number;
+  clipsCount?: number;
+}
 
 export const DEFAULT_SHORTS_CONFIG: ShortsRecommendationConfig = {
   viewThresholdSeconds: 3,
@@ -158,7 +200,7 @@ export const INITIAL_CREATORS: Record<string, ShortAuthor> = {
   },
   'u_current': {
     id: 'u_current',
-    name: 'You (Learner)',
+    name: 'Ajinkya Patil',
     role: 'Software Engineer',
     department: 'Platform Engineering',
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop&q=80',
@@ -338,13 +380,45 @@ const SEED_SHORTS: ShortItem[] = [
       'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'
     ],
     author: INITIAL_CREATORS['u_current'],
-    tags: ['#SystemDesign', '#RustLang', '#FastAPIHacks'], // Contains custom user-created tags not in enterprise list
+    tags: ['#SystemDesign', '#RustLang', '#FastAPIHacks'],
     status: 'pending',
     createdAt: '2026-09-23T09:30:00.000Z',
     viewsCount: 0,
     likesCount: 0,
     sharesCount: 0,
     durationSeconds: 15
+  },
+  {
+    id: 'short_rej_1',
+    title: 'Unauthorized Internal Architecture Leak Sample',
+    description: 'Contains restricted compliance roadmap data and internal cloud credentials.',
+    mediaType: 'video',
+    mediaUrls: ['https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'],
+    author: INITIAL_CREATORS['u_current'],
+    tags: ['CloudArchitecture'],
+    status: 'rejected',
+    rejectionReason: 'Violates enterprise policy: Contains restricted internal compliance roadmap data.',
+    createdAt: '2026-09-20T11:00:00.000Z',
+    viewsCount: 0,
+    likesCount: 0,
+    sharesCount: 0,
+    durationSeconds: 15
+  },
+  {
+    id: 'short_rej_2',
+    title: 'Unofficial Promotional Product Pitch',
+    description: 'Promoting external commercial services not approved by procurement.',
+    mediaType: 'photo',
+    mediaUrls: ['https://images.unsplash.com/photo-1557804506-669a67965ba0?w=900&h=1600&fit=crop&q=80'],
+    author: INITIAL_CREATORS['u_rahul'],
+    tags: ['SalesMastery'],
+    status: 'rejected',
+    rejectionReason: 'Violates enterprise guidelines against unvetted external vendor promotion.',
+    createdAt: '2026-09-21T14:00:00.000Z',
+    viewsCount: 0,
+    likesCount: 0,
+    sharesCount: 0,
+    durationSeconds: 12
   },
   {
     id: 'short_111',
@@ -809,9 +883,85 @@ const SEED_REPORTS: ShortReport[] = [
   }
 ];
 
+export const SEED_NOTIFICATIONS: ShortNotification[] = [
+  {
+    id: 'notif_1',
+    type: 'approved',
+    title: 'Content Approved & Published',
+    message: 'Your micro-learning reel "Kubernetes Zero-Downtime Deployment" has been reviewed by Content Manager and is now live on Learning Shorts!',
+    timestamp: '15m ago',
+    read: false,
+    reelTitle: 'Kubernetes Zero-Downtime Deployment'
+  },
+  {
+    id: 'notif_2',
+    type: 'like',
+    title: 'New Like on your Reel',
+    message: 'Dr. Anika Singh liked your reel "Cloud Microservices Event Streaming".',
+    timestamp: '1h ago',
+    read: false,
+    actorName: 'Dr. Anika Singh',
+    actorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&q=80'
+  },
+  {
+    id: 'notif_3',
+    type: 'follow',
+    title: 'New Creator Follower',
+    message: 'Sandeep Gupta (Principal Architect) started following your reels profile.',
+    timestamp: '3h ago',
+    read: false,
+    actorName: 'Sandeep Gupta',
+    actorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&q=80'
+  },
+  {
+    id: 'notif_4',
+    type: 'submitted',
+    title: 'Submitted for Moderation',
+    message: 'Your reel "System Design: Distributed Cache Invalidation" has been submitted for review. It will be published upon approval.',
+    timestamp: '5h ago',
+    read: true,
+    reelTitle: 'System Design: Distributed Cache Invalidation'
+  },
+  {
+    id: 'notif_5',
+    type: 'like',
+    title: 'Reel Gaining Traction',
+    message: 'Priya Nambiar and 18 other engineers liked your reel "Zero-Trust Security Perimeter".',
+    timestamp: '1d ago',
+    read: true,
+    actorName: 'Priya Nambiar'
+  },
+  {
+    id: 'notif_6',
+    type: 'approved',
+    title: 'Content Approved',
+    message: 'Your photo deck "5 Core REST API Principles" was approved and added to the Engineering feed.',
+    timestamp: '2d ago',
+    read: true
+  }
+];
+
+const SEED_DRAFTS: ShortDraft[] = [
+  {
+    id: 'draft_seed_1',
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    mediaType: 'video',
+    mediaUrls: ['https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'],
+    title: 'Microservices Distributed Tracing with OpenTelemetry',
+    description: 'Quick walkthrough on distributed tracing context propagation across service boundaries.',
+    tags: ['Microservices', 'DevOpsPipeline', 'CloudArchitecture'],
+    durationSeconds: 22,
+    clipsCount: 2
+  }
+];
+
 class ShortsService {
   private shorts: ShortItem[] = [];
   private reports: ShortReport[] = [];
+  private drafts: ShortDraft[] = [];
+  private notifications: ShortNotification[] = [];
+  private collections: ShortCollection[] = [];
   private config: ShortsRecommendationConfig = DEFAULT_SHORTS_CONFIG;
   private likedShortIds: Set<string> = new Set();
   private savedShortIds: Set<string> = new Set(['short_101', 'short_103']); // Seed saved collection
@@ -824,6 +974,51 @@ class ShortsService {
 
   private loadState() {
     try {
+      const storedCreators = localStorage.getItem(STORAGE_CREATORS_KEY);
+      if (storedCreators) {
+        try {
+          const parsed = JSON.parse(storedCreators);
+          Object.keys(parsed).forEach(k => {
+            if (INITIAL_CREATORS[k]) {
+              INITIAL_CREATORS[k] = { ...INITIAL_CREATORS[k], ...parsed[k] };
+            }
+          });
+        } catch (e) {
+          console.error('Error loading creator overrides:', e);
+        }
+      }
+
+      const storedDrafts = localStorage.getItem(STORAGE_DRAFTS_KEY);
+      if (storedDrafts) {
+        try {
+          const parsed = JSON.parse(storedDrafts);
+          this.drafts = Array.isArray(parsed) && parsed.length > 0 ? parsed : SEED_DRAFTS;
+        } catch (e) {
+          console.error('Error loading drafts:', e);
+          this.drafts = SEED_DRAFTS;
+        }
+      } else {
+        this.drafts = SEED_DRAFTS;
+        try {
+          localStorage.setItem(STORAGE_DRAFTS_KEY, JSON.stringify(this.drafts));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      const storedNotifications = localStorage.getItem(STORAGE_NOTIFICATIONS_KEY);
+      if (storedNotifications) {
+        try {
+          this.notifications = JSON.parse(storedNotifications);
+        } catch (e) {
+          console.error('Error loading notifications:', e);
+          this.notifications = SEED_NOTIFICATIONS;
+        }
+      } else {
+        this.notifications = SEED_NOTIFICATIONS;
+        this.saveNotifications();
+      }
+
       const storedConfig = localStorage.getItem(STORAGE_CONFIG_KEY);
       if (storedConfig) {
         this.config = { ...DEFAULT_SHORTS_CONFIG, ...JSON.parse(storedConfig) };
@@ -869,6 +1064,37 @@ class ShortsService {
         this.savedShortIds = new Set(JSON.parse(storedSaved));
       }
 
+      const storedCollections = localStorage.getItem(STORAGE_COLLECTIONS_KEY);
+      if (storedCollections) {
+        try {
+          this.collections = JSON.parse(storedCollections);
+        } catch (e) {
+          console.error('Error loading collections:', e);
+          this.collections = [];
+        }
+      }
+
+      // Ensure default saved collection exists and syncs with savedShortIds
+      let defaultCol = this.collections.find(c => c.id === 'col_default_saved' || c.isDefault);
+      if (!defaultCol) {
+        defaultCol = {
+          id: 'col_default_saved',
+          name: 'Saved',
+          description: 'Default collection for saved reels',
+          isPrivate: true,
+          isDefault: true,
+          shortIds: Array.from(this.savedShortIds),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        this.collections.unshift(defaultCol);
+        this.saveCollections();
+      } else {
+        const unionIds = Array.from(new Set([...defaultCol.shortIds, ...Array.from(this.savedShortIds)]));
+        defaultCol.shortIds = unionIds;
+        this.savedShortIds = new Set(unionIds);
+      }
+
       const storedFollows = localStorage.getItem(STORAGE_USER_FOLLOWS_KEY);
       if (storedFollows) {
         this.followedCreatorIds = new Set(JSON.parse(storedFollows));
@@ -910,6 +1136,15 @@ class ShortsService {
       window.dispatchEvent(new CustomEvent('jio_shorts_saved_updated'));
     } catch (e) {
       console.error('Error saving saved shorts:', e);
+    }
+  }
+
+  private saveCollections() {
+    try {
+      localStorage.setItem(STORAGE_COLLECTIONS_KEY, JSON.stringify(this.collections));
+      window.dispatchEvent(new CustomEvent('jio_shorts_collections_updated'));
+    } catch (e) {
+      console.error('Error saving collections:', e);
     }
   }
 
@@ -1168,6 +1403,15 @@ class ShortsService {
     } else {
       this.likedShortIds.add(shortId);
       short.likesCount += 1;
+      if (short.author.id === INITIAL_CREATORS['u_current'].id) {
+        this.addNotification({
+          type: 'like',
+          title: 'New Like on your Reel',
+          message: `Someone liked your reel "${short.title}".`,
+          reelId: short.id,
+          reelTitle: short.title
+        });
+      }
     }
 
     this.saveLikes();
@@ -1178,7 +1422,7 @@ class ShortsService {
     };
   }
 
-  // --- Saved / Bookmarks Collection ---
+  // --- Saved & Collections Management ---
 
   public isShortSaved(shortId: string): boolean {
     return this.savedShortIds.has(shortId);
@@ -1188,8 +1432,24 @@ class ShortsService {
     const wasSaved = this.savedShortIds.has(shortId);
     if (wasSaved) {
       this.savedShortIds.delete(shortId);
+      // Remove from default collection as well
+      const defaultCol = this.collections.find(c => c.id === 'col_default_saved' || c.isDefault);
+      if (defaultCol) {
+        defaultCol.shortIds = defaultCol.shortIds.filter(id => id !== shortId);
+        defaultCol.updatedAt = new Date().toISOString();
+        this.saveCollections();
+      }
     } else {
       this.savedShortIds.add(shortId);
+      // Add to default collection as well
+      const defaultCol = this.collections.find(c => c.id === 'col_default_saved' || c.isDefault);
+      if (defaultCol) {
+        if (!defaultCol.shortIds.includes(shortId)) {
+          defaultCol.shortIds.push(shortId);
+          defaultCol.updatedAt = new Date().toISOString();
+          this.saveCollections();
+        }
+      }
     }
     this.saveSaved();
     return {
@@ -1204,6 +1464,121 @@ class ShortsService {
 
   public getSavedShortIds(): string[] {
     return Array.from(this.savedShortIds);
+  }
+
+  public getCollections(): ShortCollection[] {
+    if (this.collections.length === 0) {
+      this.collections = [{
+        id: 'col_default_saved',
+        name: 'Saved',
+        description: 'Default collection for saved reels',
+        isPrivate: true,
+        isDefault: true,
+        shortIds: Array.from(this.savedShortIds),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }];
+      this.saveCollections();
+    }
+    return this.collections;
+  }
+
+  public getCollectionById(id: string): ShortCollection | undefined {
+    return this.getCollections().find(c => c.id === id);
+  }
+
+  public createCollection(name: string, description?: string, isPrivate: boolean = true): ShortCollection {
+    const trimmed = name.trim() || 'New Collection';
+    const newCol: ShortCollection = {
+      id: `col_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      name: trimmed,
+      description: description?.trim() || '',
+      isPrivate: isPrivate,
+      isDefault: false,
+      shortIds: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.collections.push(newCol);
+    this.saveCollections();
+    return newCol;
+  }
+
+  public updateCollection(id: string, updates: { name?: string; description?: string; isPrivate?: boolean }): boolean {
+    const col = this.collections.find(c => c.id === id);
+    if (!col) return false;
+    if (col.isDefault) {
+      // Default collection cannot be renamed or made public
+      return false;
+    }
+    if (updates.name !== undefined && updates.name.trim()) {
+      col.name = updates.name.trim();
+    }
+    if (updates.description !== undefined) {
+      col.description = updates.description.trim();
+    }
+    if (updates.isPrivate !== undefined) {
+      col.isPrivate = updates.isPrivate;
+    }
+    col.updatedAt = new Date().toISOString();
+    this.saveCollections();
+    return true;
+  }
+
+  public deleteCollection(id: string): boolean {
+    const col = this.collections.find(c => c.id === id);
+    if (!col || col.isDefault) {
+      // Cannot delete default saved collection
+      return false;
+    }
+    this.collections = this.collections.filter(c => c.id !== id);
+    this.saveCollections();
+    return true;
+  }
+
+  public addShortToCollection(collectionId: string, shortId: string): boolean {
+    const col = this.collections.find(c => c.id === collectionId);
+    if (!col) return false;
+    if (!col.shortIds.includes(shortId)) {
+      col.shortIds.push(shortId);
+      col.updatedAt = new Date().toISOString();
+      if (col.isDefault || col.id === 'col_default_saved') {
+        this.savedShortIds.add(shortId);
+        this.saveSaved();
+      }
+      this.saveCollections();
+    }
+    return true;
+  }
+
+  public removeShortFromCollection(collectionId: string, shortId: string): boolean {
+    const col = this.collections.find(c => c.id === collectionId);
+    if (!col) return false;
+    col.shortIds = col.shortIds.filter(id => id !== shortId);
+    col.updatedAt = new Date().toISOString();
+    if (col.isDefault || col.id === 'col_default_saved') {
+      this.savedShortIds.delete(shortId);
+      this.saveSaved();
+    }
+    this.saveCollections();
+    return true;
+  }
+
+  public isShortInCollection(collectionId: string, shortId: string): boolean {
+    const col = this.collections.find(c => c.id === collectionId);
+    return col ? col.shortIds.includes(shortId) : false;
+  }
+
+  public getCollectionsContainingShort(shortId: string): string[] {
+    return this.getCollections().filter(c => c.shortIds.includes(shortId)).map(c => c.id);
+  }
+
+  public getShortsByCollectionId(collectionId: string): ShortItem[] {
+    const col = this.collections.find(c => c.id === collectionId);
+    if (!col) return [];
+    return col.shortIds
+      .map(id => this.shorts.find(s => s.id === id && s.status === 'approved'))
+      .filter((s): s is ShortItem => Boolean(s));
   }
 
   /**
@@ -1266,17 +1641,20 @@ class ShortsService {
    * Submit a new short (enters 'pending' review)
    */
   public submitShort(data: {
-    title: string;
-    description: string;
+    title?: string;
+    description?: string;
+    caption?: string;
     mediaType: ShortMediaType;
     mediaUrls: string[];
+    thumbnailUrl?: string;
     audioUrl?: string;
     audioTitle?: string;
     tags: string[];
     author?: ShortAuthor;
   }): { success: boolean; short?: ShortItem; error?: string } {
-    if (!data.title.trim()) {
-      return { success: false, error: 'Title is required' };
+    const rawCaption = (data.caption || data.title || '').trim();
+    if (!rawCaption) {
+      return { success: false, error: 'Short caption is required' };
     }
     if (!data.mediaUrls || data.mediaUrls.length === 0) {
       return { success: false, error: 'At least one media file is required' };
@@ -1298,12 +1676,17 @@ class ShortsService {
       }
     }
 
+    const titleText = data.title?.trim() || (rawCaption.length > 60 ? rawCaption.slice(0, 60) + '...' : rawCaption);
+    const descText = data.description?.trim() || rawCaption;
+
     const newShort: ShortItem = {
       id: `short_${Date.now()}`,
-      title: data.title.trim(),
-      description: data.description.trim(),
+      title: titleText,
+      description: descText,
+      caption: data.caption?.trim() || rawCaption,
       mediaType: data.mediaType,
       mediaUrls: data.mediaUrls,
+      thumbnailUrl: data.thumbnailUrl,
       audioUrl: data.audioUrl,
       audioTitle: data.audioTitle || (data.audioUrl ? 'Original Sound' : undefined),
       author: data.author || INITIAL_CREATORS['u_current'],
@@ -1318,6 +1701,16 @@ class ShortsService {
 
     this.shorts.unshift(newShort);
     this.saveShorts();
+
+    // Notify user of moderation submission
+    this.addNotification({
+      type: 'submitted',
+      title: 'Submitted for Moderation',
+      message: `Your reel "${newShort.title}" is under review by Content Manager. Once approved, it will be published to the platform feed.`,
+      reelId: newShort.id,
+      reelTitle: newShort.title
+    });
+
     return { success: true, short: newShort };
   }
 
@@ -1330,6 +1723,16 @@ class ShortsService {
         ...updates
       };
     }
+
+    try {
+      const stored = localStorage.getItem(STORAGE_CREATORS_KEY);
+      const parsed = stored ? JSON.parse(stored) : {};
+      parsed[creatorId] = { ...(parsed[creatorId] || {}), ...updates };
+      localStorage.setItem(STORAGE_CREATORS_KEY, JSON.stringify(parsed));
+    } catch (e) {
+      console.error('Error saving creator overrides:', e);
+    }
+
     // Also update author info across all shorts authored by this creator
     this.shorts.forEach(s => {
       if (s.author.id === creatorId) {
@@ -1342,6 +1745,102 @@ class ShortsService {
     this.saveShorts();
     window.dispatchEvent(new CustomEvent('jio_shorts_updated'));
     return true;
+  }
+
+  // --- Reel Drafts Management ---
+
+  public getDrafts(): ShortDraft[] {
+    return [...this.drafts];
+  }
+
+  public getDraftById(draftId: string): ShortDraft | undefined {
+    return this.drafts.find(d => d.id === draftId);
+  }
+
+  public saveDraft(draft: Omit<ShortDraft, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }): ShortDraft {
+    const now = new Date().toISOString();
+    const existingIdx = draft.id ? this.drafts.findIndex(d => d.id === draft.id) : -1;
+    let saved: ShortDraft;
+    if (existingIdx >= 0) {
+      saved = {
+        ...this.drafts[existingIdx],
+        ...draft,
+        updatedAt: now
+      };
+      this.drafts[existingIdx] = saved;
+    } else {
+      saved = {
+        ...draft,
+        id: draft.id || `draft_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        createdAt: now,
+        updatedAt: now
+      };
+      this.drafts.unshift(saved);
+    }
+    try {
+      localStorage.setItem(STORAGE_DRAFTS_KEY, JSON.stringify(this.drafts));
+    } catch (e) {
+      console.error('Error saving drafts:', e);
+    }
+    window.dispatchEvent(new CustomEvent('jio_shorts_drafts_updated'));
+    return saved;
+  }
+
+  public deleteDraft(draftId: string): boolean {
+    this.drafts = this.drafts.filter(d => d.id !== draftId);
+    try {
+      localStorage.setItem(STORAGE_DRAFTS_KEY, JSON.stringify(this.drafts));
+    } catch (e) {
+      console.error('Error deleting draft:', e);
+    }
+    window.dispatchEvent(new CustomEvent('jio_shorts_drafts_updated'));
+    return true;
+  }
+
+  // --- Notifications Management ---
+
+  private saveNotifications() {
+    try {
+      localStorage.setItem(STORAGE_NOTIFICATIONS_KEY, JSON.stringify(this.notifications));
+      window.dispatchEvent(new CustomEvent('jio_shorts_notifications_updated'));
+    } catch (e) {
+      console.error('Error saving notifications:', e);
+    }
+  }
+
+  public getNotifications(): ShortNotification[] {
+    return [...this.notifications];
+  }
+
+  public getUnreadNotificationsCount(): number {
+    return this.notifications.filter(n => !n.read).length;
+  }
+
+  public markNotificationRead(id: string): void {
+    const notif = this.notifications.find(n => n.id === id);
+    if (notif) {
+      notif.read = true;
+      this.saveNotifications();
+    }
+  }
+
+  public markAllNotificationsRead(): void {
+    this.notifications.forEach(n => {
+      n.read = true;
+    });
+    this.saveNotifications();
+  }
+
+  public addNotification(data: Omit<ShortNotification, 'id' | 'timestamp' | 'read'>): ShortNotification {
+    const newNotif: ShortNotification = {
+      ...data,
+      id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: 'Just now',
+      read: false
+    };
+    this.notifications.unshift(newNotif);
+    this.saveNotifications();
+    return newNotif;
   }
 
   // --- Tag Management & Moderation ---
@@ -1532,6 +2031,16 @@ class ShortsService {
 
     this.saveReports();
     this.saveShorts();
+
+    // User gets notified if the content is revoked following review
+    this.addNotification({
+      type: 'rejected',
+      title: 'Content Revoked',
+      message: `Your reel "${short.title}" has been revoked: ${short.rejectionReason}`,
+      reelId: short.id,
+      reelTitle: short.title
+    });
+
     return true;
   }
 
@@ -1560,6 +2069,16 @@ class ShortsService {
     short.status = 'approved';
     delete short.rejectionReason;
     this.saveShorts();
+
+    // Notify user of content approval
+    this.addNotification({
+      type: 'approved',
+      title: 'Content Approved & Published',
+      message: `Your reel "${short.title}" has been approved by the Content Manager and is now published!`,
+      reelId: short.id,
+      reelTitle: short.title
+    });
+
     return true;
   }
 
@@ -1569,6 +2088,76 @@ class ShortsService {
     short.status = 'rejected';
     short.rejectionReason = reason || 'Does not meet learning quality standards';
     this.saveShorts();
+
+    // Notify uploader of rejection with the specific reason
+    this.addNotification({
+      type: 'rejected',
+      title: 'Submission Rejected',
+      message: `Your reel "${short.title}" was rejected: ${short.rejectionReason}`,
+      reelId: short.id,
+      reelTitle: short.title
+    });
+
+    return true;
+  }
+
+  // --- Tag Categorization: Admin-Created vs User-Created ---
+
+  public getAdminTags(): string[] {
+    return [...this.config.predefinedTags];
+  }
+
+  public getUserTags(): string[] {
+    const adminSet = new Set(this.config.predefinedTags.map(t => t.toLowerCase()));
+    const userTagsSet = new Set<string>();
+    this.shorts.forEach(s => {
+      if (s.tags && Array.isArray(s.tags)) {
+        s.tags.forEach(tag => {
+          const clean = tag.replace(/^#/, '').trim();
+          if (clean && !adminSet.has(clean.toLowerCase())) {
+            userTagsSet.add(clean);
+          }
+        });
+      }
+    });
+    return Array.from(userTagsSet);
+  }
+
+  public getAllTags(): string[] {
+    const all = new Set<string>();
+    this.getAdminTags().forEach(t => all.add(t));
+    this.getUserTags().forEach(t => all.add(t));
+    return Array.from(all);
+  }
+
+  public isTagAdminCreated(tag: string): boolean {
+    const clean = tag.replace(/^#/, '').trim().toLowerCase();
+    return this.config.predefinedTags.some(t => t.toLowerCase() === clean);
+  }
+
+  public deleteTagFromPlatform(tagToDelete: string): boolean {
+    const clean = tagToDelete.replace(/^#/, '').trim().toLowerCase();
+    let changed = false;
+
+    if (this.config.predefinedTags.some(t => t.toLowerCase() === clean)) {
+      this.config.predefinedTags = this.config.predefinedTags.filter(t => t.toLowerCase() !== clean);
+      this.updateConfig({ predefinedTags: this.config.predefinedTags });
+      changed = true;
+    }
+
+    this.shorts.forEach(s => {
+      if (s.tags && Array.isArray(s.tags)) {
+        const initLen = s.tags.length;
+        s.tags = s.tags.filter(t => t.replace(/^#/, '').trim().toLowerCase() !== clean);
+        if (s.tags.length !== initLen) {
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) {
+      this.saveShorts();
+    }
     return true;
   }
 

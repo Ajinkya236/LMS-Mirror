@@ -30,7 +30,7 @@ const MobileFooterNav: React.FC = () => {
     ];
 
     return (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-md border-t border-white/10 z-[100] shadow-[0_-2px_10px_rgba(0,0,0,0.3)]">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 z-[100] shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
             <div className="flex justify-around items-center h-16">
                 {navItems.map((item) => (
                     <NavLink
@@ -38,21 +38,21 @@ const MobileFooterNav: React.FC = () => {
                         to={item.path}
                         className={({ isActive }) => 
                             `flex flex-col items-center justify-center w-full h-full gap-1 transition-colors duration-200 ${
-                                isActive ? 'text-blue-400 font-bold' : 'text-gray-400 hover:text-gray-200'
+                                isActive ? 'text-[#002B7F] font-bold' : 'text-gray-500 hover:text-gray-900'
                             }`
                         }
                     >
                         <div className="relative">
                             {item.icon}
                         </div>
-                        <span className="text-[10px] uppercase tracking-tight leading-none">
+                        <span className="text-[10px] uppercase tracking-tight leading-none font-medium">
                             {item.label}
                         </span>
                     </NavLink>
                 ))}
             </div>
             {/* Safe area spacing for mobile browsers if needed */}
-            <div className="h-[env(safe-area-inset-bottom)] bg-slate-950"></div>
+            <div className="h-[env(safe-area-inset-bottom)] bg-white"></div>
         </nav>
     );
 };

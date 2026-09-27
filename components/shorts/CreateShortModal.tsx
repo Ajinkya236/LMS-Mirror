@@ -449,11 +449,11 @@ export const CreateShortModal: React.FC<CreateShortModalProps> = ({
           {mode === 'select' && (
             <div className="space-y-4">
               <p className="text-xs font-semibold text-gray-300">
-                Choose how you want to create your knowledge Short:
+                Choose format for your knowledge Short:
               </p>
 
               <div className="grid grid-cols-1 gap-3.5">
-                {/* Option 1: Record Video */}
+                {/* Option 1: Video */}
                 <div
                   onClick={handleStartRecordFlow}
                   className="p-5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-red-400/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.01] flex items-center gap-4 group"
@@ -464,42 +464,19 @@ export const CreateShortModal: React.FC<CreateShortModalProps> = ({
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-bold text-white group-hover:text-red-300">
-                        Record Video
+                        Video
                       </h3>
                       <span className="text-[10px] bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full font-bold">
-                        Live Camera
+                        Record or Upload
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mt-1">
-                      Record up to 60 seconds directly using your webcam or phone camera.
+                      Record live with your camera or select an existing video file from your device.
                     </p>
                   </div>
                 </div>
 
-                {/* Option 2: Upload Video */}
-                <div
-                  onClick={handleStartUploadVideoFlow}
-                  className="p-5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-400/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.01] flex items-center gap-4 group"
-                >
-                  <div className="w-14 h-14 rounded-2xl bg-blue-600/20 text-blue-400 border border-blue-400/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Film className="w-7 h-7" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-white group-hover:text-blue-300">
-                        Upload Video
-                      </h3>
-                      <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-bold">
-                        Up to 100 MB
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Upload an existing video file (.mp4, .webm, .mov) from your device.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Option 3: Add Photo Post */}
+                {/* Option 2: Photo */}
                 <div
                   onClick={handleStartPhotoFlow}
                   className="p-5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-400/50 rounded-2xl cursor-pointer transition-all hover:scale-[1.01] flex items-center gap-4 group"
@@ -510,14 +487,14 @@ export const CreateShortModal: React.FC<CreateShortModalProps> = ({
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-bold text-white group-hover:text-emerald-300">
-                        Add Photo Post
+                        Photo
                       </h3>
                       <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">
-                        1 to 20 Photos
+                        Camera & Gallery
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mt-1">
-                      Create a single visual slide or multi-photo swipeable carousel with optional voiceover audio.
+                      Snap photos with camera or mix with gallery photos, with optional audio.
                     </p>
                   </div>
                 </div>

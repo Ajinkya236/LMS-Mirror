@@ -31,11 +31,23 @@ export const ShortsModerationPreviewPage: React.FC = () => {
   const [reports, setReports] = useState<ShortReport[]>([]);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [predefinedTags, setPredefinedTags] = useState<string[]>([]);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [rejectionCategory, setRejectionCategory] = useState('');
+  const [rejectionFeedback, setRejectionFeedback] = useState('');
   const [showRejectBox, setShowRejectBox] = useState(false);
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
   const [revokeReason, setRevokeReason] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const PREDEFINED_REJECTION_REASONS = [
+    'Violates Enterprise Community Guidelines',
+    'Confidential or Proprietary Information Disclosed',
+    'Inappropriate, Unprofessional, or Offensive Content',
+    'Poor Audio / Video Presentation Quality',
+    'Misleading, Inaccurate, or Outdated Technical Concepts',
+    'Copyright or Uncredited External Materials',
+    'Duplicate or Redundant Content',
+    'Other (Specify feedback below)'
+  ];
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -103,8 +115,10 @@ export const ShortsModerationPreviewPage: React.FC = () => {
 
   // Reject the Short
   const handleConfirmReject = () => {
-    const reason = rejectionReason.trim() || 'Content does not meet enterprise technical or compliance guidelines.';
-    const success = shortsService.rejectShort(short.id, reason);
+    const category = rejectionCategory || 'Content Guidelines Violation';
+    const feedback = rejectionFeedback.trim() || 'Content does not meet enterprise technical or compliance guidelines.';
+    const finalReason = `${category}: ${feedback}`;
+    const success = shortsService.rejectShort(short.id, finalReason);
     if (success) {
       showToast('❌ Short marked as rejected with feedback.');
       setTimeout(() => {
@@ -175,16 +189,6 @@ export const ShortsModerationPreviewPage: React.FC = () => {
                 Review video content, audit custom tags, examine violation reports, and publish or revoke
               </p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate('/shorts/tags')}
-              className="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold border border-gray-200 flex items-center gap-1.5"
-            >
-              <Tag className="w-3.5 h-3.5 text-[#002B7F]" />
-              <span>Enterprise Taxonomy</span>
-            </button>
           </div>
         </div>
 
@@ -294,18 +298,18 @@ export const ShortsModerationPreviewPage: React.FC = () => {
                 <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2 border-t border-red-200">
                   <button
                     onClick={() => setShowRevokeDialog(true)}
-                    className="w-full sm:flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                    className="w-full sm:flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <XCircle className="w-4 h-4" />
-                    <span>Revoke Content</span>
+                    <span>Revoke</span>
                   </button>
 
                   <button
                     onClick={handleDismissReports}
-                    className="w-full sm:flex-1 py-2.5 bg-white hover:bg-emerald-50 text-gray-700 hover:text-emerald-800 border border-gray-300 hover:border-emerald-300 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+                    className="w-full sm:flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <CheckCircle className="w-4 h-4 text-emerald-600" />
-                    <span>Let Stay (Dismiss Reports)</span>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Let Stay</span>
                   </button>
                 </div>
               </div>
@@ -405,110 +409,136 @@ export const ShortsModerationPreviewPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 4. Approval / Reject / Revoke Decision Section */}
-            {short.status === 'pending' ? (
-              <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-sm space-y-4 text-left">
-                <div className="border-b border-gray-100 pb-3">
-                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    <span>Submission Approval Decision</span>
-                  </h3>
-                  <p className="text-[11px] text-gray-500 mt-0.5">
-                    Approve and publish to employee feeds, or reject with feedback.
-                  </p>
-                </div>
-
-                {!showRejectBox ? (
-                  <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-                    <button
-                      onClick={handleApproveShort}
-                      className="w-full sm:flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Approve & Publish Short</span>
-                    </button>
-
-                    <button
-                      onClick={() => setShowRejectBox(true)}
-                      className="w-full sm:w-auto px-6 py-3 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-                    >
-                      <XCircle className="w-4 h-4 text-red-600" />
-                      <span>Reject Short</span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-2xl space-y-3 animate-scale-up">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-red-900 flex items-center gap-1.5">
-                        <AlertCircle className="w-4 h-4 text-red-600" />
-                        <span>Rejection Feedback for Creator</span>
-                      </span>
-                      <button
-                        onClick={() => setShowRejectBox(false)}
-                        className="text-xs text-gray-500 hover:text-gray-800"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                    <textarea
-                      rows={3}
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                      placeholder="Describe what the employee needs to fix before resubmitting..."
-                      className="w-full p-3 bg-white border border-red-300 rounded-xl text-xs text-gray-900 focus:outline-none"
-                    />
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => setShowRejectBox(false)}
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleConfirmReject}
-                        className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-xs"
-                      >
-                        Confirm Rejection
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-sm space-y-3 text-left">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-900">Manage Published Status</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Status: <span className="font-bold text-gray-900 uppercase">{short.status}</span>
+            {/* 4. Approval / Reject / Revoke Decision Section (Only shown for non-reported submission workflow) */}
+            {pendingReports.length === 0 && (
+              short.status === 'pending' ? (
+                <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-sm space-y-4 text-left">
+                  <div className="border-b border-gray-100 pb-3">
+                    <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <span>Submission Approval Decision</span>
+                    </h3>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      Approve and publish to employee feeds, or reject with feedback.
                     </p>
                   </div>
 
-                  {short.status === 'approved' && (
-                    <button
-                      onClick={() => setShowRevokeDialog(true)}
-                      className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      <span>Revoke Content</span>
-                    </button>
-                  )}
+                  {!showRejectBox ? (
+                    <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                      <button
+                        onClick={handleApproveShort}
+                        className="w-full sm:flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Approve & Publish Short</span>
+                      </button>
 
-                  {short.status === 'rejected' && (
-                    <button
-                      onClick={() => {
-                        shortsService.revokeRejection(short.id);
-                        showToast('✅ Rejection revoked. Short approved & published!');
-                        loadData();
-                      }}
-                      className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Revoke Rejection & Approve</span>
-                    </button>
+                      <button
+                        onClick={() => setShowRejectBox(true)}
+                        className="w-full sm:w-auto px-6 py-3 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <XCircle className="w-4 h-4 text-red-600" />
+                        <span>Reject Short</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-5 bg-red-50/80 border border-red-200 rounded-2xl space-y-4 animate-scale-up">
+                      <div className="flex items-center justify-between border-b border-red-200/60 pb-2.5">
+                        <span className="text-xs font-bold text-red-950 flex items-center gap-1.5">
+                          <AlertCircle className="w-4 h-4 text-red-600" />
+                          <span>Select Rejection Reason & Feedback</span>
+                        </span>
+                        <button
+                          onClick={() => setShowRejectBox(false)}
+                          className="text-xs text-gray-500 hover:text-gray-800"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[11px] font-bold text-red-950">
+                          Predefined Rejection Reason <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={rejectionCategory}
+                          onChange={(e) => setRejectionCategory(e.target.value)}
+                          className="w-full p-2.5 bg-white border border-red-300 rounded-xl text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500"
+                        >
+                          <option value="">-- Select a reason --</option>
+                          {PREDEFINED_REJECTION_REASONS.map(r => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[11px] font-bold text-red-950">
+                          Text Feedback for Creator <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={rejectionFeedback}
+                          onChange={(e) => setRejectionFeedback(e.target.value)}
+                          placeholder="Explain specifically what needs to be fixed before resubmitting..."
+                          className="w-full p-3 bg-white border border-red-300 rounded-xl text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500 leading-relaxed"
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-1">
+                        <button
+                          onClick={() => setShowRejectBox(false)}
+                          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleConfirmReject}
+                          disabled={!rejectionCategory || !rejectionFeedback.trim()}
+                          className="px-5 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:hover:bg-red-600 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                        >
+                          Confirm Rejection & Notify Uploader
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
+              ) : (
+                <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-sm space-y-3 text-left">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-900">Manage Published Status</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Status: <span className="font-bold text-gray-900 uppercase">{short.status}</span>
+                      </p>
+                    </div>
+
+                    {short.status === 'approved' && (
+                      <button
+                        onClick={() => setShowRevokeDialog(true)}
+                        className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        <span>Revoke</span>
+                      </button>
+                    )}
+
+                    {short.status === 'rejected' && (
+                      <button
+                        onClick={() => {
+                          shortsService.revokeRejection(short.id);
+                          showToast('✅ Rejection revoked. Short approved & published!');
+                          loadData();
+                        }}
+                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Revoke Rejection & Approve</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
             )}
           </div>
         </div>

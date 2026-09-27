@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learning Shorts — Persona User Journeys & Screen Presentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0b0f19;
+      color: #f3f4f6;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    /* Phone Mockup Frame */
+    .mobile-frame {
+      width: 340px;
+      height: 680px;
+      border-radius: 44px;
+      border: 10px solid #1f293d;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 43, 127, 0.2);
+      overflow: hidden;
+      position: relative;
+      background: #000;
+    }
+    .mobile-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 22px;
+      background: #1f293d;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 99;
+    }
+
+    /* Web Desktop Browser Mockup Frame */
+    .desktop-frame {
+      width: 100%;
+      max-width: 960px;
+      height: 640px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 43, 127, 0.15);
+      overflow: hidden;
+      background: #0f172a;
+      display: flex;
+      flex-direction: column;
+    }
+    .browser-header {
+      height: 40px;
+      background: #1e293b;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      items-center: center;
+      padding: 0 16px;
+      gap: 12px;
+    }
+    .browser-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .browser-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .browser-address-bar {
+      flex: 1;
+      height: 24px;
+      background: #0f172a;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 11px;
+      color: #94a3b8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .pulse-glow {
+      box-shadow: 0 0 15px rgba(0, 43, 127, 0.6);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="bg-slate-900/90 border-b border-slate-800 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-500 flex items-center justify-center text-white shadow-lg">
+          <i class="fa-solid fa-play text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            Learning Shorts — User Journeys Presentation
+            <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">Interactive Deck</span>
+          </h1>
+          <p class="text-xs text-slate-400">Complete Persona Screen Views, Mobile vs Web Layouts, & Action Workflows</p>
+        </div>
+      </div>
+
+      <!-- PERSONA TABS -->
+      <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-2xl border border-slate-800">
+        <button onclick="switchPersona('learner')" id="btn-persona-learner" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-blue-600 text-white shadow-md">
+          <i class="fa-solid fa-user-graduate"></i>
+          <span>1. Employee Learner</span>
+        </button>
+        <button onclick="switchPersona('creator')" id="btn-persona-creator" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-video"></i>
+          <span>2. Content Creator</span>
+        </button>
+        <button onclick="switchPersona('manager')" id="btn-persona-manager" class="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>3. Shorts Content Manager</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+    <!-- LEFT SIDEBAR: JOURNEY STEPS SELECTOR -->
+    <div class="lg:col-span-4 space-y-6">
+      <!-- Persona Overview Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl">
+        <div class="flex items-center gap-3 border-b border-slate-800 pb-4 mb-4">
+          <div id="persona-badge-icon" class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-user-graduate"></i>
+          </div>
+          <div>
+            <h2 id="persona-title" class="text-base font-bold text-white">Employee Learner</h2>
+            <p id="persona-desc" class="text-xs text-slate-400">Consumes bite-sized shorts, interacts, searches topics, manages collections & notifications.</p>
+          </div>
+        </div>
+
+        <!-- Step List Navigation -->
+        <div class="space-y-2" id="journey-steps-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- User Action & Business Logic Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-blue-400"></i>
+          <span>Step Action Details & Acceptance Rules</span>
+        </h3>
+        <div id="step-details-content" class="text-xs text-slate-300 space-y-2 leading-relaxed">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT MAIN CANVAS: LIVE SCREEN VIEWS -->
+    <div class="lg:col-span-8 space-y-6 flex flex-col items-center">
+      
+      <!-- VIEWPORT TOGGLE BAR -->
+      <div class="w-full flex items-center justify-between bg-slate-900 border border-slate-800 p-2.5 rounded-2xl">
+        <div class="flex items-center gap-2 text-xs font-bold text-slate-300 px-2">
+          <span id="current-step-badge" class="px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 font-mono border border-blue-500/30">Step 1 of 5</span>
+          <span id="current-step-title" class="text-white">Consuming & Interacting with Shorts</span>
+        </div>
+
+        <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button onclick="switchViewport('desktop')" id="btn-view-desktop" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-desktop"></i>
+            <span>Web Desktop View</span>
+          </button>
+          <button onclick="switchViewport('mobile')" id="btn-view-mobile" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            <span>Mobile View</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- FRAME CONTAINER -->
+      <div class="w-full flex justify-center items-center py-4 min-h-[660px]">
+
+        <!-- DESKTOP FRAME CONTAINER -->
+        <div id="frame-desktop-container" class="desktop-frame">
+          <div class="browser-header">
+            <div class="browser-dots">
+              <div class="browser-dot bg-rose-500"></div>
+              <div class="browser-dot bg-amber-500"></div>
+              <div class="browser-dot bg-emerald-500"></div>
+            </div>
+            <div class="browser-address-bar" id="desktop-url-bar">
+              https://jio.learn/shorts
+            </div>
+          </div>
+          <!-- DESKTOP SCREEN CONTENT -->
+          <div id="desktop-screen-body" class="flex-1 relative overflow-y-auto bg-slate-950 text-white p-4">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- MOBILE FRAME CONTAINER -->
+        <div id="frame-mobile-container" class="mobile-frame hidden">
+          <div class="mobile-notch"></div>
+          <!-- MOBILE SCREEN CONTENT -->
+          <div id="mobile-screen-body" class="w-full h-full relative overflow-y-auto bg-slate-950 text-white pt-6">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- PRESENTATION DATA & INTERACTIVE JS -->
+  <script>
+    // DATA STRUCTURE FOR ALL 3 PERSONAS AND JOURNEY STEPS
+    const DATA = {
+      learner: {
+        title: "Employee Learner",
+        desc: "Consumes bite-sized shorts, interacts, searches topics, manages collections & notifications.",
+        icon: "fa-user-graduate",
+        steps: [
+          {
+            id: "learner-1",
+            title: "Consuming & Interacting with Shorts",
+            desc: "Web 3-column layout vs Mobile overlay layout, play/pause, double tap heart, hold 2x, like, share, save drawer without cross button.",
+            desktopUrl: "https://jio.learn/shorts",
+            actions: [
+              "3-Column Web Desktop Layout: Creator profile, caption & tags on the left side; center 9:16 video player; action buttons on right side.",
+              "Top-right outside reel: Search icon and Profile icon. Notification icon is NOT present on watching short page.",
+              "Top-left outside reel: Plus button / Back button.",
+              "Right action column: Like (Heart), Share, Save (Bookmark), More (Three Dots), and Chevrons.",
+              "Save button opens bottom sheet drawer WITHOUT top-right X button, containing compact '+ New collection' button on top-right."
+            ],
+            desktopHtml: `
+              <div class="flex items-center justify-center gap-6 h-full max-w-5xl mx-auto py-2">
+                <!-- LEFT COLUMN -->
+                <div class="w-72 bg-slate-900/80 border border-slate-800 p-4 rounded-3xl flex flex-col justify-between h-[520px]">
+                  <div>
+                    <button class="px-3 py-2 bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 mb-4">
+                      <i class="fa-solid fa-plus"></i> Create Short
+                    </button>
+                    <div class="flex items-center gap-3 mb-3">
+                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-10 h-10 rounded-full object-cover border border-blue-400">
+                      <div>
+                        <h4 class="text-xs font-bold text-white">Ananya Sharma</h4>
+                        <p class="text-[10px] font-mono text-slate-400">ananya.sharma.patil</p>
+                      </div>
+                    </div>
+                    <h5 class="text-xs font-bold text-white mb-1">Distributed Caching in Microservices</h5>
+                    <p class="text-[11px] text-slate-300 leading-snug">Learn how Redis cluster partitioning scales enterprise throughput under peak loads.</p>
+                  </div>
+                  <div>
+                    <div class="flex flex-wrap gap-1 mb-2">
+                      <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-mono">Microservices</span>
+                      <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-mono">Redis</span>
+                    </div>
+                    <div class="text-[10px] text-blue-300 flex items-center gap-1">
+                      <i class="fa-solid fa-music animate-spin"></i> Audio: Tech Insights Sound
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CENTER VIDEO PLAYER -->
+                <div class="w-[320px] h-[520px] bg-black rounded-3xl border border-slate-800 relative overflow-hidden flex items-center justify-center shadow-2xl">
+                  <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600" class="w-full h-full object-cover opacity-80">
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white">
+                      <i class="fa-solid fa-play text-xl ml-1"></i>
+                    </div>
+                  </div>
+                  <div class="absolute bottom-0 inset-x-0 h-1 bg-slate-700">
+                    <div class="w-2/3 h-full bg-blue-500"></div>
+                  </div>
+                </div>
+
+                <!-- RIGHT COLUMN ACTIONS -->
+                <div class="w-64 bg-slate-900/80 border border-slate-800 p-4 rounded-3xl flex flex-col justify-between h-[520px]">
+                  <div class="flex items-center gap-2">
+                    <button class="p-2.5 rounded-xl bg-slate-800 text-white text-xs"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <button class="p-2.5 rounded-xl bg-slate-800 text-white text-xs"><i class="fa-solid fa-user"></i></button>
+                  </div>
+
+                  <div class="space-y-3">
+                    <div class="flex items-center gap-3 p-2 rounded-xl bg-slate-800/60">
+                      <i class="fa-solid fa-heart text-rose-500 text-base"></i>
+                      <div><span class="text-xs font-bold block">1,240</span><span class="text-[9px] text-slate-400">Likes</span></div>
+                    </div>
+                    <div class="flex items-center gap-3 p-2 rounded-xl bg-slate-800/60">
+                      <i class="fa-solid fa-share text-blue-400 text-base"></i>
+                      <div><span class="text-xs font-bold block">340</span><span class="text-[9px] text-slate-400">Shares</span></div>
+                    </div>
+                    <div class="flex items-center gap-3 p-2 rounded-xl bg-amber-500/20 border border-amber-500/40">
+                      <i class="fa-solid fa-bookmark text-amber-400 text-base"></i>
+                      <div><span class="text-xs font-bold block text-amber-300">Saved</span><span class="text-[9px] text-slate-400">Collections</span></div>
+                    </div>
+                    <div class="flex items-center gap-3 p-2 rounded-xl bg-slate-800/60">
+                      <i class="fa-solid fa-ellipsis-vertical text-slate-300 text-base"></i>
+                      <div><span class="text-xs font-bold block">More</span><span class="text-[9px] text-slate-400">Options</span></div>
+                    </div>
+                  </div>
+
+                  <div class="flex gap-2">
+                    <button class="flex-1 py-1.5 bg-slate-800 text-white rounded-lg text-xs"><i class="fa-solid fa-chevron-up"></i></button>
+                    <button class="flex-1 py-1.5 bg-slate-800 text-white rounded-lg text-xs"><i class="fa-solid fa-chevron-down"></i></button>
+                  </div>
+                </div>
+              </div>
+            `,
+            mobileHtml: `
+              <div class="relative w-full h-full bg-black flex flex-col justify-between p-4">
+                <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600" class="absolute inset-0 w-full h-full object-cover opacity-70">
+                <div class="relative z-10 flex items-center justify-between">
+                  <i class="fa-solid fa-plus text-white text-lg"></i>
+                  <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-magnifying-glass text-white text-base"></i>
+                    <i class="fa-solid fa-user text-white text-base"></i>
+                  </div>
+                </div>
+
+                <div class="relative z-10 flex items-end justify-between">
+                  <div class="space-y-1 max-w-[70%]">
+                    <div class="flex items-center gap-2">
+                      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-7 h-7 rounded-full">
+                      <span class="text-xs font-bold text-white">Ananya Sharma</span>
+                    </div>
+                    <p class="text-xs text-white line-clamp-2">Distributed Caching in Microservices with Redis</p>
+                  </div>
+
+                  <div class="flex flex-col gap-4 text-center">
+                    <div><i class="fa-solid fa-heart text-rose-500 text-xl"></i><span class="text-[10px] block">1.2k</span></div>
+                    <div><i class="fa-solid fa-share text-white text-xl"></i><span class="text-[10px] block">340</span></div>
+                    <div><i class="fa-solid fa-bookmark text-amber-400 text-xl"></i><span class="text-[10px] block">Save</span></div>
+                    <div><i class="fa-solid fa-ellipsis-vertical text-white text-xl"></i></div>
+                  </div>
+                </div>
+              </div>
+            `
+          },
+          {
+            id: "learner-2",
+            title: "Searching & Discovering Shorts",
+            desc: "Light mode search page, compact icon submenu for Reels vs Tags, clean Tags list displaying topic name and reel count without subtitles/hashtags.",
+            desktopUrl: "https://jio.learn/shorts/search",
+            actions: [
+              "Search Page features clean Light Mode styling (bg-gray-50 text-gray-900).",
+              "Search Header contains back button, input field with clear X, and virtual keyboard toggle button.",
+              "NO notification icon is present on the search page header.",
+              "Submenu uses compact icon buttons directly below search bar for Reels vs Tags toggle.",
+              "Tags list displays ONLY topic name and reel count (NO hashtags `#`, NO subtitles, NO match scores, NO extra decorative icons)."
+            ],
+            desktopHtml: `
+              <div class="bg-gray-50 text-gray-900 p-6 rounded-2xl h-full max-w-3xl mx-auto space-y-4">
+                <div class="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
+                  <i class="fa-solid fa-arrow-left text-gray-600"></i>
+                  <div class="flex-1 flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-xl">
+                    <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs"></i>
+                    <input type="text" value="Microservices" class="bg-transparent text-xs w-full outline-none font-medium text-gray-800">
+                  </div>
+                  <i class="fa-solid fa-keyboard text-gray-500 text-sm"></i>
+                </div>
+
+                <div class="flex items-center gap-2 border-b border-gray-200 pb-2">
+                  <button class="p-2 rounded-xl bg-gray-200 text-gray-700 text-xs"><i class="fa-solid fa-film"></i> Reels</button>
+                  <button class="p-2 rounded-xl bg-blue-900 text-white text-xs font-bold shadow-sm"><i class="fa-solid fa-tag"></i> Tags</button>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="p-3.5 bg-white rounded-xl border border-gray-200 flex items-center justify-between shadow-2xs">
+                    <span class="text-xs font-bold text-gray-900 font-mono">Microservices</span>
+                    <span class="text-xs font-semibold text-gray-500">42 reels</span>
+                  </div>
+                  <div class="p-3.5 bg-white rounded-xl border border-gray-200 flex items-center justify-between shadow-2xs">
+                    <span class="text-xs font-bold text-gray-900 font-mono">DistributedSystems</span>
+                    <span class="text-xs font-semibold text-gray-500">28 reels</span>
+                  </div>
+                  <div class="p-3.5 bg-white rounded-xl border border-gray-200 flex items-center justify-between shadow-2xs">
+                    <span class="text-xs font-bold text-gray-900 font-mono">DockerContainers</span>
+                    <span class="text-xs font-semibold text-gray-500">19 reels</span>
+                  </div>
+                </div>
+              </div>
+            `,
+            mobileHtml: `
+              <div class="bg-gray-50 text-gray-900 p-4 h-full space-y-3">
+                <div class="flex items-center gap-2 bg-white p-2.5 rounded-xl border border-gray-200 shadow-2xs">
+                  <i class="fa-solid fa-arrow-left text-gray-600 text-xs"></i>
+                  <input type="text" value="Microservices" class="bg-transparent text-xs flex-1 outline-none">
+                  <i class="fa-solid fa-keyboard text-gray-400 text-xs"></i>
+                </div>
+
+                <div class="flex gap-2">
+                  <button class="px-3 py-1 bg-gray-200 rounded-lg text-[11px]"><i class="fa-solid fa-film"></i> Reels</button>
+                  <button class="px-3 py-1 bg-blue-900 text-white rounded-lg text-[11px] font-bold"><i class="fa-solid fa-tag"></i> Tags</button>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="p-3 bg-white rounded-xl border border-gray-200 flex justify-between">
+                    <span class="text-xs font-bold font-mono">Microservices</span>
+                    <span class="text-xs text-gray-500">42 reels</span>
+                  </div>
+                  <div class="p-3 bg-white rounded-xl border border-gray-200 flex justify-between">
+                    <span class="text-xs font-bold font-mono">DistributedSystems</span>
+                    <span class="text-xs text-gray-500">28 reels</span>
+                  </div>
+                </div>
+              </div>
+            `
+          },
+          {
+            id: "learner-3",
+            title: "Viewing Shorts Notifications",
+            desc: "Notification button located at top-right corner of Profile page only, opening dedicated Notifications page with back button.",
+            desktopUrl: "https://jio.learn/shorts/notifications",
+            actions: [
+              "Notification button (Bell icon) is located strictly at top-right of Profile page.",
+              "Clicking Bell icon navigates to dedicated Notifications page (/shorts/notifications).",
+              "Notifications page features top header with < back button.",
+              "Displays list cards for likes, saves to collection, follow alerts, and moderation status updates."
+            ],
+            desktopHtml: `
+              <div class="bg-slate-900 p-6 rounded-2xl h-full max-w-2xl mx-auto space-y-4 text-white">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div class="flex items-center gap-3">
+                    <button class="p-2 rounded-xl bg-slate-800 text-white text-xs"><i class="fa-solid fa-chevron-left"></i></button>
+                    <h3 class="text-sm font-bold">Notifications</h3>
+                  </div>
+                  <span class="text-xs text-blue-400 font-bold">Mark all as read</span>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="p-3.5 bg-slate-800/80 rounded-2xl border border-slate-700/60 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs"><i class="fa-solid fa-heart"></i></div>
+                      <div>
+                        <p class="text-xs font-bold text-white">Rohit Verma liked your short</p>
+                        <span class="text-[10px] text-slate-400">2 hours ago</span>
+                      </div>
+                    </div>
+                    <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                  </div>
+
+                  <div class="p-3.5 bg-slate-800/80 rounded-2xl border border-slate-700/60 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs"><i class="fa-solid fa-bookmark"></i></div>
+                      <div>
+                        <p class="text-xs font-bold text-white">Priya Nair saved your short to collection</p>
+                        <span class="text-[10px] text-slate-400">5 hours ago</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `,
+            mobileHtml: `
+              <div class="bg-slate-950 p-4 h-full text-white space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                    <span class="text-xs font-bold">Notifications</span>
+                  </div>
+                  <span class="text-[10px] text-blue-400">Mark read</span>
+                </div>
+
+                <div class="space-y-2">
+                  <div class="p-3 bg-slate-900 rounded-xl flex items-center justify-between border border-slate-800">
+                    <div class="flex items-center gap-2.5">
+                      <i class="fa-solid fa-heart text-rose-500 text-xs"></i>
+                      <div class="text-[11px]"><span class="font-bold">Rohit</span> liked your short<span class="text-[9px] text-slate-400 block">2h ago</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `
+          },
+          {
+            id: "learner-4",
+            title: "Managing Collections & Dedicated Collection Page",
+            desc: "Saved tab 3x3 grid, standalone collection page with < back button, icon-only edit/delete, public share modal with tiny URL and icon-only copy button.",
+            desktopUrl: "https://jio.learn/shorts/collection/col_123",
+            actions: [
+              "Saved tab in profile displays collections in a 3x3 grid / list with thumbnail on left and title + reel count on right.",
+              "Clicking a collection opens a dedicated page (/shorts/collection/:id) with a < back button.",
+              "Does NOT display 'Add Reels' button on collection page.",
+              "Edit button shows ONLY icon (Edit3), NO 'Edit Name' text.",
+              "Delete button shows ONLY icon (Trash2), NO 'Delete' text.",
+              "Public collections display Share icon button; clicking opens bottom sheet with tiny URL & icon-only copy button."
+            ],
+            desktopHtml: `
+              <div class="bg-gray-50 text-gray-900 p-6 rounded-2xl h-full max-w-3xl mx-auto space-y-4">
+                <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                  <div class="flex items-center gap-3">
+                    <button class="p-2 rounded-xl bg-gray-200 text-gray-800 text-xs"><i class="fa-solid fa-chevron-left"></i></button>
+                    <div>
+                      <h3 class="text-sm font-bold text-gray-900">System Architecture Deep Dives</h3>
+                      <span class="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Public Collection</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <button class="p-2 bg-gray-200 rounded-xl text-xs"><i class="fa-solid fa-pen"></i></button>
+                    <button class="p-2 bg-rose-100 text-rose-700 rounded-xl text-xs"><i class="fa-solid fa-trash"></i></button>
+                    <button class="p-2 bg-blue-900 text-white rounded-xl text-xs"><i class="fa-solid fa-share-nodes"></i></button>
+                  </div>
+                </div>
+
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-between max-w-md">
+                  <span class="text-xs font-mono font-bold text-blue-950">https://jio.learn/c/col_123</span>
+                  <button class="p-2 bg-blue-900 text-white rounded-xl text-xs"><i class="fa-solid fa-copy"></i></button>
+                </div>
+              </div>
+            `,
+            mobileHtml: `
+              <div class="bg-gray-50 text-gray-900 p-4 h-full space-y-3">
+                <div class="flex items-center justify-between border-b border-gray-200 pb-2">
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                    <span class="text-xs font-bold">Architecture Dives</span>
+                  </div>
+                  <div class="flex gap-1.5">
+                    <button class="p-1.5 bg-gray-200 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button>
+                    <button class="p-1.5 bg-rose-100 text-rose-700 rounded-lg text-xs"><i class="fa-solid fa-trash"></i></button>
+                    <button class="p-1.5 bg-blue-900 text-white rounded-lg text-xs"><i class="fa-solid fa-share-nodes"></i></button>
+                  </div>
+                </div>
+
+                <div class="p-2.5 bg-blue-50 rounded-xl border border-blue-200 flex justify-between text-xs font-mono">
+                  <span class="truncate">https://jio.learn/c/col_123</span>
+                  <button class="p-1.5 bg-blue-900 text-white rounded-lg"><i class="fa-solid fa-copy text-xs"></i></button>
+                </div>
+              </div>
+            `
+          },
+          {
+            id: "learner-5",
+            title: "Viewing Learner Profile & User Domain",
+            desc: "Learner profile header displaying user domain handle `ajinkya4.patil`, notification bell on top-right, and tabs navigation.",
+            desktopUrl: "https://jio.learn/shorts/creator/u_current",
+            actions: [
+              "Profile header displays user's explicit domain handle: ajinkya4.patil.",
+              "Notification button (Bell) positioned at top-right corner of profile page.",
+              "Profile contains tabs: Shorts, Saved, Analytics, About.",
+              "Provides Edit Profile modal with virtual keyboard support."
+            ],
+            desktopHtml: `
+              <div class="bg-gray-50 text-gray-900 p-6 rounded-2xl h-full max-w-3xl mx-auto space-y-4">
+                <div class="flex items-center justify-between">
+                  <button class="p-2 rounded-xl bg-gray-200 text-xs"><i class="fa-solid fa-chevron-left"></i></button>
+                  <button class="p-2.5 bg-gray-200 rounded-xl text-xs"><i class="fa-solid fa-bell text-gray-800"></i></button>
+                </div>
+
+                <div class="flex items-center gap-4">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-16 h-16 rounded-full object-cover border-2 border-blue-900">
+                  <div>
+                    <h2 class="text-base font-bold text-gray-900">Ajinkya Patil</h2>
+                    <p class="text-xs font-mono font-bold text-gray-500">ajinkya4.patil</p>
+                    <p class="text-xs text-gray-600">Senior Software Engineer • Enterprise Engineering</p>
+                  </div>
+                </div>
+
+                <div class="flex gap-2 border-b border-gray-200 pb-2 text-xs font-bold">
+                  <span class="px-3 py-1.5 bg-blue-900 text-white rounded-xl">Shorts</span>
+                  <span class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-xl">Saved</span>
+                  <span class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-xl">Analytics</span>
+                </div>
+              </div>
+            `,
+            mobileHtml: `
+              <div class="bg-gray-50 text-gray-900 p-4 h-full space-y-3">
+                <div class="flex justify-between items-center">
+                  <i class="fa-solid fa-chevron-left text-xs"></i>
+                  <i class="fa-solid fa-bell text-xs"></i>
+                </div>
+                <div class="flex items-center gap-3">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-12 h-12 rounded-full">
+                  <div>
+                    <h3 class="text-xs font-bold">Ajinkya Patil</h3>
+                    <span class="text-[10px] font-mono font-bold text-gray-500 block">ajinkya4.patil</span>
+                  </div>
+                </div>
+              </div>
+            `
+          }
+        ]
+      },
+
+      creator: {
+        title: "Content Creator",
+        desc: "Creates and submits learning shorts, manages pending/approved/rejected submissions, and responds to feedback.",
+        icon: "fa-video",
+        steps: [
+          {
+            id: "creator-1",
+            title: "Authoring & Submitting Learning Shorts",
+            desc: "Creation studio modal with Video or Photo Carousel options, tags without # requirement, virtual keyboard support.",
+            desktopUrl: "https://jio.learn/shorts/create",
+            actions: [
+              "Creation modal supports Video or Photo Carousel options.",
+              "Title and Caption inputs provide toggleable virtual keyboard.",
+              "Learning Tags input accepts custom suggestions WITHOUT forcing # hashtags.",
+              "Submitting short sets status to 'pending' for manager review."
+            ],
+            desktopHtml: `
+              <div class="bg-slate-900 p-6 rounded-2xl h-full max-w-2xl mx-auto text-white space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <h3 class="text-sm font-bold">Create Learning Short</h3>
+                  <i class="fa-solid fa-xmark text-slate-400"></i>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <button class="p-3 bg-blue-600 rounded-xl text-xs font-bold border border-blue-400"><i class="fa-solid fa-video mb-1 block"></i> Video Short</button>
+                  <button class="p-3 bg-slate-800 rounded-xl text-xs font-bold border border-slate-700 text-slate-300"><i class="fa-solid fa-layer-group mb-1 block"></i> Photo Carousel</button>
+                </div>
+
+                <div class="space-y-2">
+                  <input type="text" value="GraphQL Query Optimization" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs">
+                  <textarea rows="2" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs">Best practices for query batching & dataloader setup.</textarea>
+                  <input type="text" value="GraphQL, WebPerformance" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-mono" placeholder="Tags without hashtags">
+                </div>
+
+                <button class="w-full py-2.5 bg-blue-700 text-white font-bold rounded-xl text-xs">Submit for Manager Approval</button>
+              </div>
+            `,
+            mobileHtml: `
+              <div class="bg-slate-950 p-4 h-full text-white space-y-3">
+                <span class="text-xs font-bold block border-b border-slate-800 pb-2">Create Learning Short</span>
+                <input type="text" value="GraphQL Optimization" class="w-full p-2 bg-slate-900 rounded-lg text-xs">
+                <button class="w-full py-2 bg-blue-600 rounded-lg text-xs font-bold">Submit for Approval</button>
+              </div>
+            `
+          },
+          {
+            id: "creator-2",
+            title: "Managing Creator Submissions",
+            desc: "My Submissions dashboard tracking Pending, Approved, and Rejected status with rejection reasons.",
+            desktopUrl: "https://jio.learn/shorts/my-submissions",
+            actions: [
+              "Submissions categorized by status: Pending, Approved, Rejected.",
+              "Rejected items display manager feedback reason (e.g. Compliance guidelines violation).",
+              "Creator can edit and resubmit rejected shorts."
+            ],
+            desktopHtml: `
+              <div class="bg-slate-900 p-6 rounded-2xl h-full max-w-3xl mx-auto text-white space-y-4">
+                <h3 class="text-sm font-bold">My Submissions</h3>
+                <div class="space-y-2">
+                  <div class="p-3.5 bg-slate-800 rounded-2xl border border-rose-500/40 flex justify-between items-center">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold">GraphQL Query Optimization</span>
+                        <span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-bold">Rejected</span>
+                      </div>
+                      <p class="text-[11px] text-rose-300 mt-1">Reason: Violates Enterprise Community Guidelines: Confidential endpoint exposed.</p>
+                    </div>
+                    <button class="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-xs font-bold">Edit & Resubmit</button>
+                  </div>
+                </div>
+              </div>
+            `,
+            mobileHtml: `
+              <div class="bg-slate-950 p-4 h-full text-white space-y-3">
+                <span class="text-xs font-bold block">My Submissions</span>
+                <div class="p-2.5 bg-slate-900 rounded-xl border border-rose-500/40 text-xs">
+                  <span class="font-bold block">GraphQL Query Optimization</span>
+                  <span class="text-[10px] text-rose-400">Rejected: Confidential info</span>
+                </div>
+              </div>
+            `
+          }
+        ]
+      },
+
+      manager: {
+        title: "Shorts Content Manager",
+        desc: "Audits submissions, manages enterprise taxonomy tags, and reviews reported policy violations.",
+        icon: "fa-shield-halved",
+        steps: [
+          {
+            id: "manager-1",
+            title: "Reviewing & Publishing Submissions",
+            desc: "Moderation Portal audit workspace, live 9:16 video preview, single-click approval, and rejection with reason.",
+            desktopUrl: "https://jio.learn/shorts/moderation/preview/short_456",
+            actions: [
+              "Audit workspace displays live 9:16 media viewport on left and audit controls on right.",
+              "Single-click Approve & Publish Short publishes content directly to employee feeds.",
+              "Reject Short requires selecting predefined rejection reason and typing feedback text."
+            ],
+            desktopHtml: `
+              <div class="bg-gray-50 text-gray-900 p-6 rounded-2xl h-full max-w-3xl mx-auto space-y-4">
+                <div class="flex items-center gap-3 border-b border-gray-200 pb-3">
+                  <button class="p-2 rounded-xl bg-gray-200 text-xs"><i class="fa-solid fa-arrow-left"></i></button>
+                  <h3 class="text-sm font-bold text-gray-900">Submission & Violation Audit</h3>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="bg-black rounded-2xl h-64 flex items-center justify-center">
+                    <i class="fa-solid fa-play text-white text-2xl"></i>
+                  </div>
+                  <div class="space-y-3">
+                    <h4 class="text-xs font-bold">Kubernetes Pod Lifecycle</h4>
+                    <p class="text-[11px] text-gray-600">Detailed breakdown of init containers and pod termination sequence.</p>
+                    <div class="flex gap-2 pt-4">
+                      <button class="flex-1 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl"><i class="fa-solid fa-check"></i> Approve & Publish</button>
+                      <button class="flex-1 py-2 bg-rose-100 text-rose-700 text-xs font-bold rounded-xl"><i class="fa-solid fa-xmark"></i> Reject</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `,
+            mobileHtml: `
+              <div class="bg-gray-50 text-gray-900 p-4 h-full space-y-3">
+                <span class="text-xs font-bold block">Submission Audit</span>
+                <div class="h-40 bg-black rounded-xl flex items-center justify-center text-white"><i class="fa-solid fa-play"></i></div>
+                <button class="w-full py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold">Approve & Publish</button>
+              </div>
+            `
+          },
+          {
+            id: "manager-2",
+            title: "Managing Enterprise Taxonomy Tags",
+            desc: "Admin tag creation without hashtags, 3-way tag toggle filter (All, Admin-Created, User-Created), and tag deletion.",
+            desktopUrl: "https://jio.learn/shorts/moderation?tab=tags",
+            actions: [
+              "Admin Tag creation form accepts topic names without hashtags.",
+              "3-Way Toggle Filter switches between All Tags, Admin-Created, and User-Created tags.",
+              "Tag items feature deletion confirmation."
+            ],
+            desktopHtml: `
+              <div class="bg-gray-50 text-gray-900 p-6 rounded-2xl h-full max-w-3xl mx-auto space-y-4">
+                <div class="bg-white p-4 rounded-2xl border border-gray-200 space-y-3">
+                  <h4 class="text-xs font-bold">Add Enterprise Learning Tag</h4>
+                  <div class="flex gap-2">
+                    <input type="text" value="SystemArchitecture" class="flex-1 p-2 bg-gray-50 border border-gray-300 rounded-xl text-xs font-mono">
+                    <button class="px-4 py-2 bg-blue-900 text-white text-xs font-bold rounded-xl">Add Admin Tag</button>
+                  </div>
+                </div>
+
+                <div class="flex gap-2 border-b border-gray-200 pb-2 text-xs font-bold">
+                  <span class="px-3 py-1.5 bg-blue-900 text-white rounded-xl">All Tags (34)</span>
+                  <span class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-xl">Admin-Created (20)</span>
+                  <span class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-xl">User-Created (14)</span>
+                </div>
+              </div>
+            `,
+            mobileHtml: `
+              <div class="bg-gray-50 text-gray-900 p-4 h-full space-y-3">
+                <span class="text-xs font-bold block">Enterprise Tags</span>
+                <div class="flex gap-1 text-[10px]">
+                  <span class="px-2 py-1 bg-blue-900 text-white rounded">All Tags</span>
+                  <span class="px-2 py-1 bg-gray-200 rounded">Admin</span>
+                </div>
+              </div>
+            `
+          },
+          {
+            id: "manager-3",
+            title: "Managing Reported Content",
+            desc: "Reported Content list view displaying ONLY reel name, violation type, and Audit Reel button. Audit page showing Revoke and Let Stay buttons EXACTLY ONCE.",
+            desktopUrl: "https://jio.learn/shorts/moderation?tab=reported",
+            actions: [
+              "Reported Content list view MUST NOT display Approve Content or Revoke Content buttons in list view itself.",
+              "List view displays ONLY: 1. Reel Name, 2. Violation Type, 3. Audit Reel button. Nothing else.",
+              "Audit Reel workspace displays Revoke and Let Stay decision buttons EXACTLY ONCE on the page."
+            ],
+            desktopHtml: `
+              <div class="bg-gray-50 text-gray-900 p-6 rounded-2xl h-full max-w-3xl mx-auto space-y-4">
+                <h3 class="text-sm font-bold text-gray-900">Reported Content Audit</h3>
+
+                <div class="p-4 bg-white rounded-2xl border border-gray-200 flex items-center justify-between shadow-2xs">
+                  <div class="space-y-1">
+                    <h4 class="text-xs font-bold text-gray-900">Enterprise Security Policies Overview</h4>
+                    <span class="text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-lg inline-block">Violation: Confidential Information Disclosed</span>
+                  </div>
+                  <button class="px-4 py-2 bg-blue-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"><i class="fa-solid fa-eye"></i> Audit Reel</button>
+                </div>
+              </div>
+            `,
+            mobileHtml: `
+              <div class="bg-gray-50 text-gray-900 p-4 h-full space-y-3">
+                <span class="text-xs font-bold block">Reported Content</span>
+                <div class="p-3 bg-white rounded-xl border border-gray-200 space-y-2">
+                  <span class="text-xs font-bold block">Security Overview</span>
+                  <span class="text-[10px] text-rose-700 bg-rose-50 px-2 py-0.5 rounded">Violation: Confidential Info</span>
+                  <button class="w-full py-1.5 bg-blue-900 text-white text-xs font-bold rounded">Audit Reel</button>
+                </div>
+              </div>
+            `
+          }
+        ]
+      }
+    };
+
+    let currentPersona = 'learner';
+    let currentStepIndex = 0;
+    let currentViewport = 'desktop';
+
+    function switchPersona(personaKey) {
+      currentPersona = personaKey;
+      currentStepIndex = 0;
+      
+      // Update Persona Tab Buttons
+      ['learner', 'creator', 'manager'].forEach(key => {
+        const btn = document.getElementById(`btn-persona-${key}`);
+        if (key === personaKey) {
+          btn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-blue-600 text-white shadow-md';
+        } else {
+          btn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 text-slate-400 hover:text-white';
+        }
+      });
+
+      // Update Persona Badge Info
+      const pData = DATA[personaKey];
+      document.getElementById('persona-title').innerText = pData.title;
+      document.getElementById('persona-desc').innerText = pData.desc;
+      document.getElementById('persona-badge-icon').innerHTML = `<i class="fa-solid ${pData.icon}"></i>`;
+
+      renderStepList();
+      renderCurrentStep();
+    }
+
+    function selectStep(index) {
+      currentStepIndex = index;
+      renderStepList();
+      renderCurrentStep();
+    }
+
+    function switchViewport(mode) {
+      currentViewport = mode;
+      const btnDesktop = document.getElementById('btn-view-desktop');
+      const btnMobile = document.getElementById('btn-view-mobile');
+      const frameDesktop = document.getElementById('frame-desktop-container');
+      const frameMobile = document.getElementById('frame-mobile-container');
+
+      if (mode === 'desktop') {
+        btnDesktop.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm flex items-center gap-1.5';
+        btnMobile.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+        frameDesktop.classList.remove('hidden');
+        frameMobile.classList.add('hidden');
+      } else {
+        btnMobile.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm flex items-center gap-1.5';
+        btnDesktop.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+        frameMobile.classList.remove('hidden');
+        frameDesktop.classList.add('hidden');
+      }
+    }
+
+    function renderStepList() {
+      const pData = DATA[currentPersona];
+      const stepsContainer = document.getElementById('journey-steps-list');
+      stepsContainer.innerHTML = pData.steps.map((step, idx) => `
+        <button onclick="selectStep(${idx})" class="w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+          idx === currentStepIndex
+            ? 'bg-blue-600/20 border-blue-500/50 text-white shadow-md'
+            : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
+        }">
+          <div>
+            <span class="text-[10px] font-mono uppercase block text-blue-400">Step ${idx + 1}</span>
+            <span class="text-xs font-bold block text-white">${step.title}</span>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs"></i>
+        </button>
+      `).join('');
+    }
+
+    function renderCurrentStep() {
+      const step = DATA[currentPersona].steps[currentStepIndex];
+      
+      document.getElementById('current-step-badge').innerText = `Step ${currentStepIndex + 1} of ${DATA[currentPersona].steps.length}`;
+      document.getElementById('current-step-title').innerText = step.title;
+      document.getElementById('desktop-url-bar').innerText = step.desktopUrl;
+
+      // Render Action List
+      const detailsContainer = document.getElementById('step-details-content');
+      detailsContainer.innerHTML = `
+        <p class="text-slate-300 font-semibold mb-2">${step.desc}</p>
+        <ul class="space-y-1.5 list-disc list-inside text-slate-400">
+          ${step.actions.map(act => `<li>${act}</li>`).join('')}
+        </ul>
+      `;
+
+      // Render Frame Content
+      document.getElementById('desktop-screen-body').innerHTML = step.desktopHtml;
+      document.getElementById('mobile-screen-body').innerHTML = step.mobileHtml;
+    }
+
+    // INITIALIZATION
+    window.onload = function() {
+      switchPersona('learner');
+    };
+  </script>
+</body>
+</html>

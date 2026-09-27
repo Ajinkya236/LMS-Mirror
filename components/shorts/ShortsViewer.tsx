@@ -26,7 +26,19 @@ import {
   UserPlus,
   Sparkles,
   Eye,
-  Hash
+  Hash,
+  HelpCircle,
+  Bell,
+  BarChart3,
+  CheckCheck,
+  Clock,
+  CheckCircle2,
+  TrendingUp,
+  ArrowRight,
+  FolderPlus,
+  Folder,
+  Lock,
+  Globe
 } from 'lucide-react';
 import {
   ShortItem,
@@ -34,7 +46,10 @@ import {
   ShortsRecommendationConfig,
   INITIAL_CREATORS,
   REPORT_REASONS,
-  ReportReasonType
+  ReportReasonType,
+  ShortNotification,
+  ShortDraft,
+  ShortCollection
 } from '../../services/shortsService';
 
 interface ShortsViewerProps {
@@ -93,9 +108,38 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
   // More Options Action Sheet Menu
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isTagsMenuOpen, setIsTagsMenuOpen] = useState(false);
+  const [isWhySeeingModalOpen, setIsWhySeeingModalOpen] = useState(false);
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [savedShortIds, setSavedShortIds] = useState<string[]>(() => shortsService.getSavedShortIds());
   const [userReactions, setUserReactions] = useState<Record<string, 'interested' | 'not_interested' | null>>({});
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({});
+
+  // Notifications State
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [notifications, setNotifications] = useState<ShortNotification[]>(() => shortsService.getNotifications());
+  const unreadNotifsCount = notifications.filter(n => !n.read).length;
+
+  // Plus button draft check state
+  const [isDraftPromptOpen, setIsDraftPromptOpen] = useState(false);
+  const [latestDraft, setLatestDraft] = useState<ShortDraft | null>(null);
+
+  useEffect(() => {
+    const handleNotifsUpdate = () => {
+      setNotifications(shortsService.getNotifications());
+    };
+    window.addEventListener('jio_shorts_notifications_updated', handleNotifsUpdate);
+    return () => window.removeEventListener('jio_shorts_notifications_updated', handleNotifsUpdate);
+  }, []);
+
+  const handlePlusClick = () => {
+    const drafts = shortsService.getDrafts();
+    if (drafts.length > 0) {
+      setLatestDraft(drafts[0]);
+      setIsDraftPromptOpen(true);
+    } else {
+      navigate('/shorts/create');
+    }
+  };
 
   useEffect(() => {
     const handleSavedUpdate = () => {
@@ -119,10 +163,62 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
     return () => window.removeEventListener('jio_shorts_follows_updated', handleFollowsUpdate);
   }, []);
 
-  const toggleSaveShort = (shortId: string) => {
-    const res = shortsService.toggleSaveShort(shortId);
+  // Collections and Save Modal State
+  const [isSaveCollectionModalOpen, setIsSaveCollectionModalOpen] = useState(false);
+  const [collectionsList, setCollectionsList] = useState<ShortCollection[]>(() => shortsService.getCollections());
+  const [isCreatingCollection, setIsCreatingCollection] = useState(false);
+  const [newColTitle, setNewColTitle] = useState('');
+  const [newColDesc, setNewColDesc] = useState('');
+  const [newColIsPrivate, setNewColIsPrivate] = useState(true);
+
+  useEffect(() => {
+    const handleCollectionsUpdate = () => {
+      setCollectionsList(shortsService.getCollections());
+      setSavedShortIds(shortsService.getSavedShortIds());
+    };
+    window.addEventListener('jio_shorts_collections_updated', handleCollectionsUpdate);
+    window.addEventListener('jio_shorts_saved_updated', handleCollectionsUpdate);
+    return () => {
+      window.removeEventListener('jio_shorts_collections_updated', handleCollectionsUpdate);
+      window.removeEventListener('jio_shorts_saved_updated', handleCollectionsUpdate);
+    };
+  }, []);
+
+  const handleToggleCollectionSave = (collectionId: string) => {
+    if (!currentShort) return;
+    const isCurrentlyIn = shortsService.isShortInCollection(collectionId, currentShort.id);
+    const col = collectionsList.find(c => c.id === collectionId);
+    if (isCurrentlyIn) {
+      shortsService.removeShortFromCollection(collectionId, currentShort.id);
+      showToast(`Removed from "${col?.name || 'Collection'}"`);
+    } else {
+      shortsService.addShortToCollection(collectionId, currentShort.id);
+      showToast(`🔖 Saved to "${col?.name || 'Collection'}"!`);
+    }
+    setCollectionsList(shortsService.getCollections());
     setSavedShortIds(shortsService.getSavedShortIds());
-    showToast(res.isSaved ? '🔖 Saved to your profile collection' : 'Bookmark removed');
+  };
+
+  const handleCreateAndSaveCollection = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentShort || !newColTitle.trim()) return;
+    const newCol = shortsService.createCollection(
+      newColTitle.trim(),
+      newColDesc.trim() || undefined,
+      newColIsPrivate
+    );
+    shortsService.addShortToCollection(newCol.id, currentShort.id);
+    setCollectionsList(shortsService.getCollections());
+    setSavedShortIds(shortsService.getSavedShortIds());
+    setNewColTitle('');
+    setNewColDesc('');
+    setNewColIsPrivate(true);
+    setIsCreatingCollection(false);
+    showToast(`✨ Created "${newCol.name}" & saved reel!`);
+  };
+
+  const toggleSaveShort = (shortId: string) => {
+    setIsSaveCollectionModalOpen(true);
     setIsMoreMenuOpen(false);
   };
 
@@ -227,6 +323,17 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
 
   // Fetch approved & visible shorts, following specified custom order if provided
   const feedShorts = useMemo(() => {
+    if (fromSource === 'saved') {
+      const allSaved = shortsService.getSavedShorts();
+      if (orderedShortIds && orderedShortIds.length > 0) {
+        const idMap = new Map(allSaved.map(s => [s.id, s]));
+        const ordered = orderedShortIds
+          .map(id => idMap.get(id))
+          .filter((s): s is ShortItem => !!s);
+        if (ordered.length > 0) return ordered;
+      }
+      if (allSaved.length > 0) return allSaved;
+    }
     const allApproved = shortsService.getApprovedShorts();
     if (orderedShortIds && orderedShortIds.length > 0) {
       const idMap = new Map(allApproved.map(s => [s.id, s]));
@@ -236,7 +343,7 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
       return ordered.length > 0 ? ordered : shortsService.getPersonalizedFeed();
     }
     return shortsService.getPersonalizedFeed();
-  }, [config, orderedShortIds]);
+  }, [config, orderedShortIds, fromSource]);
 
   // Handle initial short query param or prop
   useEffect(() => {
@@ -455,10 +562,7 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
   const handleToggleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentShort) return;
-    const res = shortsService.toggleLike(currentShort.id);
-    if (res.isLiked) {
-      showToast('❤️ Liked short!');
-    }
+    shortsService.toggleLike(currentShort.id);
   };
 
   // Share action
@@ -535,13 +639,12 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
         <video src={nextShort.mediaUrls[0]} preload="auto" className="hidden" muted />
       )}
 
-      {/* Main Reel Container (9:16 Aspect Ratio Viewport) */}
-      <div
-        className="relative w-full h-full max-w-[430px] md:rounded-3xl overflow-hidden bg-black shadow-2xl border border-white/10 flex flex-col justify-between"
-      >
-        {/* --- 1. Top Bar Overlay --- */}
-        <div className="absolute top-0 inset-x-0 z-40 p-3.5 pt-3 bg-gradient-to-b from-black/80 via-black/30 to-transparent flex items-center justify-between pointer-events-auto">
-          {/* Top-Left: Back Button when opened from profile/search OR Plus Icon (No circular border) */}
+      {/* Desktop & Mobile Responsive Reels Layout */}
+      <div className="flex items-center justify-center gap-6 lg:gap-10 w-full h-full max-w-6xl px-2 sm:px-6">
+        
+        {/* --- DESKTOP ONLY: Left Side Column (Plus/Back button, Creator Profile, Description, Tags) --- */}
+        <div className="hidden md:flex flex-col justify-between w-72 lg:w-80 h-[640px] max-h-[85vh] py-2 text-left text-white shrink-0">
+          {/* Top Left: Plus Button or Back Button */}
           <div>
             {fromSource ? (
               <button
@@ -555,245 +658,51 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
                     navigate(-1);
                   }
                 }}
-                className="p-2 text-white hover:opacity-80 transition-all active:scale-95 flex items-center justify-center group"
+                className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 flex items-center gap-2 cursor-pointer shadow-md"
                 title="Back"
-                aria-label="Back"
               >
-                <ArrowLeft className="w-6 h-6 text-white group-hover:-translate-x-0.5 transition-transform" />
+                <ArrowLeft className="w-5 h-5" />
+                <span className="text-xs font-bold">Back</span>
               </button>
             ) : (
               <button
-                onClick={() => navigate('/shorts/create')}
-                className="p-2 text-white hover:opacity-80 transition-all active:scale-95 flex items-center justify-center group"
+                onClick={handlePlusClick}
+                className="p-3 rounded-2xl bg-[#002B7F] hover:bg-blue-800 text-white transition-all active:scale-95 flex items-center gap-2 cursor-pointer shadow-lg"
                 title="Create Learning Short"
-                aria-label="Create Learning Short"
               >
-                <Plus className="w-7 h-7 stroke-[2.5] text-white group-hover:scale-110 transition-transform" />
+                <Plus className="w-6 h-6 stroke-[2.5]" />
+                <span className="text-xs font-extrabold tracking-wide">Create Short</span>
               </button>
             )}
           </div>
 
-          {/* Top-Right: Search Button & Creator Profile Button */}
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => navigate('/shorts/search')}
-              className="p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md transition-all active:scale-95 border border-white/10"
-              title="Search Learning Shorts"
-              aria-label="Search Learning Shorts"
-            >
-              <Search className="w-5 h-5 text-white" />
-            </button>
-
-            {/* Profile Icon to open user's own Reels Profile */}
-            <button
-              onClick={() => navigate(`/shorts/creator/${INITIAL_CREATORS['u_current'].id}`)}
-              className="w-9 h-9 rounded-full overflow-hidden border-2 border-white/40 hover:border-white transition-all active:scale-95 shadow-md flex-shrink-0"
-              title="My Reels Profile"
-              aria-label="My Reels Profile"
-            >
-              <img
-                src={INITIAL_CREATORS['u_current'].avatar}
-                alt="My Profile"
-                className="w-full h-full object-cover"
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* --- 2. Main Media Screen (Video / Carousel / Single Photo) --- */}
-        <div
-          className="relative flex-1 w-full h-full cursor-pointer flex items-center justify-center bg-black overflow-hidden"
-          onClick={handleVideoTap}
-          onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUp}
-          onPointerLeave={handlePointerUp}
-        >
-          {/* VIDEO Short */}
-          {currentShort.mediaType === 'video' && (
-            <video
-              ref={videoRef}
-              src={currentShort.mediaUrls[0]}
-              playsInline
-              loop
-              autoPlay
-              muted={isMuted}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleTimeUpdate}
-              className="w-full h-full object-cover"
-            />
-          )}
-
-          {/* CAROUSEL Photo Deck Short */}
-          {currentShort.mediaType === 'carousel' && (
-            <div className="relative w-full h-full">
-              <img
-                src={currentShort.mediaUrls[carouselPhotoIndex] || currentShort.mediaUrls[0]}
-                alt={currentShort.title}
-                className="w-full h-full object-cover"
-              />
-
-              {/* Prev / Next Slide Arrows */}
-              {carouselPhotoIndex > 0 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCarouselPhotoIndex(p => p - 1);
-                  }}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-black/50 text-white backdrop-blur-md"
-                >
-                  ‹
-                </button>
-              )}
-              {carouselPhotoIndex < currentShort.mediaUrls.length - 1 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCarouselPhotoIndex(p => p + 1);
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-black/50 text-white backdrop-blur-md"
-                >
-                  ›
-                </button>
-              )}
-
-              {/* Voiceover Audio */}
-              {currentShort.audioUrl && (
-                <audio
-                  ref={audioRef}
-                  src={currentShort.audioUrl}
-                  loop
-                  autoPlay
-                  muted={isMuted}
-                />
-              )}
-            </div>
-          )}
-
-          {/* SINGLE PHOTO Short */}
-          {currentShort.mediaType === 'photo' && (
-            <div className="relative w-full h-full">
-              <img
-                src={currentShort.mediaUrls[0]}
-                alt={currentShort.title}
-                className="w-full h-full object-cover"
-              />
-              {currentShort.audioUrl && (
-                <audio
-                  ref={audioRef}
-                  src={currentShort.audioUrl}
-                  loop
-                  autoPlay
-                  muted={isMuted}
-                />
-              )}
-            </div>
-          )}
-
-          {/* Centered Pause & Sound Indicator Icon */}
-          {!isPlaying && !showDoubleTapHeart && (
-            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none bg-black/30 transition-all gap-3">
-              {/* Small Sound Icon Button Above Play Icon (Icon ONLY, No Text) */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleMute();
-                }}
-                className="pointer-events-auto p-2.5 rounded-full bg-black/75 hover:bg-black/90 backdrop-blur-md text-white border border-white/25 shadow-xl flex items-center justify-center transition-all active:scale-95 animate-scale-up"
-                title={isMuted ? 'Unmute sound' : 'Mute sound'}
-                aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
-              >
-                {isMuted ? (
-                  <VolumeX className="w-5 h-5 text-amber-400" />
-                ) : (
-                  <Volume2 className="w-5 h-5 text-white" />
-                )}
-              </button>
-
-              {/* Play Shutter Indicator */}
-              <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white shadow-2xl animate-scale-up">
-                <Play className="w-8 h-8 fill-white ml-1" />
-              </div>
-            </div>
-          )}
-
-          {/* Double Tap Floating Heart Animation Burst */}
-          {showDoubleTapHeart && (
-            <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
-              <div className="w-24 h-24 rounded-full bg-rose-600/90 backdrop-blur-md flex items-center justify-center shadow-2xl animate-ping text-white">
-                <Heart className="w-14 h-14 fill-white text-white" />
-              </div>
-            </div>
-          )}
-
-          {/* 2x Fast-Forward Indicator */}
-          {isAccelerating && (
-            <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40 bg-blue-600/90 text-white text-xs font-black px-4 py-1.5 rounded-full flex items-center gap-1.5 backdrop-blur-md shadow-2xl animate-pulse">
-              <Zap className="w-4 h-4 fill-white" />
-              <span>2X SPEED</span>
-            </div>
-          )}
-        </div>
-
-        {/* --- 4. Bottom Info Overlay (Constrained width, single title/description with three-dot expander, tags button) --- */}
-        <div className="absolute bottom-1 inset-x-0 z-30 p-4 pb-3 bg-gradient-to-t from-black/95 via-black/65 to-transparent pointer-events-none">
-          {/* Photo Post Carousel Dots - Positioned directly above profile menu & profile text */}
-          {currentShort.mediaType === 'carousel' && currentShort.mediaUrls.length > 1 && (
-            <div className="flex items-center justify-center gap-1.5 pb-3 pointer-events-auto">
-              {currentShort.mediaUrls.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCarouselPhotoIndex(idx);
-                  }}
-                  className={`h-1.5 rounded-full transition-all ${
-                    carouselPhotoIndex === idx
-                      ? 'w-6 bg-white shadow-lg ring-1 ring-white/40'
-                      : 'w-2 bg-white/40 hover:bg-white/70'
-                  }`}
-                  aria-label={`Go to photo ${idx + 1}`}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Main content column constrained to max 78% width to never collide with right buttons */}
-          <div className="max-w-[78%] space-y-2 pointer-events-auto">
-            {/* Creator Profile Link with Profile Picture / Icon & Ghost Follow Button right next to profile name */}
-            <div className="flex items-center gap-2 flex-wrap">
+          {/* Bottom Left: Profile, Caption, Description & Tags */}
+          <div className="space-y-4 bg-white/5 border border-white/10 p-5 rounded-3xl backdrop-blur-md shadow-2xl">
+            {/* Creator Profile */}
+            <div className="flex items-center gap-3">
               <div
                 onClick={() => navigate(`/shorts/creator/${currentShort.author.id}`)}
-                className="flex items-center gap-2 cursor-pointer group max-w-full"
+                className="cursor-pointer group flex items-center gap-3"
               >
-                {/* Show profile picture of creator, but profile icon only for My Reels (own profile) */}
-                {!isOwnProfile && currentShort.author.avatar ? (
-                  <img
-                    src={currentShort.author.avatar}
-                    alt={currentShort.author.name}
-                    className="w-8 h-8 rounded-full object-cover border border-white/40 shadow-md group-hover:scale-105 transition-transform flex-shrink-0"
-                  />
-                ) : (
-                  <div
-                    className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/40 flex items-center justify-center text-white flex-shrink-0 group-hover:scale-105 transition-transform shadow-md"
-                    title={isOwnProfile ? "My Reels Profile" : currentShort.author.name}
-                  >
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                )}
-                <div className="text-left overflow-hidden">
-                  <div className="text-xs sm:text-sm font-bold text-white group-hover:text-blue-300 flex items-center gap-1.5 transition-colors truncate">
-                    <span className="truncate">{currentShort.author.name}</span>
-                  </div>
+                <img
+                  src={currentShort.author.avatar || INITIAL_CREATORS['u_current'].avatar}
+                  alt={currentShort.author.name}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-white/30 shadow-md group-hover:scale-105 transition-transform"
+                />
+                <div>
+                  <h3 className="text-sm font-bold text-white group-hover:text-blue-300 transition-colors">
+                    {currentShort.author.name}
+                  </h3>
+                  <p className="text-xs font-mono text-gray-400">
+                    {currentShort.author.id === 'u_current' || currentShort.author.name.includes('Ajinkya') ? 'ajinkya4.patil' : `${currentShort.author.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.patil`}
+                  </p>
                 </div>
               </div>
 
-              {/* Follow Button: Shown right next to profile name with NO button background (icon + text only) */}
               {!isOwnProfile && !isFollowingAuthor && (
                 <button
                   onClick={handleToggleFollow}
-                  className="text-white hover:text-blue-200 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors p-0 active:scale-95 bg-transparent border-0 shadow-none flex-shrink-0 drop-shadow-md ml-0.5"
-                  title={`Follow ${currentShort.author.name}`}
-                  aria-label={`Follow ${currentShort.author.name}`}
+                  className="ml-auto px-3 py-1.5 rounded-full bg-[#002B7F] hover:bg-blue-800 text-white text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center gap-1 cursor-pointer"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   <span>Follow</span>
@@ -801,201 +710,386 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
               )}
             </div>
 
-            {/* Single Combined Reel Title & Description Field with Three-Dot Expand/Contract Button */}
-            <div className="text-left">
-              {currentShort.description ? (
-                <p className="text-xs sm:text-sm text-white leading-snug drop-shadow">
-                  <span className="font-bold">{currentShort.title}</span>
-                  <span className="text-gray-200 ml-1.5 font-normal text-[11px] sm:text-xs">
-                    {isDescriptionExpanded
-                      ? `— ${currentShort.description}`
-                      : currentShort.description.length > 60
-                      ? `— ${currentShort.description.slice(0, 60)}`
-                      : `— ${currentShort.description}`}
-                  </span>
-                  {currentShort.description.length > 60 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsDescriptionExpanded(!isDescriptionExpanded);
-                      }}
-                      className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-white/25 hover:bg-white/35 text-white text-[10px] font-extrabold tracking-widest cursor-pointer ml-1.5 transition-colors align-middle shadow-xs"
-                      title={isDescriptionExpanded ? "Contract description" : "Expand description"}
-                      aria-label={isDescriptionExpanded ? "Contract description" : "Expand description"}
-                    >
-                      •••
-                    </button>
-                  )}
+            {/* Caption & Description */}
+            <div className="space-y-1">
+              <h4 className="text-sm font-bold text-white leading-snug">{currentShort.title}</h4>
+              {(currentShort.caption || currentShort.description) && (
+                <p className="text-xs text-gray-300 leading-relaxed max-h-28 overflow-y-auto pr-1">
+                  {currentShort.caption || currentShort.description}
                 </p>
-              ) : (
-                <h3 className="text-xs sm:text-sm font-bold text-white leading-snug drop-shadow line-clamp-2">
-                  {currentShort.title}
-                </h3>
               )}
             </div>
 
-            {/* Tags Area: Shows up to 2 tag bubbles without hashtags, plus an 'N tags' button for remaining tags */}
+            {/* Tags */}
             {currentShort.tags && currentShort.tags.length > 0 && (
-              <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
-                {/* Fixed area: Up to 2 tag bubbles (NO hashtags) */}
-                {currentShort.tags.slice(0, 2).map((rawTag) => {
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {currentShort.tags.map((rawTag) => {
                   const cleanTag = rawTag.replace(/^#/, '');
                   return (
                     <button
-                      key={rawTag}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/shorts/search?topic=${encodeURIComponent(cleanTag)}`);
-                      }}
-                      className="px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white text-[11px] font-medium backdrop-blur-xs transition-colors shadow-2xs cursor-pointer active:scale-95"
-                      title={`Explore ${cleanTag}`}
+                      key={cleanTag}
+                      onClick={() => navigate(`/shorts/search?topic=${encodeURIComponent(cleanTag)}`)}
+                      className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-blue-200 text-[11px] font-mono transition-colors cursor-pointer"
                     >
                       {cleanTag}
                     </button>
                   );
                 })}
-
-                {/* Remaining Tags Button (e.g. "+2 tags") that opens complete list menu */}
-                {currentShort.tags.length > 2 && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsTagsMenuOpen(true);
-                    }}
-                    className="px-2.5 py-1 rounded-full bg-blue-500/30 hover:bg-blue-500/45 text-blue-200 hover:text-white border border-blue-400/30 text-[11px] font-semibold backdrop-blur-xs transition-colors shadow-2xs cursor-pointer active:scale-95"
-                    title="View all tags in menu"
-                  >
-                    +{currentShort.tags.length - 2} tags
-                  </button>
-                )}
               </div>
             )}
 
-            {/* Audio Title if exists */}
+            {/* Audio */}
             {currentShort.audioTitle && (
-              <div className="flex items-center gap-1.5 text-[10px] text-blue-300 truncate pt-0.5">
-                <Music className="w-3 h-3 flex-shrink-0 animate-spin" style={{ animationDuration: '4s' }} />
+              <div className="flex items-center gap-2 text-xs text-blue-300 pt-1">
+                <Music className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '4s' }} />
                 <span className="truncate">{currentShort.audioTitle}</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* --- 3. Right-Hand Action Buttons (Positioned AFTER overlay, z-50, vivid pure white, NO circular rings) --- */}
-        <div className="absolute right-2.5 sm:right-3 bottom-5 z-50 flex flex-col items-center gap-2.5 sm:gap-3 pointer-events-auto">
-          {/* Views Count Indicator (Above Like Button) */}
-          <div className="flex flex-col items-center select-none pointer-events-none">
-            <div className="p-1 flex items-center justify-center">
-              <Eye className="w-6 h-6 text-white stroke-[2.2] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+        {/* --- CENTER: Main Reel Viewport Container (9:16 Aspect Ratio) --- */}
+        <div
+          className="relative w-full h-full max-w-[430px] md:max-w-[390px] h-[640px] md:rounded-3xl overflow-hidden bg-black shadow-2xl border border-white/10 flex flex-col justify-between shrink-0"
+        >
+          {/* Top Bar Overlay (MOBILE ONLY: md:hidden) */}
+          <div className="absolute top-0 inset-x-0 z-40 p-3.5 pt-3 bg-gradient-to-b from-black/80 via-black/30 to-transparent flex items-center justify-between pointer-events-auto md:hidden">
+            <div>
+              {fromSource ? (
+                <button
+                  onClick={() => navigate(-1)}
+                  className="p-2 text-white hover:opacity-80 transition-all active:scale-95 flex items-center justify-center group"
+                >
+                  <ArrowLeft className="w-6 h-6 text-white" />
+                </button>
+              ) : (
+                <button
+                  onClick={handlePlusClick}
+                  className="p-2 text-white hover:opacity-80 transition-all active:scale-95 flex items-center justify-center group"
+                >
+                  <Plus className="w-7 h-7 stroke-[2.5] text-white" />
+                </button>
+              )}
             </div>
-            <span className="text-[10px] font-extrabold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] mt-0.5">
-              {currentShort.viewsCount.toLocaleString()}
-            </span>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => navigate('/shorts/search')}
+                className="p-2 text-white hover:text-white/80 transition-all active:scale-90 cursor-pointer"
+              >
+                <Search className="w-5 h-5 text-white stroke-[2.2]" />
+              </button>
+
+              <button
+                onClick={() => navigate(`/shorts/creator/${INITIAL_CREATORS['u_current'].id}`)}
+                className="p-2 text-white hover:text-white/80 transition-all active:scale-90 cursor-pointer flex items-center justify-center flex-shrink-0"
+              >
+                <User className="w-5 h-5 text-white stroke-[2.2]" />
+              </button>
+            </div>
           </div>
 
-          {/* Like Button (NO circular boundary ring, clean floating icon) */}
-          <div className="flex flex-col items-center select-none">
+          {/* Main Media Screen (Video / Carousel / Photo) */}
+          <div
+            className="relative flex-1 w-full h-full cursor-pointer flex items-center justify-center bg-black overflow-hidden"
+            onClick={handleVideoTap}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+          >
+            {/* VIDEO Short */}
+            {currentShort.mediaType === 'video' && (
+              <video
+                ref={videoRef}
+                src={currentShort.mediaUrls[0]}
+                playsInline
+                loop
+                autoPlay
+                muted={isMuted}
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleTimeUpdate}
+                className="w-full h-full object-cover"
+              />
+            )}
+
+            {/* CAROUSEL Photo Deck Short */}
+            {currentShort.mediaType === 'carousel' && (
+              <div className="relative w-full h-full">
+                <img
+                  src={currentShort.mediaUrls[carouselPhotoIndex] || currentShort.mediaUrls[0]}
+                  alt={currentShort.title}
+                  className="w-full h-full object-cover"
+                />
+
+                {carouselPhotoIndex > 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCarouselPhotoIndex(p => p - 1);
+                    }}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-black/50 text-white backdrop-blur-md"
+                  >
+                    ‹
+                  </button>
+                )}
+                {carouselPhotoIndex < currentShort.mediaUrls.length - 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCarouselPhotoIndex(p => p + 1);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-black/50 text-white backdrop-blur-md"
+                  >
+                    ›
+                  </button>
+                )}
+
+                {currentShort.audioUrl && (
+                  <audio
+                    ref={audioRef}
+                    src={currentShort.audioUrl}
+                    loop
+                    autoPlay
+                    muted={isMuted}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* SINGLE PHOTO Short */}
+            {currentShort.mediaType === 'photo' && (
+              <div className="relative w-full h-full">
+                <img
+                  src={currentShort.mediaUrls[0]}
+                  alt={currentShort.title}
+                  className="w-full h-full object-cover"
+                />
+                {currentShort.audioUrl && (
+                  <audio
+                    ref={audioRef}
+                    src={currentShort.audioUrl}
+                    loop
+                    autoPlay
+                    muted={isMuted}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Pause & Mute Overlay */}
+            {!isPlaying && !showDoubleTapHeart && (
+              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-none bg-black/30 transition-all gap-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleMute();
+                  }}
+                  className="pointer-events-auto p-2.5 rounded-full bg-black/75 hover:bg-black/90 backdrop-blur-md text-white border border-white/25 shadow-xl flex items-center justify-center transition-all active:scale-95 animate-scale-up"
+                  title={isMuted ? 'Unmute sound' : 'Mute sound'}
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-5 h-5 text-amber-400" />
+                  ) : (
+                    <Volume2 className="w-5 h-5 text-white" />
+                  )}
+                </button>
+
+                <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white shadow-2xl animate-scale-up">
+                  <Play className="w-8 h-8 fill-white ml-1" />
+                </div>
+              </div>
+            )}
+
+            {/* Double Tap Floating Heart Animation Burst */}
+            {showDoubleTapHeart && (
+              <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+                <div className="w-24 h-24 rounded-full bg-rose-600/90 backdrop-blur-md flex items-center justify-center shadow-2xl animate-ping text-white">
+                  <Heart className="w-14 h-14 fill-white text-white" />
+                </div>
+              </div>
+            )}
+
+            {/* 2x Fast-Forward Indicator */}
+            {isAccelerating && (
+              <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40 bg-blue-600/90 text-white text-xs font-black px-4 py-1.5 rounded-full flex items-center gap-1.5 backdrop-blur-md shadow-2xl animate-pulse">
+                <Zap className="w-4 h-4 fill-white" />
+                <span>2X SPEED</span>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Info Overlay (MOBILE ONLY: md:hidden) */}
+          <div className="absolute bottom-1 inset-x-0 z-30 p-4 pb-3 bg-gradient-to-t from-black/95 via-black/65 to-transparent pointer-events-none md:hidden">
+            <div className="max-w-[78%] space-y-2 pointer-events-auto">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div
+                  onClick={() => navigate(`/shorts/creator/${currentShort.author.id}`)}
+                  className="flex items-center gap-2 cursor-pointer group max-w-full"
+                >
+                  <img
+                    src={currentShort.author.avatar || INITIAL_CREATORS['u_current'].avatar}
+                    alt={currentShort.author.name}
+                    className="w-8 h-8 rounded-full object-cover border border-white/40 shadow-md"
+                  />
+                  <span className="text-xs sm:text-sm font-bold text-white truncate">{currentShort.author.name}</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-white leading-snug drop-shadow line-clamp-2">
+                {currentShort.caption || currentShort.title}
+              </p>
+
+              {currentShort.tags && currentShort.tags.length > 0 && (
+                <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
+                  {currentShort.tags.slice(0, 2).map((rawTag) => {
+                    const cleanTag = rawTag.replace(/^#/, '');
+                    return (
+                      <span key={cleanTag} className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-medium">
+                        {cleanTag}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right-Hand Action Buttons (MOBILE ONLY: md:hidden) */}
+          <div className="absolute right-3 bottom-8 z-50 flex flex-col items-center gap-3 pointer-events-auto md:hidden">
+            <button onClick={handleToggleLike} className="p-1 text-white flex items-center justify-center">
+              <Heart className={`w-6.5 h-6.5 ${isLiked ? 'fill-rose-500 text-rose-500' : 'text-white'}`} />
+            </button>
+            <button onClick={handleOpenShare} className="p-1 text-white flex items-center justify-center">
+              <Share2 className="w-6.5 h-6.5 text-white" />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); toggleSaveShort(currentShort.id); }} className="p-1 text-white flex items-center justify-center">
+              <Bookmark className={`w-6.5 h-6.5 ${isSaved ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); setIsMoreMenuOpen(true); }} className="p-1 text-white flex items-center justify-center">
+              <MoreVertical className="w-6.5 h-6.5 text-white" />
+            </button>
+          </div>
+
+          {/* Progress Line */}
+          <div className="absolute bottom-0 inset-x-0 h-1 bg-white/20 z-50 overflow-hidden">
+            <div
+              className="h-full bg-blue-500 transition-all duration-200 ease-linear shadow-[0_0_8px_rgba(59,130,246,0.8)]"
+              style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }}
+            />
+          </div>
+        </div>
+
+        {/* --- DESKTOP ONLY: Right Side Column (Search, Profile, Action Buttons: Heart, Share, Save, Three-Dots) --- */}
+        <div className="hidden md:flex flex-col justify-between w-64 lg:w-72 h-[640px] max-h-[85vh] py-2 text-white shrink-0">
+          {/* Top Right: Search & Profile Icons (NO Notification Icon) */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/shorts/search')}
+              className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 flex items-center justify-center cursor-pointer shadow-md"
+              title="Search Learning Shorts"
+            >
+              <Search className="w-5 h-5 text-white" />
+            </button>
+
+            <button
+              onClick={() => navigate(`/shorts/creator/${INITIAL_CREATORS['u_current'].id}`)}
+              className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 flex items-center justify-center cursor-pointer shadow-md"
+              title="My Reels Profile"
+            >
+              <User className="w-5 h-5 text-white" />
+            </button>
+          </div>
+
+          {/* Action Buttons Column: Heart, Share, Save, Three Dots */}
+          <div className="space-y-5 bg-white/5 border border-white/10 p-5 rounded-3xl backdrop-blur-md shadow-2xl">
+            {/* Heart (Like) Button */}
             <button
               onClick={handleToggleLike}
-              className="p-1 text-white transition-transform active:scale-125 flex items-center justify-center cursor-pointer hover:scale-110"
-              title={isLiked ? "Unlike Short" : "Like Short"}
-              aria-label={isLiked ? "Unlike Short" : "Like Short"}
+              className="flex items-center gap-3.5 group cursor-pointer w-full text-left"
             >
-              <Heart
-                className={`w-6.5 h-6.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] transition-colors ${
-                  isLiked ? 'fill-rose-500 text-rose-500 stroke-rose-500' : 'text-white stroke-[2.2]'
-                }`}
-              />
+              <div className="p-3 rounded-2xl bg-white/10 group-hover:bg-rose-500/20 text-white transition-all group-hover:scale-110">
+                <Heart className={`w-6 h-6 ${isLiked ? 'fill-rose-500 text-rose-500' : 'text-white'}`} />
+              </div>
+              <div>
+                <span className="text-xs font-bold block">{currentShort.likesCount}</span>
+                <span className="text-[10px] text-gray-400">Likes</span>
+              </div>
             </button>
-            <span className="text-[10px] font-extrabold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] mt-0.5">
-              {currentShort.likesCount}
-            </span>
-          </div>
 
-          {/* Saved Collection Button (Positioned directly BELOW Like button) */}
-          <div className="flex flex-col items-center select-none">
+            {/* Share Button */}
+            <button
+              onClick={handleOpenShare}
+              className="flex items-center gap-3.5 group cursor-pointer w-full text-left"
+            >
+              <div className="p-3 rounded-2xl bg-white/10 group-hover:bg-blue-500/20 text-white transition-all group-hover:scale-110">
+                <Share2 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <span className="text-xs font-bold block">{currentShort.sharesCount}</span>
+                <span className="text-[10px] text-gray-400">Shares</span>
+              </div>
+            </button>
+
+            {/* Save Button */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 toggleSaveShort(currentShort.id);
               }}
-              className="p-1 text-white transition-transform active:scale-125 flex items-center justify-center cursor-pointer hover:scale-110"
-              title={isSaved ? "Remove from Saved Collection" : "Save to Collection"}
-              aria-label={isSaved ? "Remove from Saved Collection" : "Save to Collection"}
+              className="flex items-center gap-3.5 group cursor-pointer w-full text-left"
             >
-              <Bookmark
-                className={`w-6.5 h-6.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] transition-colors ${
-                  isSaved ? 'fill-amber-400 text-amber-400 stroke-amber-400' : 'text-white stroke-[2.2]'
-                }`}
-              />
+              <div className="p-3 rounded-2xl bg-white/10 group-hover:bg-amber-500/20 text-white transition-all group-hover:scale-110">
+                <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
+              </div>
+              <div>
+                <span className="text-xs font-bold block">{isSaved ? 'Saved' : 'Save'}</span>
+                <span className="text-[10px] text-gray-400">Collections</span>
+              </div>
             </button>
-            <span className="text-[10px] font-extrabold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] mt-0.5">
-              {isSaved ? 'Saved' : 'Save'}
-            </span>
-          </div>
 
-          {/* Share Button (Vivid Pure White Icon, NO circular ring, NO grayish shadow) */}
-          <div className="flex flex-col items-center select-none">
-            <button
-              onClick={handleOpenShare}
-              className="p-1 text-white transition-transform active:scale-95 flex items-center justify-center cursor-pointer hover:scale-110"
-              title="Share Deep Link"
-              aria-label="Share Deep Link"
-            >
-              <Share2 className="w-6 h-6 text-white stroke-[2.2] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
-            </button>
-            <span className="text-[10px] font-extrabold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] mt-0.5">
-              {currentShort.sharesCount}
-            </span>
-          </div>
-
-          {/* Three-Dot More Options Button (Vivid Pure White Icon, NO circular ring, NO grayish shadow) */}
-          <div className="flex flex-col items-center select-none">
+            {/* Three Dots Button */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setIsMoreMenuOpen(true);
               }}
-              className="p-1 text-white transition-transform active:scale-95 flex items-center justify-center cursor-pointer hover:scale-110"
-              title="More Options"
-              aria-label="More Options"
+              className="flex items-center gap-3.5 group cursor-pointer w-full text-left"
             >
-              <MoreVertical className="w-6 h-6 text-white stroke-[2.2] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
+              <div className="p-3 rounded-2xl bg-white/10 group-hover:bg-white/20 text-white transition-all group-hover:scale-110">
+                <MoreVertical className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <span className="text-xs font-bold block">More</span>
+                <span className="text-[10px] text-gray-400">Options</span>
+              </div>
             </button>
+
+            {/* Up & Down Navigation */}
+            <div className="pt-2 border-t border-white/10 flex items-center gap-2">
+              <button
+                onClick={goToPrev}
+                disabled={currentIndex === 0}
+                className={`flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all flex items-center justify-center cursor-pointer ${
+                  currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : ''
+                }`}
+                title="Previous Reel"
+              >
+                <ChevronUp className="w-5 h-5" />
+              </button>
+              <button
+                onClick={goToNext}
+                disabled={currentIndex === feedShorts.length - 1}
+                className={`flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all flex items-center justify-center cursor-pointer ${
+                  currentIndex === feedShorts.length - 1 ? 'opacity-30 cursor-not-allowed' : ''
+                }`}
+                title="Next Reel"
+              >
+                <ChevronDown className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* --- 5. Thin Horizontal Progress Line --- */}
-        <div className="absolute bottom-0 inset-x-0 h-1 bg-white/20 z-50 overflow-hidden">
-          <div
-            className="h-full bg-blue-500 transition-all duration-200 ease-linear shadow-[0_0_8px_rgba(59,130,246,0.8)]"
-            style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }}
-          />
-        </div>
-      </div>
-
-      {/* --- Desktop Floating Up/Down Navigation Buttons beside the Reel --- */}
-      <div className="hidden md:flex flex-col gap-3 ml-4 z-40">
-        <button
-          onClick={goToPrev}
-          disabled={currentIndex === 0}
-          className={`p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all active:scale-95 border border-white/10 shadow-2xl ${
-            currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : ''
-          }`}
-          title="Previous Short (Arrow Up)"
-        >
-          <ChevronUp className="w-6 h-6" />
-        </button>
-        <button
-          onClick={goToNext}
-          disabled={currentIndex === feedShorts.length - 1}
-          className={`p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all active:scale-95 border border-white/10 shadow-2xl ${
-            currentIndex === feedShorts.length - 1 ? 'opacity-30 cursor-not-allowed' : ''
-          }`}
-          title="Next Short (Arrow Down)"
-        >
-          <ChevronDown className="w-6 h-6" />
-        </button>
       </div>
 
       {/* --- Share Modal --- */}
@@ -1061,27 +1155,35 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
             <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-2 sm:hidden" />
 
             <div className="space-y-1">
-              {/* Save / Bookmark to Saved Collection */}
-              <button
-                onClick={() => toggleSaveShort(currentShort.id)}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-white/10 transition-colors text-left font-semibold text-xs text-white"
-              >
-                <Bookmark className={`w-4 h-4 text-amber-400 ${savedShortIds.includes(currentShort.id) ? 'fill-amber-400' : ''}`} />
-                <span>{savedShortIds.includes(currentShort.id) ? 'Remove from Saved Collection' : 'Save to Collection'}</span>
-              </button>
+              {/* View Analytics (Shown for author's own short) */}
+              {(isOwnProfile || fromSource === 'profile') && (
+                <button
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    setIsAnalyticsModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl bg-blue-500/15 hover:bg-blue-500/25 transition-colors text-left font-semibold text-xs text-blue-300 border border-blue-500/30 mb-1 cursor-pointer"
+                >
+                  <BarChart3 className="w-4 h-4 text-blue-400 shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-bold text-white">View Analytics</span>
+                    <span className="text-[10px] text-gray-300">Views, completion rate, engagement & retention</span>
+                  </div>
+                </button>
+              )}
 
-              {/* View Saved Shorts */}
+              {/* Why am I seeing this post? */}
               <button
                 onClick={() => {
                   setIsMoreMenuOpen(false);
-                  navigate(`/shorts/creator/${INITIAL_CREATORS['u_current'].id}?tab=saved`);
+                  setIsWhySeeingModalOpen(true);
                 }}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-white/10 transition-colors text-left font-semibold text-xs text-amber-300 hover:text-amber-200"
+                className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-white/10 transition-colors text-left font-semibold text-xs text-white"
               >
-                <Bookmark className="w-4 h-4 text-amber-400 fill-amber-400/30" />
+                <HelpCircle className="w-4 h-4 text-blue-400 shrink-0" />
                 <div className="flex flex-col">
-                  <span>View Saved Shorts</span>
-                  <span className="text-[10px] text-gray-400">Open saved collection in profile ({savedShortIds.length} shorts)</span>
+                  <span>Why am I seeing this post?</span>
+                  <span className="text-[10px] text-gray-400">Recommendation based on role, interests & behavior</span>
                 </div>
               </button>
 
@@ -1133,6 +1235,264 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Why Am I Seeing This Post Explanation Modal --- */}
+      {isWhySeeingModalOpen && currentShort && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setIsWhySeeingModalOpen(false)}
+        >
+          <div
+            className="bg-slate-900 border border-white/20 text-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-4 animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-blue-500/20 text-blue-400">
+                  <HelpCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Why am I seeing this post?</h3>
+                  <p className="text-[10px] text-gray-400">Recommendation Transparency</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsWhySeeingModalOpen(false)}
+                className="p-1 rounded-full text-gray-400 hover:text-white hover:bg-white/10 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs leading-relaxed text-gray-300">
+              <p className="text-white font-medium">
+                This short is shown as per the platform recommendation basis:
+              </p>
+
+              <div className="space-y-2.5 bg-white/5 p-3.5 rounded-2xl border border-white/10">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0" />
+                  <div>
+                    <span className="font-bold text-white">Employee Role: </span>
+                    <span className="text-gray-300">Recommended for your job function and developmental competencies ({currentShort.author.role || 'Enterprise Tech'}).</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <div className="w-2 h-2 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                  <div>
+                    <span className="font-bold text-white">Employee Platform Interest: </span>
+                    <span className="text-gray-300">Topics matched with your skills and tags ({currentShort.tags.map(t => t.replace('#', '')).slice(0, 3).join(', ') || 'General Knowledge'}).</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
+                  <div>
+                    <span className="font-bold text-white">User Behavior on Platform: </span>
+                    <span className="text-gray-300">Based on reels you watch, like, and engage with across your sessions.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsWhySeeingModalOpen(false)}
+              className="w-full py-2.5 bg-[#002B7F] hover:bg-blue-800 rounded-xl text-xs font-bold text-white transition-colors cursor-pointer"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Save to Collection Modal Bottom Sheet --- */}
+      {isSaveCollectionModalOpen && currentShort && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+          onClick={() => {
+            setIsSaveCollectionModalOpen(false);
+            setIsCreatingCollection(false);
+          }}
+        >
+          <div
+            className="bg-slate-900 border border-white/20 text-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-sm w-full flex flex-col max-h-[85vh] sm:max-h-[80vh] overflow-hidden animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Draggable Handle Bar (No cross button per requirements) */}
+            <div
+              className="pt-3 pb-1 cursor-pointer flex justify-center bg-slate-900 flex-shrink-0"
+              onClick={() => {
+                setIsSaveCollectionModalOpen(false);
+                setIsCreatingCollection(false);
+              }}
+            >
+              <div className="w-12 h-1.5 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
+            </div>
+
+            {/* Header: Title and small New Collection button on top right */}
+            <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-slate-900 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Bookmark className="w-4.5 h-4.5 fill-amber-400 text-amber-400" />
+                <h3 className="text-sm font-bold text-white">Save to Collection</h3>
+              </div>
+
+              {!isCreatingCollection && (
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingCollection(true)}
+                  className="px-2.5 py-1 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer border border-blue-400/30"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>New collection</span>
+                </button>
+              )}
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {isCreatingCollection ? (
+                /* Inline Collection Creation Form (Title + Privacy only, NO description per requirements) */
+                <form onSubmit={handleCreateAndSaveCollection} className="space-y-3.5 animate-fade-in">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-200 mb-1">
+                      Collection Title <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newColTitle}
+                      onChange={(e) => setNewColTitle(e.target.value)}
+                      placeholder="e.g. System Design, AI Tutorials"
+                      className="w-full px-3.5 py-2 bg-black/50 border border-white/20 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-400"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-200 mb-1.5">
+                      Privacy
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setNewColIsPrivate(true)}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${
+                          newColIsPrivate
+                            ? 'bg-[#002B7F] text-white border-blue-400 shadow-xs'
+                            : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                        }`}
+                      >
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Private</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setNewColIsPrivate(false)}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${
+                          !newColIsPrivate
+                            ? 'bg-[#002B7F] text-white border-blue-400 shadow-xs'
+                            : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                        }`}
+                      >
+                        <Globe className="w-3.5 h-3.5" />
+                        <span>Public</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingCollection(false)}
+                      className="px-3 py-2 bg-white/10 hover:bg-white/15 text-gray-300 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!newColTitle.trim()}
+                      className="px-4 py-2 bg-[#002B7F] hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                    >
+                      <FolderPlus className="w-3.5 h-3.5" />
+                      <span>Create & Save</span>
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                /* Collections List (Only thumbnail, name of collection, checkmark indicator. NO number of items, NO default tag) */
+                <div className="space-y-1.5">
+                  {collectionsList.map((col) => {
+                    const isIncluded = col.shortIds.includes(currentShort.id);
+                    // Get latest reel thumbnail in this collection
+                    const colShorts = col.shortIds
+                      .map(id => shortsService.getAllShorts().find(s => s.id === id))
+                      .filter((s): s is ShortItem => !!s);
+                    const latestShort = colShorts[0];
+                    const thumb = latestShort?.thumbnailUrl || latestShort?.mediaUrls[0] || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=200&auto=format&fit=crop&q=80';
+
+                    return (
+                      <div
+                        key={col.id}
+                        onClick={() => handleToggleCollectionSave(col.id)}
+                        className={`w-full p-2.5 rounded-xl transition-all flex items-center justify-between gap-3 cursor-pointer group active:scale-98 text-left ${
+                          isIncluded
+                            ? 'bg-amber-500/15 border-l-2 border-amber-400'
+                            : 'hover:bg-white/5'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          {/* Thumbnail */}
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-800 flex-shrink-0 border border-white/10">
+                            <img
+                              src={thumb}
+                              alt={col.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+
+                          {/* Collection Name Only (NO item count, NO default tag) */}
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-xs font-bold text-white truncate">
+                              {col.name}
+                            </h4>
+                          </div>
+                        </div>
+
+                        {/* Checkmark Indicator */}
+                        <div
+                          className={`w-5 h-5 rounded-lg flex items-center justify-center transition-all ${
+                            isIncluded
+                              ? 'bg-amber-400 text-slate-950 font-bold'
+                              : 'border border-white/20 text-transparent'
+                          }`}
+                        >
+                          {isIncluded && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 border-t border-white/10 bg-slate-900 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSaveCollectionModalOpen(false);
+                  setIsCreatingCollection(false);
+                }}
+                className="w-full py-2 bg-white/10 hover:bg-white/15 rounded-xl text-xs font-bold text-gray-300 transition-colors cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1304,9 +1664,322 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
         </div>
       )}
 
-      {/* Floating Toast Notification */}
+      {/* --- Plus Button Draft Continuation Modal Prompt --- */}
+      {isDraftPromptOpen && latestDraft && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setIsDraftPromptOpen(false)}
+        >
+          <div
+            className="bg-slate-900 border border-white/20 text-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-4 animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+                  <Film className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Continue Saved Draft?</h3>
+                  <p className="text-[10px] text-gray-400">You have an unfinished learning short</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsDraftPromptOpen(false)}
+                className="p-1 rounded-full text-gray-400 hover:text-white hover:bg-white/10 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3.5 bg-white/5 rounded-2xl border border-white/10 flex items-center gap-3">
+              <div className="w-12 h-16 rounded-xl bg-black overflow-hidden flex-shrink-0 border border-white/20 relative">
+                {latestDraft.mediaUrls[0] && latestDraft.mediaType === 'video' ? (
+                  <video src={latestDraft.mediaUrls[0]} className="w-full h-full object-cover" />
+                ) : (
+                  <img src={latestDraft.mediaUrls[0]} alt="" className="w-full h-full object-cover" />
+                )}
+                <span className="absolute bottom-0.5 right-0.5 px-1 bg-black/80 text-[8px] font-mono text-white rounded">
+                  {latestDraft.durationSeconds || 15}s
+                </span>
+              </div>
+              <div className="min-w-0 flex-1 text-left">
+                <h4 className="text-xs font-bold text-white truncate">
+                  {latestDraft.title || 'Untitled Draft Reel'}
+                </h4>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  {latestDraft.clipsCount || 1} {latestDraft.mediaType === 'video' ? 'clip(s)' : 'photo(s)'} • Saved {new Date(latestDraft.updatedAt).toLocaleDateString()}
+                </p>
+                <span className="inline-block px-1.5 py-0.5 mt-1 bg-amber-500/20 text-amber-300 rounded text-[9px] font-bold">
+                  Draft
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <button
+                onClick={() => {
+                  setIsDraftPromptOpen(false);
+                  navigate(`/shorts/create?draftId=${latestDraft.id}`);
+                }}
+                className="w-full py-2.5 bg-[#002B7F] hover:bg-blue-600 rounded-xl text-xs font-bold text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Continue with Last Draft</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsDraftPromptOpen(false);
+                  navigate('/shorts/create');
+                }}
+                className="w-full py-2.5 bg-white/10 hover:bg-white/15 rounded-xl text-xs font-semibold text-gray-300 transition-colors cursor-pointer"
+              >
+                Create New Short
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Reel Analytics Modal (Three Dots Menu -> View Analytics) --- */}
+      {isAnalyticsModalOpen && currentShort && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setIsAnalyticsModalOpen(false)}
+        >
+          <div
+            className="bg-slate-900 border border-white/20 text-white rounded-3xl shadow-2xl max-w-sm w-full p-5 space-y-4 animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-blue-500/20 text-blue-400">
+                  <BarChart3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Reel Analytics</h3>
+                  <p className="text-[10px] text-gray-400 truncate max-w-[200px]">{currentShort.title}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAnalyticsModalOpen(false)}
+                className="p-1 rounded-full text-gray-400 hover:text-white hover:bg-white/10 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Metrics Grid */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-white/5 p-2.5 rounded-2xl border border-white/10 text-center">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Views</span>
+                <p className="text-base font-extrabold text-white mt-0.5">{currentShort.viewsCount}</p>
+              </div>
+              <div className="bg-white/5 p-2.5 rounded-2xl border border-white/10 text-center">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Likes</span>
+                <p className="text-base font-extrabold text-rose-400 mt-0.5">{currentShort.likesCount}</p>
+              </div>
+              <div className="bg-white/5 p-2.5 rounded-2xl border border-white/10 text-center">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Shares</span>
+                <p className="text-base font-extrabold text-blue-400 mt-0.5">{currentShort.sharesCount}</p>
+              </div>
+            </div>
+
+            {/* Engagement & Completion */}
+            <div className="space-y-2 bg-white/5 p-3 rounded-2xl border border-white/10">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-300 font-medium">Completion Rate</span>
+                <span className="font-bold text-emerald-400">86%</span>
+              </div>
+              <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                <div className="bg-emerald-500 h-full rounded-full" style={{ width: '86%' }} />
+              </div>
+
+              <div className="flex items-center justify-between text-xs pt-1">
+                <span className="text-gray-300 font-medium">Avg Watch Time</span>
+                <span className="font-bold text-white">14.8s / {currentShort.durationSeconds || 15}s</span>
+              </div>
+            </div>
+
+            {/* Audience Demographics */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Viewer Demographics</span>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between text-gray-300">
+                  <span>Engineering & Architecture</span>
+                  <span className="font-bold text-white">52%</span>
+                </div>
+                <div className="flex justify-between text-gray-300">
+                  <span>Product Management</span>
+                  <span className="font-bold text-white">26%</span>
+                </div>
+                <div className="flex justify-between text-gray-300">
+                  <span>Platform Operations</span>
+                  <span className="font-bold text-white">22%</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsAnalyticsModalOpen(false)}
+              className="w-full py-2.5 bg-[#002B7F] hover:bg-blue-600 rounded-xl text-xs font-bold text-white transition-colors cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- User Notifications Modal Drawer --- */}
+      {isNotificationModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+          onClick={() => setIsNotificationModalOpen(false)}
+        >
+          <div
+            className="bg-slate-900 border border-white/20 text-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full flex flex-col max-h-[85vh] sm:max-h-[80vh] overflow-hidden animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-slate-900 flex-shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="relative p-2 rounded-xl bg-blue-500/20 text-blue-400">
+                  <Bell className="w-5 h-5" />
+                  {unreadNotifsCount > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>Notifications</span>
+                    {unreadNotifsCount > 0 && (
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-rose-500 text-white">
+                        {unreadNotifsCount} new
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-[10px] text-gray-400">Likes, follows, moderation & approvals</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                {unreadNotifsCount > 0 && (
+                  <button
+                    onClick={() => {
+                      shortsService.markAllNotificationsRead();
+                      setNotifications(shortsService.getNotifications());
+                      showToast('✅ All marked as read');
+                    }}
+                    className="p-1.5 text-xs text-blue-400 hover:text-blue-300 font-semibold transition-colors"
+                    title="Mark all as read"
+                  >
+                    <CheckCheck className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsNotificationModalOpen(false)}
+                  className="p-1.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Endless Scroll of Notifications List */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 divide-y divide-white/5">
+              {notifications.length === 0 ? (
+                <div className="py-12 text-center space-y-2">
+                  <Bell className="w-8 h-8 text-gray-500 mx-auto" />
+                  <p className="text-xs font-semibold text-gray-300">No notifications yet</p>
+                  <p className="text-[10px] text-gray-500">You're all caught up!</p>
+                </div>
+              ) : (
+                notifications.map((notif) => {
+                  return (
+                    <div
+                      key={notif.id}
+                      onClick={() => {
+                        shortsService.markNotificationRead(notif.id);
+                        setNotifications(shortsService.getNotifications());
+                        if (notif.reelId) {
+                          setIsNotificationModalOpen(false);
+                          navigate(`/shorts?short=${notif.reelId}`);
+                        }
+                      }}
+                      className={`p-3 rounded-2xl transition-all cursor-pointer flex items-start gap-3 text-left ${
+                        !notif.read ? 'bg-white/10 border border-white/15' : 'bg-transparent hover:bg-white/5'
+                      }`}
+                    >
+                      {/* Icon per type */}
+                      <div className="flex-shrink-0 mt-0.5">
+                        {notif.type === 'like' && (
+                          <div className="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center">
+                            <Heart className="w-4 h-4 fill-current" />
+                          </div>
+                        )}
+                        {notif.type === 'follow' && (
+                          <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                            <UserPlus className="w-4 h-4" />
+                          </div>
+                        )}
+                        {notif.type === 'approved' && (
+                          <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                            <CheckCircle2 className="w-4 h-4" />
+                          </div>
+                        )}
+                        {notif.type === 'submitted' && (
+                          <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                            <Clock className="w-4 h-4" />
+                          </div>
+                        )}
+                        {notif.type === 'rejected' && (
+                          <div className="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center">
+                            <Flag className="w-4 h-4" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <h4 className="text-xs font-bold text-white truncate">{notif.title}</h4>
+                          <span className="text-[10px] text-gray-400 flex-shrink-0">{notif.timestamp}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-300 leading-snug mt-0.5">{notif.message}</p>
+                        {notif.reelTitle && (
+                          <span className="inline-block mt-1 text-[10px] text-blue-400 font-semibold underline truncate max-w-full">
+                            Watch reel: {notif.reelTitle}
+                          </span>
+                        )}
+                      </div>
+
+                      {!notif.read && (
+                        <div className="w-2 h-2 rounded-full bg-rose-500 mt-2 flex-shrink-0" />
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 border-t border-white/10 bg-slate-900 flex-shrink-0">
+              <button
+                onClick={() => setIsNotificationModalOpen(false)}
+                className="w-full py-2 bg-white/10 hover:bg-white/15 rounded-xl text-xs font-bold text-gray-300 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Toast Notification (Centered in the middle of the screen) */}
       {toastMessage && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs sm:text-sm font-bold py-2.5 px-5 rounded-full shadow-2xl z-[99999] animate-fade-in-up border border-gray-700">
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/85 backdrop-blur-md text-white text-xs sm:text-sm font-bold py-3 px-6 rounded-2xl shadow-2xl z-[99999] animate-scale-up border border-white/20 pointer-events-none text-center max-w-xs">
           {toastMessage}
         </div>
       )}

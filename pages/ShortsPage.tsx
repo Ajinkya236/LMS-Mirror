@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ShortsViewer from '../components/shorts/ShortsViewer';
+import { shortsService } from '../services/shortsService';
 
 export const ShortsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -9,6 +10,13 @@ export const ShortsPage: React.FC = () => {
 
   const orderedShortIds = useMemo(() => {
     try {
+      if (fromSource === 'saved') {
+        const savedOrder = sessionStorage.getItem('jio_shorts_saved_order');
+        if (savedOrder) {
+          return JSON.parse(savedOrder);
+        }
+        return shortsService.getSavedShortIds();
+      }
       const saved = sessionStorage.getItem('jio_shorts_search_order');
       if (saved) {
         return JSON.parse(saved);
@@ -17,7 +25,7 @@ export const ShortsPage: React.FC = () => {
       console.error(e);
     }
     return undefined;
-  }, [shortId]);
+  }, [shortId, fromSource]);
 
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] bg-slate-950">

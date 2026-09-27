@@ -51,18 +51,20 @@ import ShortsSettingsPage from './pages/ShortsSettingsPage';
 import CreateShortPage from './pages/CreateShortPage';
 import ShortsTagManagementPage from './pages/ShortsTagManagementPage';
 import ShortsModerationPreviewPage from './pages/ShortsModerationPreviewPage';
+import ShortsNotificationsPage from './pages/ShortsNotificationsPage';
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
   const isSearchPage = location.pathname.startsWith('/shorts/search');
   const isCreateShortPage = location.pathname === '/shorts/create';
   const isProfilePage = location.pathname.startsWith('/shorts/creator');
-  const isShortsView = location.pathname === '/shorts' || location.pathname === '/learning-shorts' || isCreateShortPage || isSearchPage || isProfilePage;
+  const isNotifsPage = location.pathname.startsWith('/shorts/notifications');
+  const isShortsView = location.pathname === '/shorts' || location.pathname === '/learning-shorts' || isCreateShortPage || isSearchPage || isProfilePage || isNotifsPage;
 
   return (
     <div className="bg-r-gray-50 min-h-screen font-sans text-r-gray-800 flex flex-col">
       {/* Top Nav: ALWAYS visible on web view (md:block). On mobile, hidden for immersive shorts views (search, profile, create) */}
-      {isSearchPage || isProfilePage || isCreateShortPage ? (
+      {isSearchPage || isProfilePage || isCreateShortPage || isNotifsPage ? (
         <div className="hidden md:block">
           <Header />
         </div>
@@ -73,6 +75,7 @@ const AppLayout: React.FC = () => {
         isCreateShortPage ? 'pt-0 md:pt-16 pb-0' :
         isSearchPage ? 'pt-0 md:pt-16 pb-16 md:pb-0' :
         isProfilePage ? 'pt-0 md:pt-16 pb-16 md:pb-0' :
+        isNotifsPage ? 'pt-0 md:pt-16 pb-16 md:pb-0' :
         isShortsView ? 'pt-0 md:pt-16 pb-16 md:pb-0' :
         'pt-16 pb-16 md:pb-0'
       }`}>
@@ -81,7 +84,9 @@ const AppLayout: React.FC = () => {
           <Route path="/shorts" element={<ShortsPage />} />
           <Route path="/shorts/create" element={<CreateShortPage />} />
           <Route path="/shorts/search" element={<ShortsSearchPage />} />
+          <Route path="/shorts/notifications" element={<ShortsNotificationsPage />} />
           <Route path="/shorts/creator/:creatorId" element={<CreatorProfilePage />} />
+          <Route path="/shorts/collection/:collectionId" element={<CreatorProfilePage />} />
           <Route path="/shorts/moderation" element={<ShortsModerationPage />} />
           <Route path="/shorts/moderation/preview/:shortId" element={<ShortsModerationPreviewPage />} />
           <Route path="/shorts/tags" element={<ShortsTagManagementPage />} />
@@ -137,7 +142,7 @@ const AppLayout: React.FC = () => {
           <Route path="/session/:sessionId/notes" element={<SessionNotesPage />} />
         </Routes>
       </main>
-      <Footer />
+      {!isShortsView && <Footer />}
       <MobileFooterNav />
     </div>
   );
