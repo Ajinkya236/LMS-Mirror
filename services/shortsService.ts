@@ -859,6 +859,116 @@ const SEED_SHORTS: ShortItem[] = [
     likesCount: 610,
     sharesCount: 132,
     durationSeconds: 15
+  },
+  {
+    id: 'short_131',
+    title: 'Cloud-Native Kubernetes Observability in 60s',
+    description: 'Master eBPF kernel tracing, Prometheus metric collection, and Grafana dashboard alerts without code instrumentation.',
+    mediaType: 'video',
+    mediaUrls: [
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutback2012.mp4'
+    ],
+    author: INITIAL_CREATORS['u_sandeep'],
+    tags: ['CloudArchitecture', 'Kubernetes', 'DevOpsPipeline'],
+    status: 'approved',
+    createdAt: '2026-09-25T08:00:00.000Z',
+    viewsCount: 2310,
+    likesCount: 540,
+    sharesCount: 112,
+    durationSeconds: 18
+  },
+  {
+    id: 'short_132',
+    title: 'System Design Cheat Sheet: Rate Limiting & Load Balancing',
+    description: 'High-resolution infographic comparing Round Robin, Least Connections, Consistent Hashing, and Token Bucket algorithms.',
+    mediaType: 'photo',
+    mediaUrls: [
+      'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=900&h=1600&fit=crop&q=80'
+    ],
+    audioUrl: 'https://cdn.freesound.org/previews/612/612095_5674468-lq.mp3',
+    audioTitle: 'Infra Architecture - Priya Nambiar',
+    author: INITIAL_CREATORS['u_priya'],
+    tags: ['SystemDesign', 'CyberSecurity', 'CloudArchitecture'],
+    status: 'approved',
+    createdAt: '2026-09-25T09:15:00.000Z',
+    viewsCount: 3450,
+    likesCount: 890,
+    sharesCount: 215,
+    durationSeconds: 15
+  },
+  {
+    id: 'short_133',
+    title: 'AI Agent Orchestration: LangGraph & Autogen Patterns',
+    description: 'Swipe through this 4-slide guide on stateful multi-agent workflows, human-in-the-loop validation, and memory persistence.',
+    mediaType: 'carousel',
+    mediaUrls: [
+      'https://images.unsplash.com/photo-1677442136019-21780efad99a?w=900&h=1600&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=900&h=1600&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=900&h=1600&fit=crop&q=80'
+    ],
+    audioUrl: 'https://cdn.freesound.org/previews/573/573381_11861866-lq.mp3',
+    audioTitle: 'Agentic AI Series - Dr. Anika Singh',
+    author: INITIAL_CREATORS['u_anika'],
+    tags: ['GenerativeAI', 'DataEngineering', 'SystemDesign'],
+    status: 'approved',
+    createdAt: '2026-09-25T10:30:00.000Z',
+    viewsCount: 4890,
+    likesCount: 1240,
+    sharesCount: 380,
+    durationSeconds: 20
+  },
+  {
+    id: 'short_134',
+    title: 'How High-Velocity Teams Handle Technical Debt',
+    description: 'Allocating 20% capacity per sprint for refactoring vs product features. The 3 metrics that convince stakeholders to prioritize tech debt.',
+    mediaType: 'video',
+    mediaUrls: [
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4'
+    ],
+    author: INITIAL_CREATORS['u_rahul'],
+    tags: ['ProductManagement', 'LeadershipSkills', 'DevOpsPipeline'],
+    status: 'approved',
+    createdAt: '2026-09-25T11:45:00.000Z',
+    viewsCount: 1920,
+    likesCount: 480,
+    sharesCount: 95,
+    durationSeconds: 15
+  },
+  {
+    id: 'short_135',
+    title: '5 Security Anti-Patterns in Cloud Microservices',
+    description: 'Are your JWT secrets hardcoded in environment variables? Here is why secret managers and short-lived mTLS tokens protect enterprise clouds.',
+    mediaType: 'photo',
+    mediaUrls: [
+      'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=900&h=1600&fit=crop&q=80'
+    ],
+    audioUrl: 'https://cdn.freesound.org/previews/573/573381_11861866-lq.mp3',
+    audioTitle: 'Cloud Security Dispatch - Priya Nambiar',
+    author: INITIAL_CREATORS['u_priya'],
+    tags: ['CyberSecurity', 'Microservices', 'DevOpsPipeline'],
+    status: 'approved',
+    createdAt: '2026-09-25T13:00:00.000Z',
+    viewsCount: 2680,
+    likesCount: 710,
+    sharesCount: 165,
+    durationSeconds: 14
+  },
+  {
+    id: 'short_136',
+    title: 'Mastering Customer Discovery Interviews in 60s',
+    description: 'Stop asking "Would you buy this?" Ask "How do you solve this problem today?" Watch how to uncover genuine enterprise pain points.',
+    mediaType: 'video',
+    mediaUrls: [
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'
+    ],
+    author: INITIAL_CREATORS['u_ajinkya'],
+    tags: ['CustomerSuccess', 'SalesMastery', 'LeadershipSkills'],
+    status: 'approved',
+    createdAt: '2026-09-25T14:20:00.000Z',
+    viewsCount: 3120,
+    likesCount: 810,
+    sharesCount: 190,
+    durationSeconds: 16
   }
 ];
 
