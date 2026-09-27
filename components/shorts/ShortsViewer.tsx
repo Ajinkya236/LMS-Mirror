@@ -643,9 +643,9 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
       <div className="flex items-center justify-center gap-6 lg:gap-10 w-full h-full max-w-6xl px-2 sm:px-6">
         
         {/* --- DESKTOP ONLY: Left Side Column (Plus/Back button, Creator Profile, Description, Tags) --- */}
-        <div className="hidden md:flex flex-col justify-between w-72 lg:w-80 h-[640px] max-h-[85vh] py-2 text-left text-white shrink-0">
-          {/* Top Left: Plus Button or Back Button */}
-          <div>
+        <div className="hidden md:flex flex-col justify-between w-64 lg:w-72 h-[640px] max-h-[85vh] py-2 text-left text-white shrink-0">
+          {/* Top Left: Plus Button or Back Button (Icon ONLY, close to reel) */}
+          <div className="flex justify-end">
             {fromSource ? (
               <button
                 onClick={() => {
@@ -658,42 +658,40 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
                     navigate(-1);
                   }
                 }}
-                className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 flex items-center gap-2 cursor-pointer shadow-md"
+                className="p-1 text-white hover:text-white/80 transition-transform active:scale-90 cursor-pointer"
                 title="Back"
               >
-                <ArrowLeft className="w-5 h-5" />
-                <span className="text-xs font-bold">Back</span>
+                <ArrowLeft className="w-6 h-6 stroke-[2.2]" />
               </button>
             ) : (
               <button
                 onClick={handlePlusClick}
-                className="p-3 rounded-2xl bg-[#002B7F] hover:bg-blue-800 text-white transition-all active:scale-95 flex items-center gap-2 cursor-pointer shadow-lg"
+                className="p-1 text-white hover:text-white/80 transition-transform active:scale-90 cursor-pointer"
                 title="Create Learning Short"
               >
-                <Plus className="w-6 h-6 stroke-[2.5]" />
-                <span className="text-xs font-extrabold tracking-wide">Create Short</span>
+                <Plus className="w-7 h-7 stroke-[2.5]" />
               </button>
             )}
           </div>
 
-          {/* Bottom Left: Profile, Caption, Description & Tags */}
-          <div className="space-y-4 bg-white/5 border border-white/10 p-5 rounded-3xl backdrop-blur-md shadow-2xl">
+          {/* Bottom Left: Profile, Caption, Description & Tags (NO CONTAINER BOX) */}
+          <div className="space-y-3">
             {/* Creator Profile */}
             <div className="flex items-center gap-3">
               <div
                 onClick={() => navigate(`/shorts/creator/${currentShort.author.id}`)}
-                className="cursor-pointer group flex items-center gap-3"
+                className="cursor-pointer group flex items-center gap-2.5 min-w-0"
               >
                 <img
                   src={currentShort.author.avatar || INITIAL_CREATORS['u_current'].avatar}
                   alt={currentShort.author.name}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-white/30 shadow-md group-hover:scale-105 transition-transform"
+                  className="w-10 h-10 rounded-full object-cover border border-white/30 shadow-md group-hover:scale-105 transition-transform shrink-0"
                 />
-                <div>
-                  <h3 className="text-sm font-bold text-white group-hover:text-blue-300 transition-colors">
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-white group-hover:text-blue-300 transition-colors truncate">
                     {currentShort.author.name}
                   </h3>
-                  <p className="text-xs font-mono text-gray-400">
+                  <p className="text-[11px] font-mono text-gray-400 truncate">
                     {currentShort.author.id === 'u_current' || currentShort.author.name.includes('Ajinkya') ? 'ajinkya4.patil' : `${currentShort.author.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.patil`}
                   </p>
                 </div>
@@ -702,7 +700,8 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
               {!isOwnProfile && !isFollowingAuthor && (
                 <button
                   onClick={handleToggleFollow}
-                  className="ml-auto px-3 py-1.5 rounded-full bg-[#002B7F] hover:bg-blue-800 text-white text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center gap-1 cursor-pointer"
+                  className="ml-auto text-white hover:text-blue-200 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors p-0 active:scale-95 bg-transparent border-0 shadow-none flex-shrink-0 drop-shadow-md"
+                  title={`Follow ${currentShort.author.name}`}
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   <span>Follow</span>
@@ -710,38 +709,69 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
               )}
             </div>
 
-            {/* Caption & Description */}
+            {/* Caption & Description (Compressed state) */}
             <div className="space-y-1">
-              <h4 className="text-sm font-bold text-white leading-snug">{currentShort.title}</h4>
+              <h4 className="text-xs sm:text-sm font-bold text-white leading-snug drop-shadow">{currentShort.title}</h4>
               {(currentShort.caption || currentShort.description) && (
-                <p className="text-xs text-gray-300 leading-relaxed max-h-28 overflow-y-auto pr-1">
-                  {currentShort.caption || currentShort.description}
+                <p className="text-xs text-gray-200 leading-snug drop-shadow">
+                  <span>
+                    {isDescriptionExpanded
+                      ? (currentShort.caption || currentShort.description)
+                      : (currentShort.caption || currentShort.description)!.length > 60
+                      ? `${(currentShort.caption || currentShort.description)!.slice(0, 60)}`
+                      : (currentShort.caption || currentShort.description)}
+                  </span>
+                  {(currentShort.caption || currentShort.description)!.length > 60 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsDescriptionExpanded(!isDescriptionExpanded);
+                      }}
+                      className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-[10px] font-extrabold cursor-pointer ml-1.5 transition-colors align-middle shadow-xs"
+                      title={isDescriptionExpanded ? "Close" : "Expand"}
+                    >
+                      {isDescriptionExpanded ? "less" : "•••"}
+                    </button>
+                  )}
                 </p>
               )}
             </div>
 
-            {/* Tags */}
+            {/* Tags (Compressed version: up to 2 tags + expand button, NO box) */}
             {currentShort.tags && currentShort.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {currentShort.tags.map((rawTag) => {
+              <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
+                {currentShort.tags.slice(0, 2).map((rawTag) => {
                   const cleanTag = rawTag.replace(/^#/, '');
                   return (
                     <button
                       key={cleanTag}
                       onClick={() => navigate(`/shorts/search?topic=${encodeURIComponent(cleanTag)}`)}
-                      className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-blue-200 text-[11px] font-mono transition-colors cursor-pointer"
+                      className="px-2 py-0.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-[10px] font-mono transition-colors cursor-pointer"
                     >
                       {cleanTag}
                     </button>
                   );
                 })}
+
+                {currentShort.tags.length > 2 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsTagsMenuOpen(!isTagsMenuOpen);
+                    }}
+                    className="px-2 py-0.5 rounded-full bg-blue-500/30 hover:bg-blue-500/40 text-blue-200 text-[10px] font-semibold transition-colors cursor-pointer"
+                  >
+                    +{currentShort.tags.length - 2} tags
+                  </button>
+                )}
               </div>
             )}
 
             {/* Audio */}
             {currentShort.audioTitle && (
-              <div className="flex items-center gap-2 text-xs text-blue-300 pt-1">
-                <Music className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '4s' }} />
+              <div className="flex items-center gap-1.5 text-[10px] text-blue-300 truncate pt-0.5">
+                <Music className="w-3 h-3 flex-shrink-0 animate-spin" style={{ animationDuration: '4s' }} />
                 <span className="truncate">{currentShort.audioTitle}</span>
               </div>
             )}
@@ -980,54 +1010,44 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
         </div>
 
         {/* --- DESKTOP ONLY: Right Side Column (Search, Profile, Action Buttons: Heart, Share, Save, Three-Dots) --- */}
-        <div className="hidden md:flex flex-col justify-between w-64 lg:w-72 h-[640px] max-h-[85vh] py-2 text-white shrink-0">
-          {/* Top Right: Search & Profile Icons (NO Notification Icon) */}
-          <div className="flex items-center gap-3">
+        <div className="hidden md:flex flex-col justify-between w-16 sm:w-20 h-[640px] max-h-[85vh] py-2 text-white shrink-0 items-start">
+          {/* Top Right: Search & Profile Icons (Icon ONLY, NO BOX, close to reel) */}
+          <div className="flex flex-col items-center gap-3">
             <button
               onClick={() => navigate('/shorts/search')}
-              className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 flex items-center justify-center cursor-pointer shadow-md"
+              className="p-1 text-white hover:text-white/80 transition-transform active:scale-90 cursor-pointer"
               title="Search Learning Shorts"
             >
-              <Search className="w-5 h-5 text-white" />
+              <Search className="w-6 h-6 stroke-[2.2]" />
             </button>
 
             <button
               onClick={() => navigate(`/shorts/creator/${INITIAL_CREATORS['u_current'].id}`)}
-              className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95 flex items-center justify-center cursor-pointer shadow-md"
+              className="p-1 text-white hover:text-white/80 transition-transform active:scale-90 cursor-pointer"
               title="My Reels Profile"
             >
-              <User className="w-5 h-5 text-white" />
+              <User className="w-6 h-6 stroke-[2.2]" />
             </button>
           </div>
 
-          {/* Action Buttons Column: Heart, Share, Save, Three Dots */}
-          <div className="space-y-5 bg-white/5 border border-white/10 p-5 rounded-3xl backdrop-blur-md shadow-2xl">
+          {/* Action Buttons Column: Heart, Share, Save, Three Dots (Icon ONLY, NO BOX, NO COUNTS, NO TEXT) */}
+          <div className="flex flex-col items-center gap-4 text-white">
             {/* Heart (Like) Button */}
             <button
               onClick={handleToggleLike}
-              className="flex items-center gap-3.5 group cursor-pointer w-full text-left"
+              className="p-1 text-white transition-transform active:scale-125 flex items-center justify-center cursor-pointer hover:scale-110"
+              title={isLiked ? "Unlike Short" : "Like Short"}
             >
-              <div className="p-3 rounded-2xl bg-white/10 group-hover:bg-rose-500/20 text-white transition-all group-hover:scale-110">
-                <Heart className={`w-6 h-6 ${isLiked ? 'fill-rose-500 text-rose-500' : 'text-white'}`} />
-              </div>
-              <div>
-                <span className="text-xs font-bold block">{currentShort.likesCount}</span>
-                <span className="text-[10px] text-gray-400">Likes</span>
-              </div>
+              <Heart className={`w-6.5 h-6.5 ${isLiked ? 'fill-rose-500 text-rose-500 stroke-rose-500' : 'text-white stroke-[2.2]'}`} />
             </button>
 
             {/* Share Button */}
             <button
               onClick={handleOpenShare}
-              className="flex items-center gap-3.5 group cursor-pointer w-full text-left"
+              className="p-1 text-white transition-transform active:scale-95 flex items-center justify-center cursor-pointer hover:scale-110"
+              title="Share Deep Link"
             >
-              <div className="p-3 rounded-2xl bg-white/10 group-hover:bg-blue-500/20 text-white transition-all group-hover:scale-110">
-                <Share2 className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <span className="text-xs font-bold block">{currentShort.sharesCount}</span>
-                <span className="text-[10px] text-gray-400">Shares</span>
-              </div>
+              <Share2 className="w-6.5 h-6.5 text-white stroke-[2.2]" />
             </button>
 
             {/* Save Button */}
@@ -1036,15 +1056,10 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
                 e.stopPropagation();
                 toggleSaveShort(currentShort.id);
               }}
-              className="flex items-center gap-3.5 group cursor-pointer w-full text-left"
+              className="p-1 text-white transition-transform active:scale-125 flex items-center justify-center cursor-pointer hover:scale-110"
+              title={isSaved ? "Remove from Saved Collection" : "Save to Collection"}
             >
-              <div className="p-3 rounded-2xl bg-white/10 group-hover:bg-amber-500/20 text-white transition-all group-hover:scale-110">
-                <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-amber-400 text-amber-400' : 'text-white'}`} />
-              </div>
-              <div>
-                <span className="text-xs font-bold block">{isSaved ? 'Saved' : 'Save'}</span>
-                <span className="text-[10px] text-gray-400">Collections</span>
-              </div>
+              <Bookmark className={`w-6.5 h-6.5 ${isSaved ? 'fill-amber-400 text-amber-400 stroke-amber-400' : 'text-white stroke-[2.2]'}`} />
             </button>
 
             {/* Three Dots Button */}
@@ -1053,38 +1068,33 @@ export const ShortsViewer: React.FC<ShortsViewerProps> = ({
                 e.stopPropagation();
                 setIsMoreMenuOpen(true);
               }}
-              className="flex items-center gap-3.5 group cursor-pointer w-full text-left"
+              className="p-1 text-white transition-transform active:scale-95 flex items-center justify-center cursor-pointer hover:scale-110"
+              title="More Options"
             >
-              <div className="p-3 rounded-2xl bg-white/10 group-hover:bg-white/20 text-white transition-all group-hover:scale-110">
-                <MoreVertical className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <span className="text-xs font-bold block">More</span>
-                <span className="text-[10px] text-gray-400">Options</span>
-              </div>
+              <MoreVertical className="w-6.5 h-6.5 text-white stroke-[2.2]" />
             </button>
 
             {/* Up & Down Navigation */}
-            <div className="pt-2 border-t border-white/10 flex items-center gap-2">
+            <div className="flex flex-col gap-2 pt-2">
               <button
                 onClick={goToPrev}
                 disabled={currentIndex === 0}
-                className={`flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all flex items-center justify-center cursor-pointer ${
+                className={`p-1 text-white transition-transform active:scale-95 flex items-center justify-center cursor-pointer hover:scale-110 ${
                   currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : ''
                 }`}
-                title="Previous Reel"
+                title="Previous Short"
               >
-                <ChevronUp className="w-5 h-5" />
+                <ChevronUp className="w-6 h-6 stroke-[2.2]" />
               </button>
               <button
                 onClick={goToNext}
                 disabled={currentIndex === feedShorts.length - 1}
-                className={`flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all flex items-center justify-center cursor-pointer ${
+                className={`p-1 text-white transition-transform active:scale-95 flex items-center justify-center cursor-pointer hover:scale-110 ${
                   currentIndex === feedShorts.length - 1 ? 'opacity-30 cursor-not-allowed' : ''
                 }`}
-                title="Next Reel"
+                title="Next Short"
               >
-                <ChevronDown className="w-5 h-5" />
+                <ChevronDown className="w-6 h-6 stroke-[2.2]" />
               </button>
             </div>
           </div>
