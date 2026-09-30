@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MoreHorizontal, Compass, Edit3, Share2, Trash2, X } from 'lucide-react';
-import { LearningCollection } from '../services/collectionsService';
+import { MoreHorizontal, Compass, Edit3, Share2, Trash2, X, Plus, Check } from 'lucide-react';
+import { collectionsService, LearningCollection } from '../services/collectionsService';
 import ShareCollectionModal from './ShareCollectionModal';
 
 interface CollectionCardProps {
@@ -26,6 +26,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isOwner = collection.author === 'You' || collection.isOwner === true;
+  const isOriginalOwner = (collection.author === 'You' || collection.author === undefined) && !collection.sharedWithMe;
 
   const triggerToast = (msg: string) => {
     setToastMsg(msg);
@@ -49,7 +50,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
     if (onExplore) {
       onExplore(collection);
     } else {
-      navigate(`/mylearning?tab=saved-collections&collection=${collection.id}`);
+      navigate(`/mylearning?tab=collections&collection=${collection.id}`);
     }
   };
 
@@ -60,7 +61,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
     if (onExplore) {
       onExplore(collection);
     } else {
-      navigate(`/mylearning?tab=saved-collections&collection=${collection.id}`);
+      navigate(`/mylearning?tab=collections&collection=${collection.id}`);
     }
   };
 
@@ -124,6 +125,11 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
               <span>Shared with you</span>
             </div>
           )}
+          {collection.sharedWithMe && isOwner && (
+            <div className="absolute top-2.5 left-2.5 bg-emerald-700/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-xs flex items-center gap-1 shadow-xs">
+              <span>Added to My Collections</span>
+            </div>
+          )}
         </div>
 
         {/* Card Content: Title and Three-Dot Options */}
@@ -160,8 +166,8 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
                   <span>Explore</span>
                 </button>
 
-                {/* 2. Edit (ONLY if Owner/Creator) */}
-                {isOwner && onEdit && (
+                {/* 2. Edit (ONLY if Original Creator/Owner) */}
+                {isOriginalOwner && onEdit && (
                   <button
                     type="button"
                     onClick={handleEdit}
@@ -182,8 +188,37 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
                   <span>Share</span>
                 </button>
 
-                {/* 4. Delete (ONLY if Owner/Creator) */}
-                {isOwner && onDelete && collection.id !== 'col_watch_later' && (
+                {/* 4. Toggle Add/Remove from My Collections for Shared Collections */}
+                {collection.sharedWithMe && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                      const res = collectionsService.toggleSharedCollectionInMyCollections(collection.id);
+                      if (res) {
+                        triggerToast(res.isAdded ? `Added "${collection.title}" to My Collections` : `Removed "${collection.title}" from My Collections`);
+                      }
+                    }}
+                    className="w-full text-left px-3.5 py-2 text-xs font-semibold text-gray-100 hover:bg-white/10 hover:text-white flex items-center gap-2.5 transition-colors border-t border-white/10 mt-1 pt-2"
+                  >
+                    {isOwner ? (
+                      <>
+                        <Trash2 className="w-4 h-4 text-amber-400" />
+                        <span className="text-amber-300">Remove from My Collections</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 text-emerald-400" />
+                        <span className="text-emerald-300">Add to My Collections</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {/* 5. Delete (ONLY if Original Creator/Owner) */}
+                {isOriginalOwner && onDelete && collection.id !== 'col_watch_later' && collection.id !== 'col_learn_later' && (
                   <button
                     type="button"
                     onClick={handleDelete}

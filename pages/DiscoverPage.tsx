@@ -240,7 +240,7 @@ const DiscoverPage: React.FC = () => {
                             </h2>
                         </div>
                         <button
-                            onClick={() => navigate('/my-learning?tab=saved-collections')}
+                            onClick={() => navigate('/my-learning?tab=collections')}
                             className="text-xs font-bold text-[#0a47d0] hover:underline"
                         >
                             View My Collections →

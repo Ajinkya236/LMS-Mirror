@@ -21,7 +21,7 @@ export const SelectCollectionModal: React.FC<SelectCollectionModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setCollections(collectionsService.getCollections());
+      setCollections(collectionsService.getMyCollections());
     }
   }, [isOpen]);
 

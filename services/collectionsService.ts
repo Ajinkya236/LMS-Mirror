@@ -6,13 +6,15 @@ export interface CollectionCourseItem {
   imageUrl: string;
   duration?: string;
   addedAt?: string;
+  isCompleted?: boolean;
+  completedOn?: string;
 }
 
 export interface LearningCollection {
   id: string;
   title: string;
   description: string;
-  isPublic: boolean;
+  isPublic?: boolean;
   coverImage?: string;
   courseIds: (string | number)[];
   items: CollectionCourseItem[];
@@ -24,7 +26,7 @@ export interface LearningCollection {
 }
 
 const STORAGE_KEY = 'jio_learning_collections_v1';
-const WATCH_LATER_KEY = 'jio_learning_watch_later_v1';
+const LEARN_LATER_KEY = 'jio_learning_learn_later_v1';
 
 const defaultCollectionImages = [
   'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=300&fit=crop&q=80',
@@ -38,9 +40,9 @@ const defaultCollectionImages = [
 
 const initialCollections: LearningCollection[] = [
   {
-    id: 'col_watch_later',
-    title: 'Watch Later',
-    description: 'Saved videos and courses to watch at a later time',
+    id: 'col_learn_later',
+    title: 'Learn Later',
+    description: 'Saved courses and videos to learn at a later time',
     isPublic: false,
     coverImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=300&fit=crop&q=80',
     courseIds: ['c-saved-1', 1],
@@ -51,7 +53,8 @@ const initialCollections: LearningCollection[] = [
         type: 'Course',
         provider: 'LinkedIn Learning',
         imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=300&fit=crop&q=80',
-        duration: '3h 30m'
+        duration: '3h 30m',
+        isCompleted: false
       },
       {
         id: 1,
@@ -59,11 +62,91 @@ const initialCollections: LearningCollection[] = [
         type: 'Course',
         provider: 'Video',
         imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=300&fit=crop&q=80',
-        duration: '2h 12m'
+        duration: '2h 12m',
+        isCompleted: true,
+        completedOn: '2026-09-10'
       }
     ],
     updatedAt: '2026-09-23',
     author: 'You'
+  },
+  {
+    id: 'col_sample_shared',
+    title: 'AI & Prompt Engineering Masterclass',
+    description: 'A curated collection of industry-leading courses and labs on Generative AI, LLMs, and Prompt Engineering shared with you by Dr. Sarah Jenkins.',
+    isPublic: false,
+    isOwner: false,
+    sharedWithMe: true,
+    sharedBy: 'Dr. Sarah Jenkins (Lead AI Architect)',
+    coverImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&h=300&fit=crop&q=80',
+    courseIds: ['c-ai-1', 'c-ai-2', 'c-ai-3'],
+    items: [
+      {
+        id: 'c-ai-1',
+        title: 'Fundamentals of Generative AI & Prompt Design',
+        type: 'Course',
+        provider: 'Jio Digital Academy',
+        imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&h=300&fit=crop&q=80',
+        duration: '3h 15m',
+        isCompleted: true,
+        completedOn: '2026-08-15'
+      },
+      {
+        id: 'c-ai-2',
+        title: 'Building Autonomous AI Agents with LangChain',
+        type: 'Course',
+        provider: 'LinkedIn Learning',
+        imageUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&h=300&fit=crop&q=80',
+        duration: '4h 30m',
+        isCompleted: true,
+        completedOn: '2026-09-02'
+      },
+      {
+        id: 'c-ai-3',
+        title: 'Enterprise LLM Security & Governance',
+        type: 'Course',
+        provider: 'Internal',
+        imageUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&h=300&fit=crop&q=80',
+        duration: '2h 45m',
+        isCompleted: false
+      }
+    ],
+    updatedAt: '2026-09-24',
+    author: 'Dr. Sarah Jenkins (Lead AI Architect)'
+  },
+  {
+    id: 'col_sample_shared_added',
+    title: 'Cloud Native Architecture & Microservices',
+    description: 'Advanced Cloud-Native design patterns, Kubernetes orchestration, and Distributed Microservices shared by Senior Architect Rajesh Kumar.',
+    isPublic: false,
+    isOwner: true,
+    sharedWithMe: true,
+    sharedBy: 'Rajesh Kumar (Senior Architect)',
+    coverImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&h=300&fit=crop&q=80',
+    courseIds: ['c-cloud-1', 'c-cloud-2'],
+    items: [
+      {
+        id: 'c-cloud-1',
+        title: 'Kubernetes & Container Orchestration Masterclass',
+        type: 'Course',
+        provider: 'Jio Academy',
+        imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&h=300&fit=crop&q=80',
+        duration: '5h 00m',
+        isCompleted: true,
+        completedOn: '2026-09-01'
+      },
+      {
+        id: 'c-cloud-2',
+        title: 'Designing Resilient Microservices with gRPC',
+        type: 'Course',
+        provider: 'Internal',
+        imageUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&h=300&fit=crop&q=80',
+        duration: '3h 30m',
+        isCompleted: false
+      }
+    ],
+    updatedAt: '2026-09-25',
+    author: 'Rajesh Kumar (Senior Architect)'
   },
   {
     id: 'col_saved',
@@ -79,7 +162,8 @@ const initialCollections: LearningCollection[] = [
         type: 'Course',
         provider: 'LinkedIn Learning',
         imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=300&fit=crop&q=80',
-        duration: '3h 30m'
+        duration: '3h 30m',
+        isCompleted: false
       },
       {
         id: 'c-saved-2',
@@ -87,7 +171,9 @@ const initialCollections: LearningCollection[] = [
         type: 'Course/video/blog/learning path',
         provider: 'Internal',
         imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=300&fit=crop&q=80',
-        duration: '1h 45m'
+        duration: '1h 45m',
+        isCompleted: true,
+        completedOn: '2026-07-20'
       },
       {
         id: 1,
@@ -95,7 +181,8 @@ const initialCollections: LearningCollection[] = [
         type: 'Course',
         provider: 'Video',
         imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=300&fit=crop&q=80',
-        duration: '2h 12m'
+        duration: '2h 12m',
+        isCompleted: false
       }
     ],
     updatedAt: '2026-09-23',
@@ -115,7 +202,9 @@ const initialCollections: LearningCollection[] = [
         type: 'Course',
         provider: 'Video',
         imageUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&h=300&fit=crop&q=80',
-        duration: '45m'
+        duration: '45m',
+        isCompleted: true,
+        completedOn: '2026-08-30'
       },
       {
         id: 3,
@@ -123,7 +212,8 @@ const initialCollections: LearningCollection[] = [
         type: 'Course',
         provider: 'Video',
         imageUrl: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&h=300&fit=crop&q=80',
-        duration: '1h 15m'
+        duration: '1h 15m',
+        isCompleted: false
       }
     ],
     updatedAt: '2026-09-20',
@@ -146,7 +236,9 @@ const initialCollections: LearningCollection[] = [
         type: 'Course/video/blog/learning path',
         provider: 'Jio Academy',
         imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&h=300&fit=crop&q=80',
-        duration: '2h 00m'
+        duration: '2h 00m',
+        isCompleted: true,
+        completedOn: '2026-06-12'
       },
       {
         id: 5,
@@ -154,7 +246,8 @@ const initialCollections: LearningCollection[] = [
         type: 'Course',
         provider: 'Harvard ManageMentor',
         imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&h=300&fit=crop&q=80',
-        duration: '3h 10m'
+        duration: '3h 10m',
+        isCompleted: false
       }
     ],
     updatedAt: '2026-09-18',
@@ -175,7 +268,8 @@ const initialCollections: LearningCollection[] = [
         type: 'Course',
         provider: 'Internal',
         imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=300&fit=crop&q=80',
-        duration: '6h 15m'
+        duration: '6h 15m',
+        isCompleted: false
       }
     ],
     updatedAt: '2026-09-22',
@@ -198,7 +292,9 @@ const initialCollections: LearningCollection[] = [
         type: 'Course',
         provider: 'LinkedIn Learning',
         imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&h=300&fit=crop&q=80',
-        duration: '4h 00m'
+        duration: '4h 00m',
+        isCompleted: true,
+        completedOn: '2026-02-28'
       },
       {
         id: 5,
@@ -206,7 +302,8 @@ const initialCollections: LearningCollection[] = [
         type: 'Course',
         provider: 'Harvard ManageMentor',
         imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&h=300&fit=crop&q=80',
-        duration: '3h 10m'
+        duration: '3h 10m',
+        isCompleted: false
       }
     ],
     updatedAt: '2026-09-21',
@@ -229,31 +326,12 @@ const initialCollections: LearningCollection[] = [
         type: 'Course',
         provider: 'LinkedIn Learning',
         imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=300&fit=crop&q=80',
-        duration: '1h 50m'
+        duration: '1h 50m',
+        isCompleted: false
       }
     ],
     updatedAt: '2026-09-15',
     author: 'Priya Sharma'
-  },
-  {
-    id: 'col_elearning',
-    title: 'E-LEARNING',
-    description: 'Core self-paced modules, interactive labs and certifications',
-    isPublic: true,
-    coverImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&h=300&fit=crop&q=80',
-    courseIds: ['c-saved-2', 7],
-    items: [
-      {
-        id: 'c-saved-2',
-        title: 'learning process 1',
-        type: 'Course',
-        provider: 'Internal',
-        imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&h=300&fit=crop&q=80',
-        duration: '1h 45m'
-      }
-    ],
-    updatedAt: '2026-09-10',
-    author: 'Jio Digital Academy'
   }
 ];
 
@@ -274,15 +352,33 @@ export const collectionsService = {
       return initialCollections;
     }
 
-    // Ensure 'Watch Later' collection exists and is placed first
-    let watchLaterCol = list.find(c => c.id === 'col_watch_later' || c.title.toLowerCase() === 'watch later');
-    if (!watchLaterCol) {
-      watchLaterCol = initialCollections[0];
-      list = [watchLaterCol, ...list];
-      this.saveCollections(list);
+    // Merge any missing initial default collections into stored list so newly added samples show up
+    let needsSave = false;
+    initialCollections.forEach(initCol => {
+      if (!list.some(c => c.id === initCol.id)) {
+        list.push(initCol);
+        needsSave = true;
+      }
+    });
+
+    // Ensure 'Learn Later' collection exists and is placed first internally
+    let learnLaterCol = list.find(c => c.id === 'col_learn_later' || c.id === 'col_watch_later' || c.title.toLowerCase() === 'learn later' || c.title.toLowerCase() === 'watch later');
+    if (!learnLaterCol) {
+      learnLaterCol = initialCollections[0];
+      list = [learnLaterCol, ...list];
+      needsSave = true;
     } else {
-      // Re-order to make sure Watch Later is at index 0
-      list = [watchLaterCol, ...list.filter(c => c.id !== watchLaterCol!.id)];
+      // Sync title to Learn Later
+      if (learnLaterCol.title !== 'Learn Later') {
+        learnLaterCol.title = 'Learn Later';
+        learnLaterCol.description = 'Saved courses and videos to learn at a later time';
+        needsSave = true;
+      }
+      list = [learnLaterCol, ...list.filter(c => c.id !== learnLaterCol!.id)];
+    }
+
+    if (needsSave) {
+      this.saveCollections(list);
     }
 
     return list;
@@ -310,7 +406,7 @@ export const collectionsService = {
       id: `col_${Date.now()}`,
       title: title.trim(),
       description: description.trim(),
-      isPublic,
+      isPublic: false,
       coverImage: initialCourse?.imageUrl || randomImg,
       courseIds: initialCourse ? [initialCourse.id] : [],
       items: initialCourse ? [{
@@ -319,10 +415,12 @@ export const collectionsService = {
         type: 'Course',
         provider: initialCourse.provider || 'Online Course',
         imageUrl: initialCourse.imageUrl || randomImg,
-        duration: '2h 00m'
+        duration: '2h 00m',
+        isCompleted: false
       }] : [],
       updatedAt: new Date().toISOString().split('T')[0],
-      author: 'You'
+      author: 'You',
+      isOwner: true
     };
 
     const updated = [...collections, newCol];
@@ -355,7 +453,8 @@ export const collectionsService = {
           type: 'Course',
           provider: course.provider || 'Online Course',
           imageUrl: course.imageUrl || col.coverImage || defaultCollectionImages[0],
-          duration: '2h 00m'
+          duration: '2h 00m',
+          isCompleted: false
         };
         return {
           ...col,
@@ -368,14 +467,14 @@ export const collectionsService = {
 
     this.saveCollections(updated);
 
-    // If toggled collection was 'col_watch_later', also sync watch later key
-    if (collectionId === 'col_watch_later' || collectionName.toLowerCase() === 'watch later') {
-      const wl = this.getWatchLater();
-      const inWl = wl.some(id => String(id) === String(course.id));
-      if (added && !inWl) {
-        localStorage.setItem(WATCH_LATER_KEY, JSON.stringify([course.id, ...wl]));
-      } else if (!added && inWl) {
-        localStorage.setItem(WATCH_LATER_KEY, JSON.stringify(wl.filter(id => String(id) !== String(course.id))));
+    // If toggled collection was Learn Later, also sync learn later key
+    if (collectionId === 'col_learn_later' || collectionId === 'col_watch_later' || collectionName.toLowerCase() === 'learn later' || collectionName.toLowerCase() === 'watch later') {
+      const ll = this.getLearnLater();
+      const inLl = ll.some(id => String(id) === String(course.id));
+      if (added && !inLl) {
+        localStorage.setItem(LEARN_LATER_KEY, JSON.stringify([course.id, ...ll]));
+      } else if (!added && inLl) {
+        localStorage.setItem(LEARN_LATER_KEY, JSON.stringify(ll.filter(id => String(id) !== String(course.id))));
       }
     }
 
@@ -400,10 +499,10 @@ export const collectionsService = {
     this.saveCollections(updated);
   },
 
-  // Watch Later Queue
-  getWatchLater(): (string | number)[] {
+  // Learn Later Queue
+  getLearnLater(): (string | number)[] {
     try {
-      const stored = localStorage.getItem(WATCH_LATER_KEY);
+      const stored = localStorage.getItem(LEARN_LATER_KEY) || localStorage.getItem('jio_learning_watch_later_v1');
       if (stored) return JSON.parse(stored);
     } catch (e) {
       console.warn(e);
@@ -411,8 +510,13 @@ export const collectionsService = {
     return [];
   },
 
-  addToWatchLater(courseId: string | number, courseInfo?: { title?: string; imageUrl?: string; provider?: string }): boolean {
-    const list = this.getWatchLater();
+  // Alias for backward compatibility
+  getWatchLater(): (string | number)[] {
+    return this.getLearnLater();
+  },
+
+  addToLearnLater(courseId: string | number, courseInfo?: { title?: string; imageUrl?: string; provider?: string }): boolean {
+    const list = this.getLearnLater();
     const exists = list.some(id => String(id) === String(courseId));
     let added = false;
     let updated: (string | number)[];
@@ -424,30 +528,31 @@ export const collectionsService = {
       added = true;
     }
     try {
-      localStorage.setItem(WATCH_LATER_KEY, JSON.stringify(updated));
+      localStorage.setItem(LEARN_LATER_KEY, JSON.stringify(updated));
     } catch (e) {
       console.warn(e);
     }
 
-    // Also sync with col_watch_later in collections
+    // Also sync with Learn Later collection
     const allCols = this.getCollections();
-    const watchLaterCol = allCols.find(c => c.id === 'col_watch_later' || c.title.toLowerCase() === 'watch later');
-    if (watchLaterCol) {
+    const learnLaterCol = allCols.find(c => c.id === 'col_learn_later' || c.id === 'col_watch_later' || c.title.toLowerCase() === 'learn later' || c.title.toLowerCase() === 'watch later');
+    if (learnLaterCol) {
       if (added) {
-        if (!watchLaterCol.courseIds.some(cid => String(cid) === String(courseId))) {
-          watchLaterCol.courseIds = [courseId, ...watchLaterCol.courseIds];
-          watchLaterCol.items = [{
+        if (!learnLaterCol.courseIds.some(cid => String(cid) === String(courseId))) {
+          learnLaterCol.courseIds = [courseId, ...learnLaterCol.courseIds];
+          learnLaterCol.items = [{
             id: courseId,
             title: courseInfo?.title || 'Saved Course',
             type: 'Course',
             provider: courseInfo?.provider || 'Video',
             imageUrl: courseInfo?.imageUrl || defaultCollectionImages[0],
-            duration: '2h 12m'
-          }, ...watchLaterCol.items.filter(item => String(item.id) !== String(courseId))];
+            duration: '2h 12m',
+            isCompleted: false
+          }, ...learnLaterCol.items.filter(item => String(item.id) !== String(courseId))];
         }
       } else {
-        watchLaterCol.courseIds = watchLaterCol.courseIds.filter(cid => String(cid) !== String(courseId));
-        watchLaterCol.items = watchLaterCol.items.filter(item => String(item.id) !== String(courseId));
+        learnLaterCol.courseIds = learnLaterCol.courseIds.filter(cid => String(cid) !== String(courseId));
+        learnLaterCol.items = learnLaterCol.items.filter(item => String(item.id) !== String(courseId));
       }
       this.saveCollections(allCols);
     }
@@ -455,34 +560,79 @@ export const collectionsService = {
     return added;
   },
 
+  // Alias for backward compatibility
+  addToWatchLater(courseId: string | number, courseInfo?: { title?: string; imageUrl?: string; provider?: string }): boolean {
+    return this.addToLearnLater(courseId, courseInfo);
+  },
+
+  removeFromLearnLater(courseId: string | number): void {
+    const list = this.getLearnLater();
+    const updated = list.filter(id => String(id) !== String(courseId));
+    try {
+      localStorage.setItem(LEARN_LATER_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.warn(e);
+    }
+
+    const allCols = this.getCollections();
+    const learnLaterCol = allCols.find(c => c.id === 'col_learn_later' || c.id === 'col_watch_later' || c.title.toLowerCase() === 'learn later' || c.title.toLowerCase() === 'watch later');
+    if (learnLaterCol) {
+      learnLaterCol.courseIds = learnLaterCol.courseIds.filter(cid => String(cid) !== String(courseId));
+      learnLaterCol.items = learnLaterCol.items.filter(item => String(item.id) !== String(courseId));
+      this.saveCollections(allCols);
+    }
+  },
+
   // Queries based on permissions & sharing
   getMyCollections(): LearningCollection[] {
     const all = this.getCollections();
-    return all.filter(c => c.author === 'You' || c.isOwner === true || (!c.sharedWithMe && c.author === undefined));
+    // Exclude Learn Later collection from general Collections list!
+    return all.filter(c => 
+      c.id !== 'col_learn_later' && 
+      c.id !== 'col_watch_later' && 
+      c.title.toLowerCase() !== 'learn later' && 
+      c.title.toLowerCase() !== 'watch later' &&
+      (c.author === 'You' || c.isOwner === true || (!c.sharedWithMe && c.author === undefined))
+    );
   },
 
   getSharedCollections(): LearningCollection[] {
     const all = this.getCollections();
-    return all.filter(c => c.sharedWithMe === true);
+    return all.filter(c => c.sharedWithMe === true && c.id !== 'col_learn_later' && c.id !== 'col_watch_later');
   },
 
   getPublicCollections(): LearningCollection[] {
     const all = this.getCollections();
-    return all.filter(c => c.isPublic === true);
+    return all.filter(c => c.id !== 'col_learn_later' && c.id !== 'col_watch_later');
   },
 
-  shareCollectionWithUser(collectionId: string, recipientName: string = 'Colleague'): void {
+  toggleSharedCollectionInMyCollections(collectionId: string): { isAdded: boolean; collection: LearningCollection } | null {
     const all = this.getCollections();
+    const target = all.find(c => c.id === collectionId);
+    if (!target) return null;
+
+    const newOwnerState = !target.isOwner;
+
     const updated = all.map(c => {
       if (c.id === collectionId) {
         return {
           ...c,
-          sharedWithMe: true,
-          sharedBy: c.author === 'You' ? 'You' : (c.sharedBy || c.author || 'Colleague')
+          isOwner: newOwnerState,
+          sharedWithMe: true, // Always remains accessible in Shared with me
+          updatedAt: new Date().toISOString().split('T')[0]
         };
       }
       return c;
     });
+
     this.saveCollections(updated);
+    const updatedTarget: LearningCollection = { ...target, isOwner: newOwnerState, sharedWithMe: true };
+    return { isAdded: newOwnerState, collection: updatedTarget };
+  },
+
+  addSharedCollectionToMyCollections(collectionId: string): LearningCollection | null {
+    const res = this.toggleSharedCollectionInMyCollections(collectionId);
+    return res ? res.collection : null;
   }
 };
+

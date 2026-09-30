@@ -35,6 +35,8 @@ import CoursePlayerPage from './pages/CoursePlayerPage';
 import EvaluatorDashboardPage from './pages/EvaluatorDashboardPage';
 import ProctoringReportPage from './pages/ProctoringReportPage';
 import EventsPage from './pages/EventsPage';
+import InstructorSessionDetailsPage from './pages/InstructorSessionDetailsPage';
+import InstructorParticipantFeedbackPage from './pages/InstructorParticipantFeedbackPage';
 import MarkAttendancePage from './pages/MarkAttendancePage';
 import AssessmentPlayerPage from './pages/AssessmentPlayerPage';
 import SessionFeedbackPage from './pages/SessionFeedbackPage';
@@ -108,6 +110,8 @@ const AppLayout: React.FC = () => {
           <Route path="/evaluation" element={<EvaluatorDashboardPage />} />
           <Route path="/evaluation/proctoring-report/:reportId" element={<ProctoringReportPage />} />
           <Route path="/events" element={<EventsPage />} />
+          <Route path="/instructor/session/:sessionId" element={<InstructorSessionDetailsPage />} />
+          <Route path="/instructor/session/:sessionId/feedback/:participantId" element={<InstructorParticipantFeedbackPage />} />
           <Route path="/mark-attendance" element={<MarkAttendancePage />} />
           <Route path="/assessment/:sessionId" element={<AssessmentPlayerPage />} />
           <Route path="/feedback/:sessionId" element={<SessionFeedbackPage />} />

@@ -96,23 +96,6 @@ export const CreateCollectionModal: React.FC<CreateCollectionModalProps> = ({
             />
           </div>
 
-          {/* Visibility toggle */}
-          <div className="bg-[#1f2633] p-3 rounded-xl flex items-center justify-between border border-white/5">
-            <div>
-              <div className="text-xs font-bold text-white">Public Collection</div>
-              <div className="text-[11px] text-gray-400">Allow colleagues to discover and learn from this collection</div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={isPublic} 
-                onChange={(e) => setIsPublic(e.target.checked)} 
-                className="sr-only peer" 
-              />
-              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0a47d0]" />
-            </label>
-          </div>
-
           {/* Action buttons */}
           <div className="flex items-center justify-end gap-3 pt-3">
             <button

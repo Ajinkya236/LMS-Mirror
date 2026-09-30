@@ -68,16 +68,16 @@ const CourseCard: React.FC<CourseCardProps> = ({
     setIsSelectCollectionOpen(true);
   };
 
-  const handleSaveToWatchLater = (e: React.MouseEvent) => {
+  const handleSaveToLearnLater = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setMenuOpen(false);
-    const added = collectionsService.addToWatchLater(course.id, {
+    const added = collectionsService.addToLearnLater(course.id, {
       title: course.title,
       imageUrl: course.imageUrl,
       provider: course.provider
     });
-    triggerToast(added ? 'Added to Watch Later' : 'Removed from Watch Later');
+    triggerToast(added ? 'Added to Learn Later' : 'Removed from Learn Later');
   };
 
   const handleAssignToMe = (e: React.MouseEvent) => {
@@ -163,13 +163,13 @@ const CourseCard: React.FC<CourseCardProps> = ({
                               <span>Start/Resume</span>
                           </button>
 
-                          {/* 2. Save to Watch Later */}
+                          {/* 2. Save to Learn Later */}
                           <button 
-                            onClick={handleSaveToWatchLater}
+                            onClick={handleSaveToLearnLater}
                             className="w-full text-left px-3.5 py-2 text-xs font-semibold text-gray-100 hover:bg-white/10 hover:text-white flex items-center gap-2.5 transition-colors"
                           >
                               <Clock className="w-4 h-4 text-gray-300" />
-                              <span>Save to Watch Later</span>
+                              <span>Save to Learn Later</span>
                           </button>
 
                           {/* 3. Save to a Collection */}

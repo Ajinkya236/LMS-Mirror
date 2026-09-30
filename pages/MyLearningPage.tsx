@@ -55,13 +55,13 @@ export const MyLearningPage: React.FC = () => {
   // Top sub-nav tab: Courses (active by default), Rewards, My Learning Goals, Events
   const [activeSubNav, setActiveSubNav] = useState<'Courses' | 'Rewards' | 'My Learning Goals' | 'Events'>('Courses');
 
-  // Sub-Pills: My Courses | Saved Collections (active by default) | Learning History | Shared with me
-  const [activeTab, setActiveTab] = useState<'saved-collections' | 'my-courses' | 'history' | 'shared'>(() => {
+  // Sub-Pills: My Courses | Collections (active by default) | Learn Later | Learning History | Shared with me
+  const [activeTab, setActiveTab] = useState<'collections' | 'my-courses' | 'learn-later' | 'history' | 'shared'>(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam === 'my-courses' || tabParam === 'history' || tabParam === 'shared') {
+    if (tabParam === 'my-courses' || tabParam === 'learn-later' || tabParam === 'history' || tabParam === 'shared') {
       return tabParam;
     }
-    return 'saved-collections'; // Default is Saved Collections
+    return 'collections'; // Default is Collections
   });
 
   // Selected Collection for Detail View
@@ -197,20 +197,20 @@ export const MyLearningPage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleTabChange = (tab: 'saved-collections' | 'my-courses' | 'history' | 'shared') => {
+  const handleTabChange = (tab: 'collections' | 'my-courses' | 'learn-later' | 'history' | 'shared') => {
     setActiveTab(tab);
     setSelectedCollectionId(null);
-    setSearchParams(tab === 'saved-collections' ? {} : { tab });
+    setSearchParams(tab === 'collections' ? {} : { tab });
   };
 
   const handleSelectCollection = (colId: string) => {
     setSelectedCollectionId(colId);
-    setSearchParams({ tab: 'saved-collections', collection: colId });
+    setSearchParams({ tab: 'collections', collection: colId });
   };
 
   const handleBackToCollections = () => {
     setSelectedCollectionId(null);
-    setSearchParams({ tab: 'saved-collections' });
+    setSearchParams({ tab: 'collections' });
   };
 
   const handleResetFilters = () => {
@@ -263,6 +263,9 @@ export const MyLearningPage: React.FC = () => {
     if (!selectedCollectionId) return null;
     return collections.find(c => c.id === selectedCollectionId) || null;
   }, [collections, selectedCollectionId]);
+
+  // Is viewing a shared collection
+  const isViewingSharedCollection = currentCollection !== null && currentCollection.sharedWithMe === true;
 
   // Filtered collections for list (personal & created by user)
   const filteredCollections = useMemo(() => {
@@ -327,202 +330,260 @@ export const MyLearningPage: React.FC = () => {
     <div className="bg-[#f8f9fa] min-h-screen pb-24" onClick={handleContainerClick}>
       
       {/* Sub-Header Navigation Bar: Courses | Rewards | My Learning Goals | Events */}
-      <div className="bg-[#002B7F] text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center space-x-8 overflow-x-auto no-scrollbar py-3.5">
-            {(['Courses', 'Rewards', 'My Learning Goals', 'Events'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  setActiveSubNav(tab);
-                  if (tab === 'Events') navigate('/events');
-                }}
-                className={`text-sm font-semibold whitespace-nowrap transition-colors relative py-1 ${
-                  activeSubNav === tab 
-                    ? 'text-white font-bold after:content-[""] after:absolute after:bottom-[-6px] after:left-0 after:right-0 after:h-[3px] after:bg-white after:rounded-t-sm' 
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
+      {!isViewingSharedCollection && (
+        <div className="bg-[#002B7F] text-white shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center space-x-8 overflow-x-auto no-scrollbar py-3.5">
+              {(['Courses', 'Rewards', 'My Learning Goals', 'Events'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveSubNav(tab);
+                    if (tab === 'Events') navigate('/events');
+                  }}
+                  className={`text-sm font-semibold whitespace-nowrap transition-colors relative py-1 ${
+                    activeSubNav === tab 
+                      ? 'text-white font-bold after:content-[""] after:absolute after:bottom-[-6px] after:left-0 after:right-0 after:h-[3px] after:bg-white after:rounded-t-sm' 
+                      : 'text-white/80 hover:text-white'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Page Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         
-        {/* Secondary Filter Pills & View/Sort Actions Row (Matches Screenshot 7, 8, 9) */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          
-          {/* Sub-Pills: My Courses | Saved Collections | Learning History | Shared with me */}
-          <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-1">
+        {/* Secondary Filter Pills & View/Sort Actions Row */}
+        {!isViewingSharedCollection && (
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             
-            {/* My Courses */}
-            <button
-              onClick={() => handleTabChange('my-courses')}
-              className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                activeTab === 'my-courses'
-                  ? 'bg-[#0a47d0] text-white shadow-md'
-                  : 'bg-[#e9edf5] text-gray-700 hover:bg-[#dfe4ef]'
-              }`}
-            >
-              My Courses
-            </button>
-
-            {/* Saved Collections (DEFAULT ACTIVE) */}
-            <button
-              onClick={() => handleTabChange('saved-collections')}
-              className={`px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
-                activeTab === 'saved-collections'
-                  ? 'bg-[#0052cc] text-white shadow-md ring-2 ring-[#0052cc]/30'
-                  : 'bg-[#e9edf5] text-gray-700 hover:bg-[#dfe4ef]'
-              }`}
-            >
-              Saved Collections
-            </button>
-
-            {/* Learning History */}
-            <button
-              onClick={() => handleTabChange('history')}
-              className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                activeTab === 'history'
-                  ? 'bg-[#0a47d0] text-white shadow-md'
-                  : 'bg-[#e9edf5] text-gray-700 hover:bg-[#dfe4ef]'
-              }`}
-            >
-              Learning History
-            </button>
-
-            {/* Shared with me */}
-            <button
-              onClick={() => handleTabChange('shared')}
-              className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
-                activeTab === 'shared'
-                  ? 'bg-[#0a47d0] text-white shadow-md'
-                  : 'bg-[#e9edf5] text-gray-700 hover:bg-[#dfe4ef]'
-              }`}
-            >
-              Shared with me
-            </button>
-          </div>
-
-          {/* Right Action Controls: View Toggle, Sort, Filter */}
-          <div className="flex items-center gap-2.5 sm:gap-3 self-end md:self-auto">
-            
-            {/* View Mode Toggle */}
-            <div className="bg-[#e9edf5] p-1 rounded-full flex items-center gap-1">
+            {/* Sub-Pills: My Courses (1st) | Learn Later (2nd) | My Collections (3rd) | Learning History (4th) | Shared with me (5th) */}
+            <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-1">
+              
+              {/* 1. My Courses */}
               <button
-                type="button"
-                onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                className="p-1.5 rounded-full bg-white text-gray-700 shadow-2xs hover:text-[#0a47d0] transition-colors"
-                title="Toggle View"
+                onClick={() => handleTabChange('my-courses')}
+                className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                  activeTab === 'my-courses'
+                    ? 'bg-[#0a47d0] text-white shadow-md'
+                    : 'bg-[#e9edf5] text-gray-700 hover:bg-[#dfe4ef]'
+                }`}
               >
-                <List className="w-4 h-4" />
+                My Courses
+              </button>
+
+              {/* 2. Learn Later */}
+              <button
+                onClick={() => handleTabChange('learn-later')}
+                className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                  activeTab === 'learn-later'
+                    ? 'bg-[#0a47d0] text-white shadow-md'
+                    : 'bg-[#e9edf5] text-gray-700 hover:bg-[#dfe4ef]'
+                }`}
+              >
+                Learn Later
+              </button>
+
+              {/* 3. My Collections */}
+              <button
+                onClick={() => handleTabChange('collections')}
+                className={`px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                  activeTab === 'collections'
+                    ? 'bg-[#0052cc] text-white shadow-md ring-2 ring-[#0052cc]/30'
+                    : 'bg-[#e9edf5] text-gray-700 hover:bg-[#dfe4ef]'
+                }`}
+              >
+                My Collections
+              </button>
+
+              {/* 4. Learning History */}
+              <button
+                onClick={() => handleTabChange('history')}
+                className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                  activeTab === 'history'
+                    ? 'bg-[#0a47d0] text-white shadow-md'
+                    : 'bg-[#e9edf5] text-gray-700 hover:bg-[#dfe4ef]'
+                }`}
+              >
+                Learning History
+              </button>
+
+              {/* 5. Shared with me */}
+              <button
+                onClick={() => handleTabChange('shared')}
+                className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                  activeTab === 'shared'
+                    ? 'bg-[#0a47d0] text-white shadow-md'
+                    : 'bg-[#e9edf5] text-gray-700 hover:bg-[#dfe4ef]'
+                }`}
+              >
+                Shared with me
               </button>
             </div>
 
-            {/* Sort Button */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsSortOpen(!isSortOpen);
-                }}
-                className="px-4 py-2 bg-white hover:bg-gray-50 rounded-full border border-gray-300 text-xs sm:text-sm font-semibold text-gray-700 flex items-center gap-1.5 shadow-2xs transition-all"
-              >
-                <span>Sort</span>
-                <ArrowUpDown className="w-3.5 h-3.5 text-gray-500" />
-              </button>
-
-              {isSortOpen && (
-                <div 
-                  className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-scale-up"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {['Date Added: Newest', 'Date Added: Oldest', 'Title: A to Z'].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setIsSortOpen(false)}
-                      className="w-full text-left px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50"
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Filter Pill Button */}
-            <button
-              onClick={() => showToast('Filters refreshed')}
-              className="px-4 sm:px-5 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-full border border-gray-300 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-2xs transition-all"
-            >
-              <span>Filter</span>
-              <SlidersHorizontal className="w-3.5 h-3.5 text-gray-500" />
-            </button>
-
-          </div>
-        </div>
-
-        {/* ------------------------------------------------------------------------- */}
-        {/* VIEW 1: SINGLE COLLECTION DETAIL VIEW (Matching Screenshots 8 & 9)        */}
-        {/* ------------------------------------------------------------------------- */}
-        {activeTab === 'saved-collections' && currentCollection ? (
-          <div className="space-y-6 animate-fade-in">
-            {/* Header: Back arrow + Collection Title + Right Action Buttons (Share, Edit, Delete) */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-              <div className="flex items-center gap-3">
+            {/* Right Action Controls: View Toggle, Sort, Filter */}
+            <div className="flex items-center gap-2.5 sm:gap-3 self-end md:self-auto">
+              
+              {/* View Mode Toggle */}
+              <div className="bg-[#e9edf5] p-1 rounded-full flex items-center gap-1">
                 <button
-                  onClick={handleBackToCollections}
-                  className="p-1.5 -ml-1.5 rounded-full hover:bg-gray-200 text-gray-800 transition-colors"
-                  title="Back to Collections"
+                  type="button"
+                  onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+                  className="p-1.5 rounded-full bg-white text-gray-700 shadow-2xs hover:text-[#0a47d0] transition-colors"
+                  title="Toggle View"
                 >
-                  <ArrowLeft className="w-6 h-6" />
+                  <List className="w-4 h-4" />
                 </button>
+              </div>
+
+              {/* Sort Button */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsSortOpen(!isSortOpen);
+                  }}
+                  className="px-4 py-2 bg-white hover:bg-gray-50 rounded-full border border-gray-300 text-xs sm:text-sm font-semibold text-gray-700 flex items-center gap-1.5 shadow-2xs transition-all"
+                >
+                  <span>Sort</span>
+                  <ArrowUpDown className="w-3.5 h-3.5 text-gray-500" />
+                </button>
+
+                {isSortOpen && (
+                  <div 
+                    className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-scale-up"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {['Date Added: Newest', 'Date Added: Oldest', 'Title: A to Z'].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setIsSortOpen(false)}
+                        className="w-full text-left px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-blue-50"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Filter Pill Button */}
+              <button
+                onClick={() => showToast('Filters refreshed')}
+                className="px-4 sm:px-5 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-full border border-gray-300 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-2xs transition-all"
+              >
+                <span>Filter</span>
+                <SlidersHorizontal className="w-3.5 h-3.5 text-gray-500" />
+              </button>
+
+            </div>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------------------- */}
+        {/* VIEW 1: SINGLE COLLECTION DETAIL VIEW                                     */}
+        {/* ------------------------------------------------------------------------- */}
+        {(activeTab === 'collections' || activeTab === 'shared') && currentCollection ? (
+          <div className="space-y-6 animate-fade-in">
+            {/* Header: Back arrow (Only for personal collections) + Collection Title + Total Count + Right Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pt-2 border-b border-gray-200 pb-4">
+              <div className="flex items-start gap-3">
+                {!isViewingSharedCollection && (
+                  <button
+                    onClick={handleBackToCollections}
+                    className="p-1.5 -ml-1.5 mt-1 rounded-full hover:bg-gray-200 text-gray-800 transition-colors"
+                    title="Back to Collections"
+                  >
+                    <ArrowLeft className="w-6 h-6" />
+                  </button>
+                )}
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-heading font-black text-gray-900 tracking-tight">
-                    {currentCollection.title}
-                  </h1>
-                  {(!currentCollection.isOwner && currentCollection.author !== 'You') && (
-                    <span className="text-xs text-[#002B7F] font-semibold">
-                      Shared with you by {currentCollection.sharedBy || currentCollection.author || 'Colleague'}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h1 className="text-2xl sm:text-3xl font-heading font-black text-gray-900 tracking-tight">
+                      {currentCollection.title}
+                    </h1>
+                    <span className="text-xs font-bold text-[#002B7F] bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                      {currentCollection.items.length} {currentCollection.items.length === 1 ? 'item' : 'items'}
+                    </span>
+                  </div>
+
+                  {/* Creator Info & Add/Remove from My Collections toggle button for shared collections */}
+                  {currentCollection.sharedWithMe && (
+                    <div className="flex items-center gap-3 mt-2 flex-wrap">
+                      <span className="text-xs text-gray-700 font-bold bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+                        Created by {currentCollection.author || currentCollection.sharedBy || 'Colleague'}
+                      </span>
+                      {currentCollection.isOwner ? (
+                        <button
+                          onClick={() => {
+                            const res = collectionsService.toggleSharedCollectionInMyCollections(currentCollection.id);
+                            setCollections(collectionsService.getCollections());
+                            showToast(`Removed "${currentCollection.title}" from My Collections`);
+                          }}
+                          className="px-3.5 py-1.5 bg-emerald-50 hover:bg-red-50 text-emerald-700 hover:text-red-700 text-xs font-bold rounded-lg flex items-center gap-1.5 border border-emerald-200 hover:border-red-200 transition-all cursor-pointer group"
+                          title="Click to remove from My Collections"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 group-hover:hidden" />
+                          <Trash2 className="w-3.5 h-3.5 text-red-600 hidden group-hover:block" />
+                          <span className="group-hover:hidden">Added to My Collections</span>
+                          <span className="hidden group-hover:inline">Remove from My Collections</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            const res = collectionsService.toggleSharedCollectionInMyCollections(currentCollection.id);
+                            setCollections(collectionsService.getCollections());
+                            showToast(`Added "${currentCollection.title}" to My Collections!`);
+                          }}
+                          className="px-3.5 py-1.5 bg-[#002B7F] hover:bg-[#0a47d0] text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-xs transition-all active:scale-95 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add to My Collections</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {!currentCollection.sharedWithMe && (
+                    <span className="text-xs text-gray-500 font-semibold block mt-1">
+                      Created by You
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Right Action Icons: Share (for all) | Edit & Delete (Only for Creator) */}
-              <div className="flex items-center gap-5 self-start sm:self-center text-sm font-semibold text-gray-700">
+              {/* Right Action Icons: Share (for all) | Edit & Delete (ONLY for Original Creator, never for shared) */}
+              <div className="flex items-center gap-4 self-start sm:self-center text-sm font-semibold text-gray-700">
                 <button
                   onClick={() => setShareModalCollection(currentCollection)}
-                  className="flex items-center gap-1.5 hover:text-[#0a47d0] transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 hover:text-[#0a47d0] hover:border-blue-200 transition-colors shadow-2xs"
                 >
-                  <Share2 className="w-4 h-4" />
+                  <Share2 className="w-4 h-4 text-gray-600" />
                   <span>Share</span>
                 </button>
 
-                {(currentCollection.isOwner === true || currentCollection.author === 'You') && (
+                {!currentCollection.sharedWithMe && (currentCollection.author === 'You' || currentCollection.author === undefined) && (
                   <>
                     <button
                       onClick={() => setEditingCollection(currentCollection)}
-                      className="flex items-center gap-1.5 hover:text-[#0a47d0] transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 hover:text-[#0a47d0] hover:border-blue-200 transition-colors shadow-2xs"
                     >
-                      <Edit3 className="w-4 h-4" />
+                      <Edit3 className="w-4 h-4 text-gray-600" />
                       <span>Edit</span>
                     </button>
 
-                    {currentCollection.id !== 'col_watch_later' && (
-                      <button
-                        onClick={() => handleDeleteCollection(currentCollection.id, currentCollection.title)}
-                        className="flex items-center gap-1.5 hover:text-red-600 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4 text-gray-600 hover:text-red-600" />
-                        <span>Delete</span>
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleDeleteCollection(currentCollection.id, currentCollection.title)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 hover:text-red-600 hover:border-red-200 transition-colors shadow-2xs"
+                    >
+                      <Trash2 className="w-4 h-4 text-gray-600 hover:text-red-600" />
+                      <span>Delete</span>
+                    </button>
                   </>
                 )}
               </div>
@@ -530,7 +591,7 @@ export const MyLearningPage: React.FC = () => {
 
             {/* Collection Description if any */}
             {currentCollection.description && (
-              <p className="text-sm text-gray-600 -mt-2">
+              <p className="text-sm text-gray-600">
                 {currentCollection.description}
               </p>
             )}
@@ -540,16 +601,43 @@ export const MyLearningPage: React.FC = () => {
               {currentCollection.items.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {currentCollection.items.map((item) => (
-                    <CourseCard
-                      key={item.id}
-                      course={{
-                        id: item.id,
-                        title: item.title,
-                        provider: item.provider || 'Internal',
-                        imageUrl: item.imageUrl || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=300&fit=crop&q=80',
-                        tags: item.type ? [item.type, 'Online'] : ['Online', 'Course']
-                      }}
-                    />
+                    <div key={item.id} className="bg-white rounded-xl group h-full flex flex-col relative border border-gray-100 shadow-xs hover:shadow-md transition-all">
+                      <div onClick={() => navigate(`/course/${item.id}`)} className="relative block overflow-hidden rounded-t-xl cursor-pointer">
+                        <img className="h-40 w-full object-cover group-hover:scale-105 transition-transform duration-300" src={item.imageUrl} alt={item.title} />
+                        <div className="absolute top-2.5 left-2.5">
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider bg-[#002B7F] text-white">
+                            {item.type || 'Course'}
+                          </span>
+                        </div>
+                        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-mono font-bold px-1.5 py-0.5 rounded">
+                          {item.duration || '2h 12m'}
+                        </div>
+                      </div>
+
+                      <div className="p-4 flex flex-col flex-grow justify-between">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{item.provider || 'Internal'}</p>
+                          <h3 onClick={() => navigate(`/course/${item.id}`)} className="mt-1 text-sm font-heading font-semibold text-gray-900 group-hover:text-[#0a47d0] line-clamp-2 cursor-pointer transition-colors">
+                            {item.title}
+                          </h3>
+                        </div>
+
+                        {/* Completion status with green tick mark and date */}
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          {item.isCompleted ? (
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                              <span>Completed on {item.completedOn || 'recently'}</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
+                              <Clock className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                              <span>In Progress</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -571,45 +659,153 @@ export const MyLearningPage: React.FC = () => {
               )}
             </div>
           </div>
-        ) : activeTab === 'saved-collections' ? (
+        ) : activeTab === 'collections' ? (
           /* ----------------------------------------------------------------------- */
-          /* VIEW 2: SAVED COLLECTIONS GRID (Matching Screenshot 7)                  */
+          /* VIEW 2: COLLECTIONS GRID                                                */
           /* ----------------------------------------------------------------------- */
           <div className="space-y-6">
             
-            {/* Header: My Collections/Playlists + Add new Collection button */}
+            {/* Header: Collections + Add new Collection button */}
             <div className="flex items-center justify-between pt-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-                My Collections/Playlists
-              </h1>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+                  My Collections
+                </h1>
+                <p className="text-xs text-gray-500 mt-0.5">Your personal learning playlists and curated collections</p>
+              </div>
 
               <button
                 onClick={() => setIsCreateCollectionOpen(true)}
-                className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-900 hover:text-[#0a47d0] transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#002B7F] hover:bg-[#0a47d0] text-white rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs"
               >
-                <Plus className="w-4 h-4 text-gray-900" />
+                <Plus className="w-4 h-4 text-white" />
                 <span>Add new Collection</span>
               </button>
             </div>
 
-            {/* Grid of Collection Cards with uniform course-tile UI */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredCollections.map((col) => (
-                <CollectionCard
-                  key={col.id}
-                  collection={col}
-                  onExplore={() => handleSelectCollection(col.id)}
-                  onEdit={() => setEditingCollection(col)}
-                  onDelete={() => handleDeleteCollection(col.id, col.title)}
-                  onShare={() => setShareModalCollection(col)}
-                />
-              ))}
+            {/* Grid of Collection Cards */}
+            {filteredCollections.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {filteredCollections.map((col) => (
+                  <CollectionCard
+                    key={col.id}
+                    collection={col}
+                    onExplore={() => handleSelectCollection(col.id)}
+                    onEdit={() => setEditingCollection(col)}
+                    onDelete={() => handleDeleteCollection(col.id, col.title)}
+                    onShare={() => setShareModalCollection(col)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-xs space-y-3">
+                <div className="w-12 h-12 bg-blue-50 text-[#0a47d0] rounded-full flex items-center justify-center mx-auto">
+                  <Bookmark className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-gray-900">No collections found</h3>
+                <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                  Create a collection to organize your learning courses and paths.
+                </p>
+                <button
+                  onClick={() => setIsCreateCollectionOpen(true)}
+                  className="px-4 py-2 bg-[#002B7F] hover:bg-[#0a47d0] text-white text-xs font-bold rounded-xl shadow-md transition-all"
+                >
+                  Create Collection
+                </button>
+              </div>
+            )}
+
+          </div>
+        ) : activeTab === 'learn-later' ? (
+          /* ----------------------------------------------------------------------- */
+          /* VIEW 3: LEARN LATER SECTION                                             */
+          /* ----------------------------------------------------------------------- */
+          <div className="space-y-6">
+            <div className="flex items-center justify-between pt-2">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+                  Learn Later
+                </h1>
+                <p className="text-xs text-gray-500 mt-1">
+                  Saved courses and videos to learn at a later time
+                </p>
+              </div>
             </div>
 
+            {(() => {
+              const learnLaterCol = collections.find(c => c.id === 'col_learn_later' || c.id === 'col_watch_later' || c.title.toLowerCase() === 'learn later' || c.title.toLowerCase() === 'watch later');
+              const items = learnLaterCol?.items || [];
+              if (items.length === 0) {
+                return (
+                  <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-xs space-y-3">
+                    <div className="w-12 h-12 bg-blue-50 text-[#0a47d0] rounded-full flex items-center justify-center mx-auto">
+                      <Clock className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-base font-bold text-gray-900">Your Learn Later list is empty</h3>
+                    <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                      Save courses or videos using "Save to Learn Later" from any course options menu.
+                    </p>
+                    <button
+                      onClick={() => navigate('/discover')}
+                      className="px-4 py-2 bg-[#002B7F] hover:bg-[#0a47d0] text-white text-xs font-bold rounded-xl shadow-md transition-all"
+                    >
+                      Browse Courses
+                    </button>
+                  </div>
+                );
+              }
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {items.map((item) => (
+                    <div key={item.id} className="bg-white rounded-xl group h-full flex flex-col relative border border-gray-100 shadow-xs hover:shadow-md transition-all">
+                      <div onClick={() => navigate(`/course/${item.id}`)} className="relative block overflow-hidden rounded-t-xl cursor-pointer">
+                        <img className="h-40 w-full object-cover group-hover:scale-105 transition-transform duration-300" src={item.imageUrl} alt={item.title} />
+                        <div className="absolute top-2.5 left-2.5">
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider bg-[#002B7F] text-white">
+                            {item.type || 'Course'}
+                          </span>
+                        </div>
+                        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-mono font-bold px-1.5 py-0.5 rounded">
+                          {item.duration || '2h 12m'}
+                        </div>
+                      </div>
+                      <div className="p-4 flex flex-col flex-grow justify-between">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{item.provider || 'Internal'}</p>
+                          <h3 onClick={() => navigate(`/course/${item.id}`)} className="mt-1 text-sm font-heading font-semibold text-gray-900 group-hover:text-[#0a47d0] line-clamp-2 cursor-pointer transition-colors">
+                            {item.title}
+                          </h3>
+                        </div>
+                        <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                          <button
+                            onClick={() => {
+                              collectionsService.removeFromLearnLater(item.id);
+                              setCollections(collectionsService.getCollections());
+                              showToast('Removed from Learn Later');
+                            }}
+                            className="flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-700 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Remove</span>
+                          </button>
+                          <button
+                            onClick={() => navigate(`/course/${item.id}`)}
+                            className="flex items-center gap-1.5 text-xs font-bold text-[#002B7F] hover:text-[#0a47d0]"
+                          >
+                            <Play className="w-3.5 h-3.5 fill-[#002B7F]" />
+                            <span>Start</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         ) : activeTab === 'shared' ? (
           /* ----------------------------------------------------------------------- */
-          /* VIEW 3: SHARED WITH ME TAB (Collections & Courses)                      */
+          /* VIEW 4: SHARED WITH ME TAB                                              */
           /* ----------------------------------------------------------------------- */
           <div className="space-y-8">
             {/* Shared Collections Section */}
@@ -630,9 +826,8 @@ export const MyLearningPage: React.FC = () => {
                       key={col.id}
                       collection={col}
                       onExplore={() => {
-                        setActiveTab('saved-collections');
                         setSelectedCollectionId(col.id);
-                        setSearchParams({ tab: 'saved-collections', collection: col.id });
+                        setSearchParams({ tab: 'shared', collection: col.id });
                       }}
                       onShare={() => setShareModalCollection(col)}
                     />
@@ -674,7 +869,7 @@ export const MyLearningPage: React.FC = () => {
           </div>
         ) : (
           /* ----------------------------------------------------------------------- */
-          /* VIEW 4: STANDARD TABS (My Courses, History)                             */
+          /* VIEW 5: STANDARD TABS (My Courses, History)                             */
           /* ----------------------------------------------------------------------- */
           <div className="space-y-6">
             <h2 className="text-lg font-bold text-gray-900 tracking-tight">

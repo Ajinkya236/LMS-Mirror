@@ -43,9 +43,9 @@ const CoursePlayerPage: React.FC = () => {
         setTimeout(() => setToastMessage(null), 3500);
     };
 
-    const handleSaveToWatchLater = () => {
-        const added = collectionsService.addToWatchLater(courseId || course.id);
-        showToast(added ? 'Added to Watch Later' : 'Removed from Watch Later');
+    const handleSaveToLearnLater = () => {
+        const added = collectionsService.addToLearnLater(courseId || course.id);
+        showToast(added ? 'Added to Learn Later' : 'Removed from Learn Later');
     };
 
     const handleShare = () => {
@@ -79,9 +79,9 @@ const CoursePlayerPage: React.FC = () => {
                         </button>
 
                         <button
-                            onClick={handleSaveToWatchLater}
+                            onClick={handleSaveToLearnLater}
                             className="p-2 rounded-full text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
-                            title="Save to Watch Later"
+                            title="Save to Learn Later"
                         >
                             <Clock className="w-4 h-4" />
                         </button>

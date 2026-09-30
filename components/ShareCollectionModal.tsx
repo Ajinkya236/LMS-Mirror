@@ -36,15 +36,18 @@ export const ShareCollectionModal: React.FC<ShareCollectionModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/75 backdrop-blur-xs z-[9999] flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 bg-black/75 backdrop-blur-xs z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="bg-white text-gray-900 rounded-3xl shadow-2xl max-w-md w-full p-6 border border-gray-100 space-y-5 animate-scale-up"
+        className="bg-white text-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full p-6 border border-gray-100 space-y-4 animate-slide-up sm:animate-scale-up"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag handle pill for mobile */}
+        <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto sm:hidden -mt-2 mb-1" />
+
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div className="flex items-center justify-between pb-2 border-b border-gray-100">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-blue-50 text-[#002B7F] flex items-center justify-center">
               <Share2 className="w-4 h-4" />
@@ -68,7 +71,7 @@ export const ShareCollectionModal: React.FC<ShareCollectionModalProps> = ({
           <img
             src={collection.coverImage || 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&h=300&fit=crop&q=80'}
             alt={collection.title}
-            className="w-13 h-13 rounded-xl object-cover flex-shrink-0 shadow-xs"
+            className="w-12 h-12 rounded-xl object-cover flex-shrink-0 shadow-xs"
           />
           <div className="min-w-0 flex-1">
             <h4 className="text-sm font-bold text-gray-900 truncate">{collection.title}</h4>
@@ -77,14 +80,11 @@ export const ShareCollectionModal: React.FC<ShareCollectionModalProps> = ({
               <span className="text-[11px] font-semibold text-[#002B7F] bg-blue-50 px-2.5 py-0.5 rounded-full">
                 {collection.items?.length || collection.courseIds?.length || 0} items
               </span>
-              <span className="text-[11px] text-gray-400">
-                • {collection.isPublic ? 'Public' : 'Private (accessible via link)'}
-              </span>
             </div>
           </div>
         </div>
 
-        {/* URL Box with Copy Link Button */}
+        {/* URL Box with Copy Icon Button ONLY */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-300 rounded-2xl p-2 focus-within:border-[#002B7F] focus-within:ring-2 focus-within:ring-blue-100 transition-all">
             <input
@@ -96,23 +96,18 @@ export const ShareCollectionModal: React.FC<ShareCollectionModalProps> = ({
             <button
               type="button"
               onClick={handleCopy}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
+              className={`p-2.5 rounded-xl transition-all shadow-xs flex items-center justify-center ${
                 copied
                   ? 'bg-emerald-600 text-white'
                   : 'bg-[#002B7F] hover:bg-[#0a47d0] text-white active:scale-95'
               }`}
               title="Copy Link"
+              aria-label="Copy Link"
             >
               {copied ? (
-                <>
-                  <Check className="w-4 h-4 stroke-[3]" />
-                  <span>Copied!</span>
-                </>
+                <Check className="w-4 h-4 stroke-[3]" />
               ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  <span>Copy Link</span>
-                </>
+                <Copy className="w-4 h-4" />
               )}
             </button>
           </div>
